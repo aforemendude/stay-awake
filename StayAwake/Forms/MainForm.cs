@@ -9,7 +9,7 @@ namespace StayAwake.Forms
     {
         private readonly PowerManager _powerManager;
         private readonly AppTerminator _appTerminator;
-        
+
         private DateTime? _sleepUntil;
         private DateTime? _killUntil;
 
@@ -18,7 +18,7 @@ namespace StayAwake.Forms
             InitializeComponent();
             _powerManager = new PowerManager();
             _appTerminator = new AppTerminator();
-            
+
             LoadDurations();
             RefreshProcesses();
 
@@ -40,7 +40,7 @@ namespace StayAwake.Forms
             cmbSleepDuration.SelectedIndex = 0;
 
             cmbKillDuration.Items.AddRange(new object[] {
-                new DurationItem("1 Minute", TimeSpan.FromMinutes(1)), 
+                new DurationItem("1 Minute", TimeSpan.FromMinutes(1)),
                 new DurationItem("30 Minutes", TimeSpan.FromMinutes(30)),
                 new DurationItem("1 Hour", TimeSpan.FromHours(1)),
                 new DurationItem("2 Hours", TimeSpan.FromHours(2))
@@ -53,7 +53,7 @@ namespace StayAwake.Forms
             var current = cmbProcesses.SelectedItem as string;
             cmbProcesses.Items.Clear();
             cmbProcesses.Items.AddRange(_appTerminator.GetRunningProcesses());
-            
+
             if (current != null && cmbProcesses.Items.Contains(current))
             {
                 cmbProcesses.SelectedItem = current;
@@ -69,23 +69,26 @@ namespace StayAwake.Forms
             RefreshProcesses();
         }
 
-        private void ChkStayAwake_CheckedChanged(object sender, EventArgs e)
+        private void ChkStayAwake_CheckedChanged(object? sender, EventArgs e)
         {
             bool enable = chkStayAwake.Checked;
             cmbSleepDuration.Enabled = !enable;
 
             if (enable)
             {
-                var duration = ((DurationItem)cmbSleepDuration.SelectedItem).Duration;
-                if (duration != TimeSpan.MaxValue)
+                if (cmbSleepDuration.SelectedItem is DurationItem item)
                 {
-                    _sleepUntil = DateTime.Now.Add(duration);
+                    var duration = item.Duration;
+                    if (duration != TimeSpan.MaxValue)
+                    {
+                        _sleepUntil = DateTime.Now.Add(duration);
+                    }
+                    else
+                    {
+                        _sleepUntil = null;
+                    }
                 }
-                else
-                {
-                    _sleepUntil = null;
-                }
-                
+
                 _powerManager.KeepAwake(true);
                 lblStatus.Text = "System will stay awake.";
             }
@@ -99,7 +102,7 @@ namespace StayAwake.Forms
             UpdateTimerState();
         }
 
-        private void ChkKillApp_CheckedChanged(object sender, EventArgs e)
+        private void ChkKillApp_CheckedChanged(object? sender, EventArgs e)
         {
             bool enable = chkKillApp.Checked;
             cmbProcesses.Enabled = !enable;
@@ -115,9 +118,12 @@ namespace StayAwake.Forms
                     return;
                 }
 
-                var duration = ((DurationItem)cmbKillDuration.SelectedItem).Duration;
-                _killUntil = DateTime.Now.Add(duration);
-                lblStatus.Text = $"Terminator active for {cmbProcesses.SelectedItem}.";
+                if (cmbKillDuration.SelectedItem is DurationItem item)
+                {
+                    var duration = item.Duration;
+                    _killUntil = DateTime.Now.Add(duration);
+                    lblStatus.Text = $"Terminator active for {cmbProcesses.SelectedItem}.";
+                }
             }
             else
             {
@@ -165,16 +171,20 @@ namespace StayAwake.Forms
             {
                 if (now >= _killUntil.Value)
                 {
-                    string target = cmbProcesses.SelectedItem as string;
+                    string? target = cmbProcesses.SelectedItem as string;
                     chkKillApp.Checked = false;
-                    bool killed = _appTerminator.KillProcess(target);
-                    string msg = killed ? $"Process {target} terminated." : $"Process {target} not found or could not be terminated.";
-                    lblStatus.Text = msg;
-                    MessageBox.Show(msg, "Terminator", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                    if (!string.IsNullOrEmpty(target))
+                    {
+                        bool killed = _appTerminator.KillProcess(target);
+                        string msg = killed ? $"Process {target} terminated." : $"Process {target} not found or could not be terminated.";
+                        lblStatus.Text = msg;
+                        MessageBox.Show(msg, "Terminator", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
                 }
                 else
                 {
-                     // Optionally update status with remaining time
+                    // Optionally update status with remaining time
                 }
             }
         }
