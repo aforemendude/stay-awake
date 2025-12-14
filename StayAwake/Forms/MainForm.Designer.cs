@@ -31,6 +31,7 @@ namespace StayAwake.Forms
             statusStrip = new StatusStrip();
             lblStatus = new ToolStripStatusLabel();
             timer1 = new System.Windows.Forms.Timer(components);
+            lblSleepRemainingTime = new Label();
             grpSleep.SuspendLayout();
             grpKill.SuspendLayout();
             statusStrip.SuspendLayout();
@@ -38,6 +39,7 @@ namespace StayAwake.Forms
             // 
             // grpSleep
             // 
+            grpSleep.Controls.Add(lblSleepRemainingTime);
             grpSleep.Controls.Add(lblRemainingTime);
             grpSleep.Controls.Add(lblSleepDuration);
             grpSleep.Controls.Add(cmbSleepDuration);
@@ -47,15 +49,15 @@ namespace StayAwake.Forms
             grpSleep.Margin = new Padding(3, 2, 3, 2);
             grpSleep.Name = "grpSleep";
             grpSleep.Padding = new Padding(3, 2, 3, 2);
-            grpSleep.Size = new Size(460, 75);
+            grpSleep.Size = new Size(460, 100);
             grpSleep.TabIndex = 0;
             grpSleep.TabStop = false;
-            grpSleep.Text = "Sleep Prevention";
+            grpSleep.Text = "Stay Awake";
             // 
             // lblRemainingTime
             // 
             lblRemainingTime.AutoSize = true;
-            lblRemainingTime.Location = new Point(121, 31);
+            lblRemainingTime.Location = new Point(284, 59);
             lblRemainingTime.Name = "lblRemainingTime";
             lblRemainingTime.Size = new Size(70, 21);
             lblRemainingTime.TabIndex = 2;
@@ -65,7 +67,7 @@ namespace StayAwake.Forms
             // lblSleepDuration
             // 
             lblSleepDuration.AutoSize = true;
-            lblSleepDuration.Location = new Point(117, 31);
+            lblSleepDuration.Location = new Point(148, 31);
             lblSleepDuration.Name = "lblSleepDuration";
             lblSleepDuration.Size = new Size(74, 21);
             lblSleepDuration.TabIndex = 3;
@@ -75,10 +77,10 @@ namespace StayAwake.Forms
             // 
             cmbSleepDuration.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbSleepDuration.FormattingEnabled = true;
-            cmbSleepDuration.Location = new Point(197, 28);
+            cmbSleepDuration.Location = new Point(228, 28);
             cmbSleepDuration.Margin = new Padding(3, 2, 3, 2);
             cmbSleepDuration.Name = "cmbSleepDuration";
-            cmbSleepDuration.Size = new Size(257, 29);
+            cmbSleepDuration.Size = new Size(226, 29);
             cmbSleepDuration.TabIndex = 1;
             // 
             // btnStayAwake
@@ -86,7 +88,7 @@ namespace StayAwake.Forms
             btnStayAwake.Location = new Point(6, 26);
             btnStayAwake.Margin = new Padding(3, 2, 3, 2);
             btnStayAwake.Name = "btnStayAwake";
-            btnStayAwake.Size = new Size(105, 30);
+            btnStayAwake.Size = new Size(136, 30);
             btnStayAwake.TabIndex = 0;
             btnStayAwake.Text = "Stay Awake";
             btnStayAwake.UseVisualStyleBackColor = true;
@@ -100,11 +102,11 @@ namespace StayAwake.Forms
             grpKill.Controls.Add(cmbProcesses);
             grpKill.Controls.Add(chkKillApp);
             grpKill.Font = new Font("Segoe UI", 12F);
-            grpKill.Location = new Point(12, 90);
+            grpKill.Location = new Point(12, 115);
             grpKill.Margin = new Padding(3, 2, 3, 2);
             grpKill.Name = "grpKill";
             grpKill.Padding = new Padding(3, 2, 3, 2);
-            grpKill.Size = new Size(460, 247);
+            grpKill.Size = new Size(460, 222);
             grpKill.TabIndex = 1;
             grpKill.TabStop = false;
             grpKill.Text = "Process Terminator";
@@ -190,6 +192,15 @@ namespace StayAwake.Forms
             timer1.Interval = 1000;
             timer1.Tick += timer1_Tick;
             // 
+            // lblSleepRemainingTime
+            // 
+            lblSleepRemainingTime.AutoSize = true;
+            lblSleepRemainingTime.Location = new Point(148, 59);
+            lblSleepRemainingTime.Name = "lblSleepRemainingTime";
+            lblSleepRemainingTime.Size = new Size(130, 21);
+            lblSleepRemainingTime.TabIndex = 4;
+            lblSleepRemainingTime.Text = "Remaining Time: ";
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -229,5 +240,6 @@ namespace StayAwake.Forms
         private System.Windows.Forms.StatusStrip statusStrip;
         private System.Windows.Forms.ToolStripStatusLabel lblStatus;
         private System.Windows.Forms.Timer timer1;
+        private Label lblSleepRemainingTime;
     }
 }
