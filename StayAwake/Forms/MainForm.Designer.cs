@@ -15,187 +15,202 @@ namespace StayAwake.Forms
 
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
-            this.grpSleep = new System.Windows.Forms.GroupBox();
-            this.btnStayAwake = new System.Windows.Forms.Button();
-            this.cmbSleepDuration = new System.Windows.Forms.ComboBox();
-            this.lblSleepDuration = new System.Windows.Forms.Label();
-            this.lblRemainingTime = new System.Windows.Forms.Label();
-            this.grpKill = new System.Windows.Forms.GroupBox();
-            this.chkKillApp = new System.Windows.Forms.CheckBox();
-            this.cmbProcesses = new System.Windows.Forms.ComboBox();
-            this.lblProcess = new System.Windows.Forms.Label();
-            this.cmbKillDuration = new System.Windows.Forms.ComboBox();
-            this.lblKillDuration = new System.Windows.Forms.Label();
-            this.btnRefresh = new System.Windows.Forms.Button();
-            this.statusStrip = new System.Windows.Forms.StatusStrip();
-            this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
-            this.timer1 = new System.Windows.Forms.Timer(this.components);
-
-            this.grpSleep.SuspendLayout();
-            this.grpKill.SuspendLayout();
-            this.statusStrip.SuspendLayout();
-            this.SuspendLayout();
-
+            components = new System.ComponentModel.Container();
+            grpSleep = new GroupBox();
+            lblRemainingTime = new Label();
+            lblSleepDuration = new Label();
+            cmbSleepDuration = new ComboBox();
+            btnStayAwake = new Button();
+            grpKill = new GroupBox();
+            btnRefresh = new Button();
+            lblKillDuration = new Label();
+            cmbKillDuration = new ComboBox();
+            lblProcess = new Label();
+            cmbProcesses = new ComboBox();
+            chkKillApp = new CheckBox();
+            statusStrip = new StatusStrip();
+            lblStatus = new ToolStripStatusLabel();
+            timer1 = new System.Windows.Forms.Timer(components);
+            grpSleep.SuspendLayout();
+            grpKill.SuspendLayout();
+            statusStrip.SuspendLayout();
+            SuspendLayout();
+            // 
             // grpSleep
-            this.grpSleep.Controls.Add(this.lblRemainingTime);
-            this.grpSleep.Controls.Add(this.lblSleepDuration);
-            this.grpSleep.Controls.Add(this.cmbSleepDuration);
-            this.grpSleep.Controls.Add(this.btnStayAwake);
-            this.grpSleep.Location = new System.Drawing.Point(12, 12);
-            this.grpSleep.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.grpSleep.Name = "grpSleep";
-            this.grpSleep.Size = new System.Drawing.Size(460, 100);
-            this.grpSleep.TabIndex = 0;
-            this.grpSleep.TabStop = false;
-            this.grpSleep.Text = "Sleep Prevention";
-
-            // btnStayAwake
-            this.btnStayAwake.Location = new System.Drawing.Point(20, 30);
-            this.btnStayAwake.Name = "btnStayAwake";
-            this.btnStayAwake.Size = new System.Drawing.Size(120, 40);
-            this.btnStayAwake.TabIndex = 0;
-            this.btnStayAwake.Text = "Stay Awake";
-            this.btnStayAwake.UseVisualStyleBackColor = true;
-
+            // 
+            grpSleep.Controls.Add(lblRemainingTime);
+            grpSleep.Controls.Add(lblSleepDuration);
+            grpSleep.Controls.Add(cmbSleepDuration);
+            grpSleep.Controls.Add(btnStayAwake);
+            grpSleep.Font = new Font("Segoe UI", 12F);
+            grpSleep.Location = new Point(12, 11);
+            grpSleep.Margin = new Padding(3, 2, 3, 2);
+            grpSleep.Name = "grpSleep";
+            grpSleep.Padding = new Padding(3, 2, 3, 2);
+            grpSleep.Size = new Size(460, 75);
+            grpSleep.TabIndex = 0;
+            grpSleep.TabStop = false;
+            grpSleep.Text = "Sleep Prevention";
+            // 
             // lblRemainingTime
-            this.lblRemainingTime.AutoSize = true;
-            this.lblRemainingTime.Location = new System.Drawing.Point(160, 37);
-            this.lblRemainingTime.Name = "lblRemainingTime";
-            this.lblRemainingTime.Size = new System.Drawing.Size(71, 21);
-            this.lblRemainingTime.TabIndex = 2;
-            this.lblRemainingTime.Text = "00:00:00";
-            this.lblRemainingTime.Visible = false;
-
+            // 
+            lblRemainingTime.AutoSize = true;
+            lblRemainingTime.Location = new Point(121, 31);
+            lblRemainingTime.Name = "lblRemainingTime";
+            lblRemainingTime.Size = new Size(70, 21);
+            lblRemainingTime.TabIndex = 2;
+            lblRemainingTime.Text = "00:00:00";
+            lblRemainingTime.Visible = false;
+            // 
             // lblSleepDuration
-            this.lblSleepDuration.AutoSize = true;
-            this.lblSleepDuration.Location = new System.Drawing.Point(160, 37);
-            this.lblSleepDuration.Name = "lblSleepDuration";
-            this.lblSleepDuration.Size = new System.Drawing.Size(76, 21);
-            this.lblSleepDuration.Text = "Duration:";
-
+            // 
+            lblSleepDuration.AutoSize = true;
+            lblSleepDuration.Location = new Point(117, 31);
+            lblSleepDuration.Name = "lblSleepDuration";
+            lblSleepDuration.Size = new Size(74, 21);
+            lblSleepDuration.TabIndex = 3;
+            lblSleepDuration.Text = "Duration:";
+            // 
             // cmbSleepDuration
-            this.cmbSleepDuration.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbSleepDuration.FormattingEnabled = true;
-            this.cmbSleepDuration.Location = new System.Drawing.Point(250, 34);
-            this.cmbSleepDuration.Name = "cmbSleepDuration";
-            this.cmbSleepDuration.Size = new System.Drawing.Size(180, 29);
-            this.cmbSleepDuration.TabIndex = 1;
-
+            // 
+            cmbSleepDuration.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbSleepDuration.FormattingEnabled = true;
+            cmbSleepDuration.Location = new Point(197, 28);
+            cmbSleepDuration.Margin = new Padding(3, 2, 3, 2);
+            cmbSleepDuration.Name = "cmbSleepDuration";
+            cmbSleepDuration.Size = new Size(257, 29);
+            cmbSleepDuration.TabIndex = 1;
+            // 
+            // btnStayAwake
+            // 
+            btnStayAwake.Location = new Point(6, 26);
+            btnStayAwake.Margin = new Padding(3, 2, 3, 2);
+            btnStayAwake.Name = "btnStayAwake";
+            btnStayAwake.Size = new Size(105, 30);
+            btnStayAwake.TabIndex = 0;
+            btnStayAwake.Text = "Stay Awake";
+            btnStayAwake.UseVisualStyleBackColor = true;
+            // 
             // grpKill
-            this.grpKill.Controls.Add(this.btnRefresh);
-            this.grpKill.Controls.Add(this.lblKillDuration);
-            this.grpKill.Controls.Add(this.cmbKillDuration);
-            this.grpKill.Controls.Add(this.lblProcess);
-            this.grpKill.Controls.Add(this.cmbProcesses);
-            this.grpKill.Controls.Add(this.chkKillApp);
-            // grpKill
-            this.grpKill.Controls.Add(this.btnRefresh);
-            this.grpKill.Controls.Add(this.lblKillDuration);
-            this.grpKill.Controls.Add(this.cmbKillDuration);
-            this.grpKill.Controls.Add(this.lblProcess);
-            this.grpKill.Controls.Add(this.cmbProcesses);
-            this.grpKill.Controls.Add(this.chkKillApp);
-            this.grpKill.Location = new System.Drawing.Point(12, 120);
-            this.grpKill.Name = "grpKill";
-            this.grpKill.Size = new System.Drawing.Size(460, 140);
-            this.grpKill.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.grpKill.TabIndex = 1;
-            this.grpKill.TabStop = false;
-            this.grpKill.Text = "Process Terminator";
-
-            // chkKillApp
-            this.chkKillApp.AutoSize = true;
-            this.chkKillApp.Location = new System.Drawing.Point(20, 35);
-            this.chkKillApp.Name = "chkKillApp";
-            this.chkKillApp.Size = new System.Drawing.Size(106, 25);
-            this.chkKillApp.TabIndex = 0;
-            this.chkKillApp.Text = "Kill Process";
-            this.chkKillApp.UseVisualStyleBackColor = true;
-
-            // lblProcess
-            this.lblProcess.AutoSize = true;
-            this.lblProcess.Location = new System.Drawing.Point(20, 70);
-            this.lblProcess.Name = "lblProcess";
-            this.lblProcess.Size = new System.Drawing.Size(57, 21);
-            this.lblProcess.Text = "Target:";
-
-            // cmbProcesses
-            this.cmbProcesses.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbProcesses.FormattingEnabled = true;
-            // cmbProcesses
-            this.cmbProcesses.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbProcesses.FormattingEnabled = true;
-            this.cmbProcesses.Location = new System.Drawing.Point(90, 67);
-            this.cmbProcesses.Name = "cmbProcesses";
-            this.cmbProcesses.Size = new System.Drawing.Size(260, 29);
-            this.cmbProcesses.TabIndex = 1;
-
+            // 
+            grpKill.Controls.Add(btnRefresh);
+            grpKill.Controls.Add(lblKillDuration);
+            grpKill.Controls.Add(cmbKillDuration);
+            grpKill.Controls.Add(lblProcess);
+            grpKill.Controls.Add(cmbProcesses);
+            grpKill.Controls.Add(chkKillApp);
+            grpKill.Font = new Font("Segoe UI", 12F);
+            grpKill.Location = new Point(12, 90);
+            grpKill.Margin = new Padding(3, 2, 3, 2);
+            grpKill.Name = "grpKill";
+            grpKill.Padding = new Padding(3, 2, 3, 2);
+            grpKill.Size = new Size(460, 247);
+            grpKill.TabIndex = 1;
+            grpKill.TabStop = false;
+            grpKill.Text = "Process Terminator";
+            // 
             // btnRefresh
-            // btnRefresh
-            this.btnRefresh.Location = new System.Drawing.Point(360, 66);
-            this.btnRefresh.Name = "btnRefresh";
-            this.btnRefresh.Size = new System.Drawing.Size(60, 31);
-            this.btnRefresh.TabIndex = 2;
-            this.btnRefresh.Text = "Ref";
-            this.btnRefresh.UseVisualStyleBackColor = true;
-            this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
-
+            // 
+            btnRefresh.Location = new Point(315, 50);
+            btnRefresh.Margin = new Padding(3, 2, 3, 2);
+            btnRefresh.Name = "btnRefresh";
+            btnRefresh.Size = new Size(52, 23);
+            btnRefresh.TabIndex = 2;
+            btnRefresh.Text = "Ref";
+            btnRefresh.UseVisualStyleBackColor = true;
+            btnRefresh.Click += btnRefresh_Click;
+            // 
             // lblKillDuration
-            this.lblKillDuration.AutoSize = true;
-            this.lblKillDuration.Location = new System.Drawing.Point(20, 105);
-            this.lblKillDuration.Name = "lblKillDuration";
-            this.lblKillDuration.Size = new System.Drawing.Size(48, 21);
-            this.lblKillDuration.Text = "After:";
-
+            // 
+            lblKillDuration.AutoSize = true;
+            lblKillDuration.Location = new Point(18, 79);
+            lblKillDuration.Name = "lblKillDuration";
+            lblKillDuration.Size = new Size(47, 21);
+            lblKillDuration.TabIndex = 3;
+            lblKillDuration.Text = "After:";
+            // 
             // cmbKillDuration
-            this.cmbKillDuration.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbKillDuration.FormattingEnabled = true;
-            // cmbKillDuration
-            this.cmbKillDuration.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbKillDuration.FormattingEnabled = true;
-            this.cmbKillDuration.Location = new System.Drawing.Point(90, 102);
-            this.cmbKillDuration.Name = "cmbKillDuration";
-            this.cmbKillDuration.Size = new System.Drawing.Size(180, 29);
-            this.cmbKillDuration.TabIndex = 3;
-
+            // 
+            cmbKillDuration.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbKillDuration.FormattingEnabled = true;
+            cmbKillDuration.Location = new Point(79, 76);
+            cmbKillDuration.Margin = new Padding(3, 2, 3, 2);
+            cmbKillDuration.Name = "cmbKillDuration";
+            cmbKillDuration.Size = new Size(158, 29);
+            cmbKillDuration.TabIndex = 3;
+            // 
+            // lblProcess
+            // 
+            lblProcess.AutoSize = true;
+            lblProcess.Location = new Point(18, 52);
+            lblProcess.Name = "lblProcess";
+            lblProcess.Size = new Size(55, 21);
+            lblProcess.TabIndex = 4;
+            lblProcess.Text = "Target:";
+            // 
+            // cmbProcesses
+            // 
+            cmbProcesses.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbProcesses.FormattingEnabled = true;
+            cmbProcesses.Location = new Point(79, 50);
+            cmbProcesses.Margin = new Padding(3, 2, 3, 2);
+            cmbProcesses.Name = "cmbProcesses";
+            cmbProcesses.Size = new Size(228, 29);
+            cmbProcesses.TabIndex = 1;
+            // 
+            // chkKillApp
+            // 
+            chkKillApp.AutoSize = true;
+            chkKillApp.Location = new Point(18, 26);
+            chkKillApp.Margin = new Padding(3, 2, 3, 2);
+            chkKillApp.Name = "chkKillApp";
+            chkKillApp.Size = new Size(107, 25);
+            chkKillApp.TabIndex = 0;
+            chkKillApp.Text = "Kill Process";
+            chkKillApp.UseVisualStyleBackColor = true;
+            // 
             // statusStrip
-            this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.lblStatus});
-            this.statusStrip.Location = new System.Drawing.Point(0, 285);
-            this.statusStrip.Name = "statusStrip";
-            this.statusStrip.Size = new System.Drawing.Size(484, 26);
-            this.statusStrip.TabIndex = 2;
-            this.statusStrip.Text = "statusStrip1";
-
+            // 
+            statusStrip.Items.AddRange(new ToolStripItem[] { lblStatus });
+            statusStrip.Location = new Point(0, 339);
+            statusStrip.Name = "statusStrip";
+            statusStrip.Padding = new Padding(1, 0, 12, 0);
+            statusStrip.Size = new Size(484, 22);
+            statusStrip.TabIndex = 2;
+            statusStrip.Text = "statusStrip1";
+            // 
             // lblStatus
-            this.lblStatus.Name = "lblStatus";
-            this.lblStatus.Size = new System.Drawing.Size(50, 20);
-            this.lblStatus.Text = "Ready";
-
+            // 
+            lblStatus.Name = "lblStatus";
+            lblStatus.Size = new Size(39, 17);
+            lblStatus.Text = "Ready";
+            // 
             // timer1
-            this.timer1.Interval = 1000;
-            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
-
+            // 
+            timer1.Interval = 1000;
+            timer1.Tick += timer1_Tick;
+            // 
             // MainForm
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(484, 311);
-            this.Controls.Add(this.statusStrip);
-            this.Controls.Add(this.grpKill);
-            this.Controls.Add(this.grpSleep);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.MaximizeBox = false;
-            this.Name = "MainForm";
-            this.Text = "Stay Awake";
-            this.grpSleep.ResumeLayout(false);
-            this.grpSleep.PerformLayout();
-            this.grpKill.ResumeLayout(false);
-            this.grpKill.PerformLayout();
-            this.statusStrip.ResumeLayout(false);
-            this.statusStrip.PerformLayout();
-            this.ResumeLayout(false);
-            this.PerformLayout();
+            // 
+            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(484, 361);
+            Controls.Add(statusStrip);
+            Controls.Add(grpKill);
+            Controls.Add(grpSleep);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            Margin = new Padding(3, 2, 3, 2);
+            MaximizeBox = false;
+            Name = "MainForm";
+            Text = "Stay Awake";
+            grpSleep.ResumeLayout(false);
+            grpSleep.PerformLayout();
+            grpKill.ResumeLayout(false);
+            grpKill.PerformLayout();
+            statusStrip.ResumeLayout(false);
+            statusStrip.PerformLayout();
+            ResumeLayout(false);
+            PerformLayout();
 
         }
 
