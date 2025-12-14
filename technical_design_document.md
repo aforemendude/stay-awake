@@ -19,28 +19,28 @@ A lightweight Windows desktop application effectively managing power states and 
   - The app will call this API to reset the system idle timer.
   - When the timer expires, the app will clear the flags (`ES_CONTINUOUS`).
 
-### 3.2. Process Terminator
-**Mechanism**: `System.Diagnostics.Process` API.
-- **Input**: Process name (selector from running processes list).
+### 3.2. Window Closer
+**Mechanism**: Win32 API `SendMessage` with `WM_CLOSE`.
+- **Input**: Window Title (selected from a list of open windows).
 - **Behavior**:
   - A timer counts down.
-  - On zero, `Process.GetProcessesByName()` finds the target.
-  - Calls `Kill()` on matching processes.
+  - On zero, the app finds the target window handle.
+  - Sends `WM_CLOSE` message to gracefully close the window.
 
 ### 3.3. Architecture Diagram
 ```mermaid
 graph TD
     UI[MainForm UI] -->|Configures| Manager[PowerManager]
-    UI -->|Configures| Terminator[AppTerminator]
+    UI -->|Configures| Closer[WindowCloser]
     Manager -->|PInvoke| Win32[kernel32.dll / SetThreadExecutionState]
-    Terminator -->|Monitors| Timer[System.Windows.Forms.Timer]
-    Timer -->|Triggers| Proc[Process Management]
+    Closer -->|Monitors| Timer[System.Windows.Forms.Timer]
+    Timer -->|Triggers| WinUser[user32.dll / SendMessage]
 ```
 
 ## 4. UI Design
 A simple single-window interface.
 - **Top Section**: "Stay Awake" toggle & Duration (Dropdown: 30m, 1h, 2h, Indefinite).
-- **Bottom Section**: "Kill App" toggle, Target App (ComboBox), Duration.
+- **Bottom Section**: "Close Window" toggle, Target Window (List/ListView with scroll), Duration.
 - **Status Bar**: showing current active rules.
 
 ## 5. Win32 API Details
@@ -56,6 +56,11 @@ public enum EXECUTION_STATE : uint
 
 [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
 static extern EXECUTION_STATE SetThreadExecutionState(EXECUTION_STATE esFlags);
+
+[DllImport("user32.dll", CharSet = CharSet.Auto)]
+private static extern IntPtr SendMessage(IntPtr hWnd, UInt32 Msg, IntPtr wParam, IntPtr lParam);
+
+private const UInt32 WM_CLOSE = 0x0010;
 ```
 
 ## 6. Resource Efficiency Plan
