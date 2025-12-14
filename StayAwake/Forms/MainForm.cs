@@ -12,6 +12,7 @@ namespace StayAwake.Forms
 
         private DateTime? _sleepUntil;
         private DateTime? _killUntil;
+        private bool _isStayAwakeActive;
 
         public MainForm()
         {
@@ -23,21 +24,41 @@ namespace StayAwake.Forms
             RefreshProcesses();
 
             // Hook up events
-            chkStayAwake.CheckedChanged += ChkStayAwake_CheckedChanged;
+            btnStayAwake.Click += btnStayAwake_Click;
             chkKillApp.CheckedChanged += ChkKillApp_CheckedChanged;
         }
 
         private void LoadDurations()
         {
-            var durations = new object[] {
-                new DurationItem("Indefinite", TimeSpan.MaxValue),
-                new DurationItem("30 Minutes", TimeSpan.FromMinutes(30)),
-                new DurationItem("1 Hour", TimeSpan.FromHours(1)),
-                new DurationItem("2 Hours", TimeSpan.FromHours(2))
-            };
+            cmbSleepDuration.Items.Clear();
 
-            cmbSleepDuration.Items.AddRange(durations);
-            cmbSleepDuration.SelectedIndex = 0;
+            // 30 min to 8 hours in 15 min increments
+            var durations = new System.Collections.Generic.List<DurationItem>();
+            TimeSpan current = TimeSpan.FromMinutes(30);
+            TimeSpan end = TimeSpan.FromHours(8);
+
+            while (current <= end)
+            {
+                string label;
+                if (current.TotalHours >= 1)
+                {
+                    if (current.Minutes > 0)
+                        label = $"{current.Hours} Hour{(current.Hours > 1 ? "s" : "")} {current.Minutes} Mins";
+                    else
+                        label = $"{current.Hours} Hour{(current.Hours > 1 ? "s" : "")}";
+                }
+                else
+                {
+                    label = $"{current.Minutes} Minutes";
+                }
+
+                durations.Add(new DurationItem(label, current));
+                current = current.Add(TimeSpan.FromMinutes(15));
+            }
+
+            cmbSleepDuration.Items.AddRange(durations.ToArray());
+            if (cmbSleepDuration.Items.Count > 0)
+                cmbSleepDuration.SelectedIndex = 0;
 
             cmbKillDuration.Items.AddRange(new object[] {
                 new DurationItem("1 Minute", TimeSpan.FromMinutes(1)),
@@ -69,37 +90,49 @@ namespace StayAwake.Forms
             RefreshProcesses();
         }
 
-        private void ChkStayAwake_CheckedChanged(object? sender, EventArgs e)
+        private void btnStayAwake_Click(object? sender, EventArgs e)
         {
-            bool enable = chkStayAwake.Checked;
-            cmbSleepDuration.Enabled = !enable;
-
-            if (enable)
+            if (!_isStayAwakeActive)
             {
+                // Start
                 if (cmbSleepDuration.SelectedItem is DurationItem item)
                 {
                     var duration = item.Duration;
-                    if (duration != TimeSpan.MaxValue)
-                    {
-                        _sleepUntil = DateTime.Now.Add(duration);
-                    }
-                    else
-                    {
-                        _sleepUntil = null;
-                    }
-                }
+                    _sleepUntil = DateTime.Now.Add(duration);
 
-                _powerManager.KeepAwake(true);
-                lblStatus.Text = "System will stay awake.";
+                    _isStayAwakeActive = true;
+                    btnStayAwake.Text = "Stop";
+
+                    // UI changes
+                    cmbSleepDuration.Visible = false;
+                    lblRemainingTime.Visible = true;
+                    lblStatus.Text = "System will stay awake.";
+
+                    _powerManager.KeepAwake(true);
+                }
             }
             else
             {
-                _powerManager.KeepAwake(false);
-                _sleepUntil = null;
-                lblStatus.Text = "Stay awake processing disabled.";
+                // Stop
+                StopStayAwake();
             }
 
             UpdateTimerState();
+        }
+
+        private void StopStayAwake()
+        {
+            _isStayAwakeActive = false;
+            btnStayAwake.Text = "Stay Awake";
+
+            _sleepUntil = null;
+
+            // UI changes
+            cmbSleepDuration.Visible = true;
+            lblRemainingTime.Visible = false;
+
+            _powerManager.KeepAwake(false);
+            lblStatus.Text = "Stay awake processing disabled.";
         }
 
         private void ChkKillApp_CheckedChanged(object? sender, EventArgs e)
@@ -136,7 +169,7 @@ namespace StayAwake.Forms
 
         private void UpdateTimerState()
         {
-            if (chkStayAwake.Checked || chkKillApp.Checked)
+            if (_isStayAwakeActive || chkKillApp.Checked)
             {
                 timer1.Start();
             }
@@ -152,17 +185,20 @@ namespace StayAwake.Forms
             var now = DateTime.Now;
 
             // Handle Sleep
-            if (chkStayAwake.Checked && _sleepUntil.HasValue)
+            if (_isStayAwakeActive && _sleepUntil.HasValue)
             {
-                if (now >= _sleepUntil.Value)
+                TimeSpan remaining = _sleepUntil.Value - now;
+
+                if (remaining <= TimeSpan.Zero)
                 {
-                    chkStayAwake.Checked = false; // Will trigger event and disable KeepAwake
+                    StopStayAwake();
+                    UpdateTimerState();
                     lblStatus.Text = "Stay awake duration expired.";
                     MessageBox.Show("Stay awake duration expired.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 else
                 {
-                    // Optionally update status with remaining time
+                    lblRemainingTime.Text = remaining.ToString(@"hh\:mm\:ss");
                 }
             }
 
