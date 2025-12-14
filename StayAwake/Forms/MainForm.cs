@@ -14,15 +14,12 @@ namespace StayAwake.Forms
         public MainForm()
         {
             InitializeComponent();
+
             _powerManager = new PowerManager();
             _appTerminator = new AppTerminator();
 
             LoadDurations();
             RefreshProcesses();
-
-            // Hook up events
-            btnStayAwake.Click += BtnStayAwake_Click;
-            chkKillApp.CheckedChanged += ChkKillApp_CheckedChanged;
         }
 
         private void LoadDurations()
@@ -36,19 +33,7 @@ namespace StayAwake.Forms
 
             while (current <= end)
             {
-                string label;
-                if (current.TotalHours >= 1)
-                {
-                    if (current.Minutes > 0)
-                        label = $"{current.Hours} Hour{(current.Hours > 1 ? "s" : "")} {current.Minutes} Mins";
-                    else
-                        label = $"{current.Hours} Hour{(current.Hours > 1 ? "s" : "")}";
-                }
-                else
-                {
-                    label = $"{current.Minutes} Minutes";
-                }
-
+                string label = current.ToString(@"hh\:mm\:ss");
                 durations.Add(new DurationItem(label, current));
                 current = current.Add(TimeSpan.FromMinutes(15));
             }
@@ -58,10 +43,10 @@ namespace StayAwake.Forms
                 cmbSleepDuration.SelectedIndex = 0;
 
             cmbKillDuration.Items.AddRange([
-                new DurationItem("1 Minute", TimeSpan.FromMinutes(1)),
-                new DurationItem("30 Minutes", TimeSpan.FromMinutes(30)),
-                new DurationItem("1 Hour", TimeSpan.FromHours(1)),
-                new DurationItem("2 Hours", TimeSpan.FromHours(2))
+                new DurationItem(TimeSpan.FromMinutes(1).ToString(@"hh\:mm\:ss"), TimeSpan.FromMinutes(1)),
+                new DurationItem(TimeSpan.FromMinutes(30).ToString(@"hh\:mm\:ss"), TimeSpan.FromMinutes(30)),
+                new DurationItem(TimeSpan.FromHours(1).ToString(@"hh\:mm\:ss"), TimeSpan.FromHours(1)),
+                new DurationItem(TimeSpan.FromHours(2).ToString(@"hh\:mm\:ss"), TimeSpan.FromHours(2))
             ]);
             cmbKillDuration.SelectedIndex = 0;
         }
@@ -123,7 +108,7 @@ namespace StayAwake.Forms
 
             // UI changes
             cmbSleepDuration.Enabled = true;
-            lblRemainingTime.Text = "00:00:00";
+            lblRemainingTime.Text = "Not Enabled";
 
             _powerManager.KeepAwake(false);
         }
@@ -186,8 +171,6 @@ namespace StayAwake.Forms
                 {
                     StopStayAwake();
                     UpdateTimerState();
-
-                    MessageBox.Show("Stay awake duration expired.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 else
                 {

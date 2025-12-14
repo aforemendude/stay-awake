@@ -67,7 +67,7 @@ namespace StayAwake.Forms
             lblRemainingTime.Name = "lblRemainingTime";
             lblRemainingTime.Size = new Size(70, 21);
             lblRemainingTime.TabIndex = 2;
-            lblRemainingTime.Text = "00:00:00";
+            lblRemainingTime.Text = "Not Enabled";
             // 
             // lblSleepDuration
             // 
@@ -97,6 +97,7 @@ namespace StayAwake.Forms
             btnStayAwake.TabIndex = 0;
             btnStayAwake.Text = "Stay Awake";
             btnStayAwake.UseVisualStyleBackColor = true;
+            btnStayAwake.Click += BtnStayAwake_Click;
             // 
             // grpKill
             // 
@@ -175,6 +176,7 @@ namespace StayAwake.Forms
             chkKillApp.TabIndex = 0;
             chkKillApp.Text = "Kill Process";
             chkKillApp.UseVisualStyleBackColor = true;
+            chkKillApp.CheckedChanged += ChkKillApp_CheckedChanged;
             // 
             // timer1
             // 
