@@ -104,8 +104,7 @@ namespace StayAwake.Forms
                     btnStayAwake.Text = "Stop";
 
                     // UI changes
-                    cmbSleepDuration.Visible = false;
-                    lblRemainingTime.Visible = true;
+                    cmbSleepDuration.Enabled = false;
                     lblStatus.Text = "System will stay awake.";
 
                     _powerManager.KeepAwake(true);
@@ -128,8 +127,8 @@ namespace StayAwake.Forms
             _sleepUntil = null;
 
             // UI changes
-            cmbSleepDuration.Visible = true;
-            lblRemainingTime.Visible = false;
+            cmbSleepDuration.Enabled = true;
+            lblRemainingTime.Text = "00:00:00";
 
             _powerManager.KeepAwake(false);
             lblStatus.Text = "Stay awake processing disabled.";

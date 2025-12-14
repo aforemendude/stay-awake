@@ -17,6 +17,7 @@ namespace StayAwake.Forms
         {
             components = new System.ComponentModel.Container();
             grpSleep = new GroupBox();
+            lblSleepRemainingTime = new Label();
             lblRemainingTime = new Label();
             lblSleepDuration = new Label();
             cmbSleepDuration = new ComboBox();
@@ -31,7 +32,6 @@ namespace StayAwake.Forms
             statusStrip = new StatusStrip();
             lblStatus = new ToolStripStatusLabel();
             timer1 = new System.Windows.Forms.Timer(components);
-            lblSleepRemainingTime = new Label();
             grpSleep.SuspendLayout();
             grpKill.SuspendLayout();
             statusStrip.SuspendLayout();
@@ -54,6 +54,15 @@ namespace StayAwake.Forms
             grpSleep.TabStop = false;
             grpSleep.Text = "Stay Awake";
             // 
+            // lblSleepRemainingTime
+            // 
+            lblSleepRemainingTime.AutoSize = true;
+            lblSleepRemainingTime.Location = new Point(148, 59);
+            lblSleepRemainingTime.Name = "lblSleepRemainingTime";
+            lblSleepRemainingTime.Size = new Size(130, 21);
+            lblSleepRemainingTime.TabIndex = 4;
+            lblSleepRemainingTime.Text = "Remaining Time: ";
+            // 
             // lblRemainingTime
             // 
             lblRemainingTime.AutoSize = true;
@@ -62,7 +71,6 @@ namespace StayAwake.Forms
             lblRemainingTime.Size = new Size(70, 21);
             lblRemainingTime.TabIndex = 2;
             lblRemainingTime.Text = "00:00:00";
-            lblRemainingTime.Visible = false;
             // 
             // lblSleepDuration
             // 
@@ -191,15 +199,6 @@ namespace StayAwake.Forms
             // 
             timer1.Interval = 1000;
             timer1.Tick += timer1_Tick;
-            // 
-            // lblSleepRemainingTime
-            // 
-            lblSleepRemainingTime.AutoSize = true;
-            lblSleepRemainingTime.Location = new Point(148, 59);
-            lblSleepRemainingTime.Name = "lblSleepRemainingTime";
-            lblSleepRemainingTime.Size = new Size(130, 21);
-            lblSleepRemainingTime.TabIndex = 4;
-            lblSleepRemainingTime.Text = "Remaining Time: ";
             // 
             // MainForm
             // 
