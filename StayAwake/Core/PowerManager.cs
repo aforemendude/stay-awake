@@ -1,5 +1,3 @@
-using System;
-
 namespace StayAwake.Core
 {
     public class PowerManager

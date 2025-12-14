@@ -1,6 +1,3 @@
-using System;
-using System.Drawing;
-using System.Windows.Forms;
 using StayAwake.Core;
 
 namespace StayAwake.Forms
@@ -24,7 +21,7 @@ namespace StayAwake.Forms
             RefreshProcesses();
 
             // Hook up events
-            btnStayAwake.Click += btnStayAwake_Click;
+            btnStayAwake.Click += BtnStayAwake_Click;
             chkKillApp.CheckedChanged += ChkKillApp_CheckedChanged;
         }
 
@@ -33,7 +30,7 @@ namespace StayAwake.Forms
             cmbSleepDuration.Items.Clear();
 
             // 30 min to 8 hours in 15 min increments
-            var durations = new System.Collections.Generic.List<DurationItem>();
+            var durations = new List<DurationItem>();
             TimeSpan current = TimeSpan.FromMinutes(30);
             TimeSpan end = TimeSpan.FromHours(8);
 
@@ -56,26 +53,25 @@ namespace StayAwake.Forms
                 current = current.Add(TimeSpan.FromMinutes(15));
             }
 
-            cmbSleepDuration.Items.AddRange(durations.ToArray());
+            cmbSleepDuration.Items.AddRange([.. durations]);
             if (cmbSleepDuration.Items.Count > 0)
                 cmbSleepDuration.SelectedIndex = 0;
 
-            cmbKillDuration.Items.AddRange(new object[] {
+            cmbKillDuration.Items.AddRange([
                 new DurationItem("1 Minute", TimeSpan.FromMinutes(1)),
                 new DurationItem("30 Minutes", TimeSpan.FromMinutes(30)),
                 new DurationItem("1 Hour", TimeSpan.FromHours(1)),
                 new DurationItem("2 Hours", TimeSpan.FromHours(2))
-            });
+            ]);
             cmbKillDuration.SelectedIndex = 0;
         }
 
         private void RefreshProcesses()
         {
-            var current = cmbProcesses.SelectedItem as string;
             cmbProcesses.Items.Clear();
-            cmbProcesses.Items.AddRange(_appTerminator.GetRunningProcesses());
+            cmbProcesses.Items.AddRange(AppTerminator.GetRunningProcesses());
 
-            if (current != null && cmbProcesses.Items.Contains(current))
+            if (cmbProcesses.SelectedItem is string current && cmbProcesses.Items.Contains(current))
             {
                 cmbProcesses.SelectedItem = current;
             }
@@ -85,12 +81,12 @@ namespace StayAwake.Forms
             }
         }
 
-        private void btnRefresh_Click(object sender, EventArgs e)
+        private void BtnRefresh_Click(object sender, EventArgs e)
         {
             RefreshProcesses();
         }
 
-        private void btnStayAwake_Click(object? sender, EventArgs e)
+        private void BtnStayAwake_Click(object? sender, EventArgs e)
         {
             if (!_isStayAwakeActive)
             {
@@ -105,7 +101,6 @@ namespace StayAwake.Forms
 
                     // UI changes
                     cmbSleepDuration.Enabled = false;
-                    lblStatus.Text = "System will stay awake.";
 
                     _powerManager.KeepAwake(true);
                 }
@@ -131,7 +126,6 @@ namespace StayAwake.Forms
             lblRemainingTime.Text = "00:00:00";
 
             _powerManager.KeepAwake(false);
-            lblStatus.Text = "Stay awake processing disabled.";
         }
 
         private void ChkKillApp_CheckedChanged(object? sender, EventArgs e)
@@ -154,13 +148,13 @@ namespace StayAwake.Forms
                 {
                     var duration = item.Duration;
                     _killUntil = DateTime.Now.Add(duration);
-                    lblStatus.Text = $"Terminator active for {cmbProcesses.SelectedItem}.";
+
                 }
             }
             else
             {
                 _killUntil = null;
-                lblStatus.Text = "Terminator disabled.";
+
             }
 
             UpdateTimerState();
@@ -175,11 +169,11 @@ namespace StayAwake.Forms
             else
             {
                 timer1.Stop();
-                lblStatus.Text = "Ready";
+
             }
         }
 
-        private void timer1_Tick(object sender, EventArgs e)
+        private void Timer1_Tick(object sender, EventArgs e)
         {
             var now = DateTime.Now;
 
@@ -192,7 +186,7 @@ namespace StayAwake.Forms
                 {
                     StopStayAwake();
                     UpdateTimerState();
-                    lblStatus.Text = "Stay awake duration expired.";
+
                     MessageBox.Show("Stay awake duration expired.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 else
@@ -211,9 +205,9 @@ namespace StayAwake.Forms
 
                     if (!string.IsNullOrEmpty(target))
                     {
-                        bool killed = _appTerminator.KillProcess(target);
+                        bool killed = AppTerminator.KillProcess(target);
                         string msg = killed ? $"Process {target} terminated." : $"Process {target} not found or could not be terminated.";
-                        lblStatus.Text = msg;
+
                         MessageBox.Show(msg, "Terminator", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                 }
@@ -224,16 +218,10 @@ namespace StayAwake.Forms
             }
         }
 
-        private class DurationItem
+        private class DurationItem(string name, TimeSpan duration)
         {
-            public string Name { get; }
-            public TimeSpan Duration { get; }
-
-            public DurationItem(string name, TimeSpan duration)
-            {
-                Name = name;
-                Duration = duration;
-            }
+            public string Name { get; } = name;
+            public TimeSpan Duration { get; } = duration;
 
             public override string ToString()
             {

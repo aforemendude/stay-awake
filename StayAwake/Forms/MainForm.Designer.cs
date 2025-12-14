@@ -29,12 +29,9 @@ namespace StayAwake.Forms
             lblProcess = new Label();
             cmbProcesses = new ComboBox();
             chkKillApp = new CheckBox();
-            statusStrip = new StatusStrip();
-            lblStatus = new ToolStripStatusLabel();
             timer1 = new System.Windows.Forms.Timer(components);
             grpSleep.SuspendLayout();
             grpKill.SuspendLayout();
-            statusStrip.SuspendLayout();
             SuspendLayout();
             // 
             // grpSleep
@@ -128,7 +125,7 @@ namespace StayAwake.Forms
             btnRefresh.TabIndex = 2;
             btnRefresh.Text = "Ref";
             btnRefresh.UseVisualStyleBackColor = true;
-            btnRefresh.Click += btnRefresh_Click;
+            btnRefresh.Click += BtnRefresh_Click;
             // 
             // lblKillDuration
             // 
@@ -179,33 +176,16 @@ namespace StayAwake.Forms
             chkKillApp.Text = "Kill Process";
             chkKillApp.UseVisualStyleBackColor = true;
             // 
-            // statusStrip
-            // 
-            statusStrip.Items.AddRange(new ToolStripItem[] { lblStatus });
-            statusStrip.Location = new Point(0, 339);
-            statusStrip.Name = "statusStrip";
-            statusStrip.Padding = new Padding(1, 0, 12, 0);
-            statusStrip.Size = new Size(484, 22);
-            statusStrip.TabIndex = 2;
-            statusStrip.Text = "statusStrip1";
-            // 
-            // lblStatus
-            // 
-            lblStatus.Name = "lblStatus";
-            lblStatus.Size = new Size(39, 17);
-            lblStatus.Text = "Ready";
-            // 
             // timer1
             // 
             timer1.Interval = 1000;
-            timer1.Tick += timer1_Tick;
+            timer1.Tick += Timer1_Tick;
             // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(484, 361);
-            Controls.Add(statusStrip);
             Controls.Add(grpKill);
             Controls.Add(grpSleep);
             FormBorderStyle = FormBorderStyle.FixedSingle;
@@ -217,8 +197,6 @@ namespace StayAwake.Forms
             grpSleep.PerformLayout();
             grpKill.ResumeLayout(false);
             grpKill.PerformLayout();
-            statusStrip.ResumeLayout(false);
-            statusStrip.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
 
@@ -236,8 +214,6 @@ namespace StayAwake.Forms
         private System.Windows.Forms.ComboBox cmbKillDuration;
         private System.Windows.Forms.Label lblKillDuration;
         private System.Windows.Forms.Button btnRefresh;
-        private System.Windows.Forms.StatusStrip statusStrip;
-        private System.Windows.Forms.ToolStripStatusLabel lblStatus;
         private System.Windows.Forms.Timer timer1;
         private Label lblSleepRemainingTime;
     }

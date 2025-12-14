@@ -1,21 +1,18 @@
-using System;
 using System.Diagnostics;
-using System.Linq;
 
 namespace StayAwake.Core
 {
     public class AppTerminator
     {
-        public string[] GetRunningProcesses()
+        public static string[] GetRunningProcesses()
         {
-            return Process.GetProcesses()
+            return [.. Process.GetProcesses()
                 .Select(p => p.ProcessName)
                 .OrderBy(n => n)
-                .Distinct()
-                .ToArray();
+                .Distinct()];
         }
 
-        public bool KillProcess(string processName)
+        public static bool KillProcess(string processName)
         {
             try
             {
