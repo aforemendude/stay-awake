@@ -33,11 +33,11 @@ A lightweight Windows desktop application effectively managing power states and 
 ### 3.3. Architecture Diagram
 ```mermaid
 graph TD
-    UI[MainForm UI] -->|Configures| Manager[PowerManager (Static)]
-    UI -->|Configures| Closer[WindowCloser (Static)]
-    Manager -->|PInvoke| Win32[kernel32.dll / SetThreadExecutionState]
-    Closer -->|Monitors| Timer[System.Windows.Forms.Timer]
-    Timer -->|Triggers| WinUser[user32.dll / SendMessage]
+    UI["MainForm UI"] -->|Configures| Manager["PowerManager (Static)"]
+    UI -->|Configures| Closer["WindowCloser (Static)"]
+    Manager -->|PInvoke| Win32["kernel32.dll / SetThreadExecutionState"]
+    Closer -->|Monitors| Timer["System.Windows.Forms.Timer"]
+    Timer -->|Triggers| WinUser["user32.dll / SendMessage"]
 ```
 
 ### 3.4. Single Instance Enforcement
