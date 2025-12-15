@@ -7,6 +7,7 @@ namespace StayAwake.Core
     {
         public string Title { get; set; } = string.Empty;
         public IntPtr Handle { get; set; }
+        public string ProcessName { get; set; } = string.Empty;
 
         public override string ToString()
         {
@@ -36,7 +37,16 @@ namespace StayAwake.Core
                 // Filter out empty titles or Program Manager
                 if (string.IsNullOrWhiteSpace(title) || title == "Program Manager") return true;
 
-                windows.Add(new WindowInfo { Title = title, Handle = hWnd });
+                NativeMethods.GetWindowThreadProcessId(hWnd, out uint processId);
+                string processName = "Unknown";
+                try
+                {
+                    using var process = System.Diagnostics.Process.GetProcessById((int)processId);
+                    processName = process.ProcessName;
+                }
+                catch { }
+
+                windows.Add(new WindowInfo { Title = title, Handle = hWnd, ProcessName = processName });
                 return true;
 
             }, IntPtr.Zero);

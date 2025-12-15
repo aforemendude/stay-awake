@@ -67,6 +67,20 @@ namespace StayAwake.Forms
             lstWindows.Items.AddRange([.. WindowCloser.GetOpenWindows()]);
         }
 
+        private void LstWindows_SelectedIndexChanged(object? sender, EventArgs e)
+        {
+            if (lstWindows.SelectedItem is WindowInfo info)
+            {
+                txtProcessName.Text = info.ProcessName;
+                txtWindowHandle.Text = info.Handle.ToString("X");
+            }
+            else
+            {
+                txtProcessName.Text = string.Empty;
+                txtWindowHandle.Text = string.Empty;
+            }
+        }
+
         private void BtnRefresh_Click(object sender, EventArgs e)
         {
             RefreshWindows();

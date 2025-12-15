@@ -30,6 +30,10 @@ namespace StayAwake.Forms
             lblCloseRemainingTimeValue = new Label();
             lblCloseRemainingTimeLabel = new Label();
             btnCloseWindow = new Button();
+            lblProcessNameLabel = new Label();
+            txtProcessName = new TextBox();
+            lblWindowHandleLabel = new Label();
+            txtWindowHandle = new TextBox();
             timer1 = new System.Windows.Forms.Timer(components);
             grpSleep.SuspendLayout();
             grpClose.SuspendLayout();
@@ -86,7 +90,7 @@ namespace StayAwake.Forms
             cmbSleepDuration.Location = new Point(288, 26);
             cmbSleepDuration.Margin = new Padding(3, 2, 3, 2);
             cmbSleepDuration.Name = "cmbSleepDuration";
-            cmbSleepDuration.Size = new Size(193, 29);
+            cmbSleepDuration.Size = new Size(151, 29);
             cmbSleepDuration.TabIndex = 1;
             // 
             // btnStayAwake
@@ -109,6 +113,10 @@ namespace StayAwake.Forms
             grpClose.Controls.Add(lblCloseRemainingTimeValue);
             grpClose.Controls.Add(lblCloseRemainingTimeLabel);
             grpClose.Controls.Add(btnCloseWindow);
+            grpClose.Controls.Add(lblProcessNameLabel);
+            grpClose.Controls.Add(txtProcessName);
+            grpClose.Controls.Add(lblWindowHandleLabel);
+            grpClose.Controls.Add(txtWindowHandle);
             grpClose.Font = new Font("Segoe UI", 12F);
             grpClose.Location = new Point(12, 115);
             grpClose.Margin = new Padding(3, 2, 3, 2);
@@ -146,7 +154,7 @@ namespace StayAwake.Forms
             cmbCloseDuration.Location = new Point(288, 26);
             cmbCloseDuration.Margin = new Padding(3, 2, 3, 2);
             cmbCloseDuration.Name = "cmbCloseDuration";
-            cmbCloseDuration.Size = new Size(193, 29);
+            cmbCloseDuration.Size = new Size(151, 29);
             cmbCloseDuration.TabIndex = 3;
             // 
             // lstWindows
@@ -158,6 +166,7 @@ namespace StayAwake.Forms
             lstWindows.ScrollAlwaysVisible = true;
             lstWindows.Size = new Size(748, 214);
             lstWindows.TabIndex = 1;
+            lstWindows.SelectedIndexChanged += LstWindows_SelectedIndexChanged;
             // 
             // lblCloseRemainingTimeValue
             // 
@@ -187,6 +196,40 @@ namespace StayAwake.Forms
             btnCloseWindow.Text = "Schedule Close Window";
             btnCloseWindow.UseVisualStyleBackColor = true;
             btnCloseWindow.Click += BtnCloseWindow_Click;
+            // 
+            // lblProcessNameLabel
+            // 
+            lblProcessNameLabel.AutoSize = true;
+            lblProcessNameLabel.Location = new Point(445, 31);
+            lblProcessNameLabel.Name = "lblProcessNameLabel";
+            lblProcessNameLabel.Size = new Size(66, 21);
+            lblProcessNameLabel.TabIndex = 7;
+            lblProcessNameLabel.Text = "Process:";
+            // 
+            // txtProcessName
+            // 
+            txtProcessName.Location = new Point(517, 26);
+            txtProcessName.Name = "txtProcessName";
+            txtProcessName.ReadOnly = true;
+            txtProcessName.Size = new Size(237, 29);
+            txtProcessName.TabIndex = 8;
+            // 
+            // lblWindowHandleLabel
+            // 
+            lblWindowHandleLabel.AutoSize = true;
+            lblWindowHandleLabel.Location = new Point(445, 68);
+            lblWindowHandleLabel.Name = "lblWindowHandleLabel";
+            lblWindowHandleLabel.Size = new Size(62, 21);
+            lblWindowHandleLabel.TabIndex = 9;
+            lblWindowHandleLabel.Text = "Handle:";
+            // 
+            // txtWindowHandle
+            // 
+            txtWindowHandle.Location = new Point(517, 63);
+            txtWindowHandle.Name = "txtWindowHandle";
+            txtWindowHandle.ReadOnly = true;
+            txtWindowHandle.Size = new Size(237, 29);
+            txtWindowHandle.TabIndex = 10;
             // 
             // timer1
             // 
@@ -227,5 +270,9 @@ namespace StayAwake.Forms
         private Label lblSleepRemainingTimeLabel;
         private Label lblCloseRemainingTimeLabel;
         private Label lblCloseRemainingTimeValue;
+        private Label lblProcessNameLabel;
+        private TextBox txtProcessName;
+        private Label lblWindowHandleLabel;
+        private TextBox txtWindowHandle;
     }
 }
