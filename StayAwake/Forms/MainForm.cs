@@ -153,6 +153,8 @@ namespace StayAwake.Forms
                     lstWindows.Enabled = false;
                     cmbCloseDuration.Enabled = false;
                     btnRefresh.Enabled = false;
+
+                    grpClose.Text = "Window Closer";
                 }
             }
             else
@@ -222,6 +224,7 @@ namespace StayAwake.Forms
                     if (target != null)
                     {
                         WindowCloser.CloseWindow(target.Handle);
+                        grpClose.Text = $"Window Closer - Closed {target.Handle:X} At {now} ({target.ProcessName})";
                         RefreshWindows();
                     }
                 }
