@@ -20,9 +20,9 @@ namespace StayAwake
         [STAThread]
         static void Main()
         {
-            const string appName = "StayAwake_SingleInstance_Mutex";
+            const string mutexKey = "StayAwake-Mutex-1927b19d-4cad-4589-9ed1-17ae32b96c1b";
 
-            using (var mutex = new Mutex(true, appName, out bool createdNew))
+            using (var mutex = new Mutex(true, mutexKey, out bool createdNew))
             {
                 if (!createdNew)
                 {
