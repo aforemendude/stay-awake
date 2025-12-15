@@ -8,6 +8,7 @@ namespace StayAwake.Forms
         private DateTime? _closeUntil;
         private bool _isStayAwakeActive;
         private bool _isCloseWindowActive;
+        private bool _isExplicitClose = false;
 
         public MainForm()
         {
@@ -15,6 +16,9 @@ namespace StayAwake.Forms
 
             LoadDurations();
             RefreshWindows();
+
+            Icon = SystemIcons.Application;
+            notifyIcon.Icon = Icon;
         }
 
         private void LoadDurations()
@@ -240,6 +244,42 @@ namespace StayAwake.Forms
                     lblCloseRemainingTimeValue.Text = remaining.ToString(@"hh\:mm\:ss");
                 }
             }
+        }
+
+        private void MainForm_FormClosing(object? sender, FormClosingEventArgs e)
+        {
+            if (!_isExplicitClose)
+            {
+                e.Cancel = true;
+                Hide();
+                notifyIcon.ShowBalloonTip(1000, "Stay Awake", "Application running in the background.", ToolTipIcon.Info);
+            }
+        }
+
+        private void NotifyIcon_MouseClick(object? sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                ShowForm();
+            }
+        }
+
+        private void ShowToolStripMenuItem_Click(object? sender, EventArgs e)
+        {
+            ShowForm();
+        }
+
+        private void QuitToolStripMenuItem_Click(object? sender, EventArgs e)
+        {
+            _isExplicitClose = true;
+            Application.Exit();
+        }
+
+        private void ShowForm()
+        {
+            Show();
+            WindowState = FormWindowState.Normal;
+            Activate();
         }
 
         private class DurationItem(string name, TimeSpan duration)

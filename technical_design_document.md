@@ -62,6 +62,14 @@ A simple single-window interface (`FixedSingle`, Non-resizable).
   - Duration Dropdown (Disabled when active).
   - Remaining Time Label.
 
+### 4.1. System Tray Interaction
+- **Close Button**: Does NOT quit the application; minimizes it to the system tray.
+- **Tray Icon**:
+  - **Left Click**: Restores and shows the main window.
+  - **Right Click**: Context menu with:
+    - **Show**: Restores window.
+    - **Quit**: Fully terminates the application.
+
 ## 5. Win32 API Details
 ```csharp
 [Flags]

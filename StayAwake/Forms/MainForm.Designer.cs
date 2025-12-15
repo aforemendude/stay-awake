@@ -35,6 +35,11 @@ namespace StayAwake.Forms
             lblWindowHandleLabel = new Label();
             txtWindowHandle = new TextBox();
             timer1 = new System.Windows.Forms.Timer(components);
+            notifyIcon = new NotifyIcon(components);
+            contextMenuStrip = new ContextMenuStrip(components);
+            showToolStripMenuItem = new ToolStripMenuItem();
+            quitToolStripMenuItem = new ToolStripMenuItem();
+            contextMenuStrip.SuspendLayout();
             grpSleep.SuspendLayout();
             grpClose.SuspendLayout();
             SuspendLayout();
@@ -246,12 +251,40 @@ namespace StayAwake.Forms
             FormBorderStyle = FormBorderStyle.FixedSingle;
             Margin = new Padding(3, 2, 3, 2);
             MaximizeBox = false;
+            FormClosing += MainForm_FormClosing;
             Name = "MainForm";
             Text = "Stay Awake";
             grpSleep.ResumeLayout(false);
             grpSleep.PerformLayout();
             grpClose.ResumeLayout(false);
             grpClose.PerformLayout();
+            // 
+            // notifyIcon
+            // 
+            notifyIcon.Text = "Stay Awake";
+            notifyIcon.ContextMenuStrip = contextMenuStrip;
+            notifyIcon.MouseClick += NotifyIcon_MouseClick;
+            // 
+            // contextMenuStrip
+            // 
+            contextMenuStrip.Items.AddRange(new ToolStripItem[] { showToolStripMenuItem, quitToolStripMenuItem });
+            contextMenuStrip.Name = "contextMenuStrip";
+            contextMenuStrip.Size = new Size(104, 48);
+            // 
+            // showToolStripMenuItem
+            // 
+            showToolStripMenuItem.Name = "showToolStripMenuItem";
+            showToolStripMenuItem.Size = new Size(103, 22);
+            showToolStripMenuItem.Text = "Show";
+            showToolStripMenuItem.Click += ShowToolStripMenuItem_Click;
+            // 
+            // quitToolStripMenuItem
+            // 
+            quitToolStripMenuItem.Name = "quitToolStripMenuItem";
+            quitToolStripMenuItem.Size = new Size(103, 22);
+            quitToolStripMenuItem.Text = "Quit";
+            quitToolStripMenuItem.Click += QuitToolStripMenuItem_Click;
+            contextMenuStrip.ResumeLayout(false);
             ResumeLayout(false);
         }
 
@@ -274,5 +307,9 @@ namespace StayAwake.Forms
         private TextBox txtProcessName;
         private Label lblWindowHandleLabel;
         private TextBox txtWindowHandle;
+        private System.Windows.Forms.NotifyIcon notifyIcon;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip;
+        private System.Windows.Forms.ToolStripMenuItem showToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem quitToolStripMenuItem;
     }
 }
