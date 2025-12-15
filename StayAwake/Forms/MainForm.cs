@@ -268,6 +268,8 @@ namespace StayAwake.Forms
                 e.Cancel = true;
                 Hide();
                 notifyIcon.ShowBalloonTip(1000, "Stay Awake", "Application running in the background.", ToolTipIcon.Info);
+
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, true, true);
             }
         }
 
