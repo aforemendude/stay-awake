@@ -8,7 +8,7 @@ A lightweight Windows desktop application effectively managing power states and 
 - **Framework**: .NET 10 (LTS)
 - **UI Framework**: Windows Forms (WinForms)
   - *Rationale*: Lowest memory footprint (~20MB RAM) compared to WPF (~60MB) or MAUI/Electron (>100MB). Native look and feel, excellent performance.
-- **Distribution**: Single-file executable (Trimmed) for ease of deployment.
+- **Distribution**: Framework-dependent executable.
 
 ## 3. Core Features & Architecture
 
@@ -41,12 +41,14 @@ graph TD
 ```
 
 ### 3.4. Single Instance Enforcement
-**Mechanism**: `System.Threading.Mutex` + P/Invoke `SetForegroundWindow` / `ShowWindowAsync`.
+**Mechanism**: `System.Threading.Mutex` + `System.Threading.EventWaitHandle`.
 - **Logic**:
   - Validates a named mutex on startup.
-  - If mutex exists, identifies the existing process.
-  - Restores the existing window (if minimized) and brings it to the foreground.
-  - Terminates the new instance immediately.
+  - If mutex exists (application is already running):
+    - Opens a named `EventWaitHandle`.
+    - Signals the event to notify the existing instance.
+    - The existing instance (listening on a background thread) receives the signal, invokes the UI thread to restore the window and bring it to the foreground.
+    - The new instance terminates immediately.
 
 ## 4. UI Design
 A simple single-window interface (`FixedSingle`, Non-resizable).
@@ -88,6 +90,23 @@ static extern EXECUTION_STATE SetThreadExecutionState(EXECUTION_STATE esFlags);
 private static extern IntPtr SendMessage(IntPtr hWnd, UInt32 Msg, IntPtr wParam, IntPtr lParam);
 
 private const UInt32 WM_CLOSE = 0x0010;
+
+// Window Enumeration & Info
+[DllImport("user32.dll")]
+public static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+
+[DllImport("user32.dll", CharSet = CharSet.Unicode)]
+public static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+
+[DllImport("user32.dll")]
+public static extern bool IsWindowVisible(IntPtr hWnd);
+
+[DllImport("user32.dll")]
+public static extern IntPtr GetShellWindow();
+
+[DllImport("user32.dll")]
+public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
 ```
 
 ## 6. Resource Efficiency Plan

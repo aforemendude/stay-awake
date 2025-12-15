@@ -18,6 +18,7 @@ A lightweight utility for Windows that prevents the system from sleeping and pro
 - Logs closure details (Time, Handle, Process Name) in the interface upon completion.
 
 ### General
+- **System Tray**: Closing the window minimizes the application to the system tray. Left-click the tray icon to show the window, or right-click for options (Show/Quit).
 - **Single Instance**: Ensures only one instance of the application runs at a time. If a new instance is started, the existing one is brought to the foreground.
 
 ## Requirements
