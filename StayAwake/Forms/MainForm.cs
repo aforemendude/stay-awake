@@ -33,6 +33,9 @@ namespace StayAwake.Forms
                 current = current.Add(TimeSpan.FromMinutes(15));
             }
 
+            // Add 10 seconds option for debugging
+            durations.Add(new DurationItem("00:00:10", TimeSpan.FromSeconds(10)));
+
             cmbSleepDuration.Items.AddRange([.. durations]);
 
             // Default 2 hours. 
@@ -53,6 +56,9 @@ namespace StayAwake.Forms
                 closeDurations.Add(new DurationItem(label, closeCurrent));
                 closeCurrent = closeCurrent.Add(TimeSpan.FromMinutes(15));
             }
+
+            // Add 10 seconds option for debugging
+            closeDurations.Add(new DurationItem("00:00:10", TimeSpan.FromSeconds(10)));
 
             cmbCloseDuration.Items.AddRange([.. closeDurations]);
 
@@ -224,7 +230,7 @@ namespace StayAwake.Forms
                     if (target != null)
                     {
                         WindowCloser.CloseWindow(target.Handle);
-                        grpClose.Text = $"Window Closer - Closed {target.Handle:X} At {now} ({target.ProcessName})";
+                        grpClose.Text = $"Window Closer - Closed {target.Handle:X} At {now:MM/dd HH:mm} ({target.ProcessName})";
                         RefreshWindows();
                     }
                 }
