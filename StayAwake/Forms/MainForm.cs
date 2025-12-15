@@ -32,7 +32,6 @@ namespace StayAwake.Forms
             LoadDurations();
             RefreshWindows();
 
-            Icon = SystemIcons.Application;
             notifyIcon.Icon = Icon;
         }
 

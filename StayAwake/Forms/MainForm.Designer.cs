@@ -16,6 +16,7 @@ namespace StayAwake.Forms
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             grpSleep = new GroupBox();
             lblSleepRemainingTimeLabel = new Label();
             lblSleepRemainingTimeValue = new Label();
@@ -276,6 +277,7 @@ namespace StayAwake.Forms
             Controls.Add(grpClose);
             Controls.Add(grpSleep);
             FormBorderStyle = FormBorderStyle.FixedSingle;
+            Icon = (Icon)resources.GetObject("$this.Icon");
             Margin = new Padding(3, 2, 3, 2);
             MaximizeBox = false;
             Name = "MainForm";
