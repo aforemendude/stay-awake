@@ -40,6 +40,14 @@ graph TD
     Timer -->|Triggers| WinUser[user32.dll / SendMessage]
 ```
 
+### 3.4. Single Instance Enforcement
+**Mechanism**: `System.Threading.Mutex` + P/Invoke `SetForegroundWindow` / `ShowWindowAsync`.
+- **Logic**:
+  - Validates a named mutex on startup.
+  - If mutex exists, identifies the existing process.
+  - Restores the existing window (if minimized) and brings it to the foreground.
+  - Terminates the new instance immediately.
+
 ## 4. UI Design
 A simple single-window interface (`FixedSingle`, Non-resizable).
 - **Top Section (Stay Awake)**:

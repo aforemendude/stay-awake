@@ -17,6 +17,9 @@ A lightweight utility for Windows that prevents the system from sleeping and pro
 - Configurable duration: 15 minutes to 8 hours (in 15-minute increments).
 - Logs closure details (Time, Handle, Process Name) in the interface upon completion.
 
+### General
+- **Single Instance**: Ensures only one instance of the application runs at a time. If a new instance is started, the existing one is brought to the foreground.
+
 ## Requirements
 
 - **OS**: Windows
