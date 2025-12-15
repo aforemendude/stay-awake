@@ -10,9 +10,24 @@ namespace StayAwake.Forms
         private bool _isCloseWindowActive;
         private bool _isExplicitClose = false;
 
-        public MainForm()
+        public MainForm(EventWaitHandle? showEvent = null)
         {
             InitializeComponent();
+
+            if (showEvent != null)
+            {
+                Task.Factory.StartNew(() =>
+                {
+                    while (!_isExplicitClose)
+                    {
+                        showEvent.WaitOne();
+                        Invoke(new Action(() =>
+                        {
+                            ShowForm();
+                        }));
+                    }
+                }, TaskCreationOptions.LongRunning);
+            }
 
             LoadDurations();
             RefreshWindows();
