@@ -26,9 +26,10 @@ namespace StayAwake.Forms
             btnRefresh = new Button();
             lblCloseDuration = new Label();
             cmbCloseDuration = new ComboBox();
-            lblWindow = new Label();
             lstWindows = new ListBox();
-            chkCloseWindow = new CheckBox();
+            lblCloseRemainingTimeValue = new Label();
+            lblCloseRemainingTimeLabel = new Label();
+            btnCloseWindow = new Button();
             timer1 = new System.Windows.Forms.Timer(components);
             grpSleep.SuspendLayout();
             grpClose.SuspendLayout();
@@ -46,7 +47,7 @@ namespace StayAwake.Forms
             grpSleep.Margin = new Padding(3, 2, 3, 2);
             grpSleep.Name = "grpSleep";
             grpSleep.Padding = new Padding(3, 2, 3, 2);
-            grpSleep.Size = new Size(460, 100);
+            grpSleep.Size = new Size(760, 100);
             grpSleep.TabIndex = 0;
             grpSleep.TabStop = false;
             grpSleep.Text = "Stay Awake";
@@ -54,7 +55,7 @@ namespace StayAwake.Forms
             // lblSleepRemainingTime
             // 
             lblSleepRemainingTime.AutoSize = true;
-            lblSleepRemainingTime.Location = new Point(148, 63);
+            lblSleepRemainingTime.Location = new Point(208, 63);
             lblSleepRemainingTime.Name = "lblSleepRemainingTime";
             lblSleepRemainingTime.Size = new Size(130, 21);
             lblSleepRemainingTime.TabIndex = 4;
@@ -63,7 +64,7 @@ namespace StayAwake.Forms
             // lblRemainingTime
             // 
             lblRemainingTime.AutoSize = true;
-            lblRemainingTime.Location = new Point(284, 63);
+            lblRemainingTime.Location = new Point(344, 63);
             lblRemainingTime.Name = "lblRemainingTime";
             lblRemainingTime.Size = new Size(95, 21);
             lblRemainingTime.TabIndex = 2;
@@ -72,7 +73,7 @@ namespace StayAwake.Forms
             // lblSleepDuration
             // 
             lblSleepDuration.AutoSize = true;
-            lblSleepDuration.Location = new Point(148, 31);
+            lblSleepDuration.Location = new Point(208, 31);
             lblSleepDuration.Name = "lblSleepDuration";
             lblSleepDuration.Size = new Size(74, 21);
             lblSleepDuration.TabIndex = 3;
@@ -82,10 +83,10 @@ namespace StayAwake.Forms
             // 
             cmbSleepDuration.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbSleepDuration.FormattingEnabled = true;
-            cmbSleepDuration.Location = new Point(228, 28);
+            cmbSleepDuration.Location = new Point(288, 26);
             cmbSleepDuration.Margin = new Padding(3, 2, 3, 2);
             cmbSleepDuration.Name = "cmbSleepDuration";
-            cmbSleepDuration.Size = new Size(226, 29);
+            cmbSleepDuration.Size = new Size(193, 29);
             cmbSleepDuration.TabIndex = 1;
             // 
             // btnStayAwake
@@ -93,7 +94,7 @@ namespace StayAwake.Forms
             btnStayAwake.Location = new Point(6, 26);
             btnStayAwake.Margin = new Padding(3, 2, 3, 2);
             btnStayAwake.Name = "btnStayAwake";
-            btnStayAwake.Size = new Size(136, 30);
+            btnStayAwake.Size = new Size(196, 30);
             btnStayAwake.TabIndex = 0;
             btnStayAwake.Text = "Stay Awake";
             btnStayAwake.UseVisualStyleBackColor = true;
@@ -104,34 +105,35 @@ namespace StayAwake.Forms
             grpClose.Controls.Add(btnRefresh);
             grpClose.Controls.Add(lblCloseDuration);
             grpClose.Controls.Add(cmbCloseDuration);
-            grpClose.Controls.Add(lblWindow);
             grpClose.Controls.Add(lstWindows);
-            grpClose.Controls.Add(chkCloseWindow);
+            grpClose.Controls.Add(lblCloseRemainingTimeValue);
+            grpClose.Controls.Add(lblCloseRemainingTimeLabel);
+            grpClose.Controls.Add(btnCloseWindow);
             grpClose.Font = new Font("Segoe UI", 12F);
             grpClose.Location = new Point(12, 115);
             grpClose.Margin = new Padding(3, 2, 3, 2);
             grpClose.Name = "grpClose";
             grpClose.Padding = new Padding(3, 2, 3, 2);
-            grpClose.Size = new Size(460, 235);
+            grpClose.Size = new Size(760, 335);
             grpClose.TabIndex = 1;
             grpClose.TabStop = false;
             grpClose.Text = "Window Closer";
             // 
             // btnRefresh
             // 
-            btnRefresh.Location = new Point(402, 50);
+            btnRefresh.Location = new Point(6, 63);
             btnRefresh.Margin = new Padding(3, 2, 3, 2);
             btnRefresh.Name = "btnRefresh";
-            btnRefresh.Size = new Size(52, 23);
+            btnRefresh.Size = new Size(196, 30);
             btnRefresh.TabIndex = 2;
-            btnRefresh.Text = "Ref";
+            btnRefresh.Text = "Refresh List";
             btnRefresh.UseVisualStyleBackColor = true;
             btnRefresh.Click += BtnRefresh_Click;
             // 
             // lblCloseDuration
             // 
             lblCloseDuration.AutoSize = true;
-            lblCloseDuration.Location = new Point(18, 170);
+            lblCloseDuration.Location = new Point(208, 31);
             lblCloseDuration.Name = "lblCloseDuration";
             lblCloseDuration.Size = new Size(47, 21);
             lblCloseDuration.TabIndex = 3;
@@ -141,42 +143,50 @@ namespace StayAwake.Forms
             // 
             cmbCloseDuration.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbCloseDuration.FormattingEnabled = true;
-            cmbCloseDuration.Location = new Point(79, 167);
+            cmbCloseDuration.Location = new Point(288, 26);
             cmbCloseDuration.Margin = new Padding(3, 2, 3, 2);
             cmbCloseDuration.Name = "cmbCloseDuration";
-            cmbCloseDuration.Size = new Size(158, 29);
+            cmbCloseDuration.Size = new Size(193, 29);
             cmbCloseDuration.TabIndex = 3;
-            // 
-            // lblWindow
-            // 
-            lblWindow.AutoSize = true;
-            lblWindow.Location = new Point(18, 52);
-            lblWindow.Name = "lblWindow";
-            lblWindow.Size = new Size(55, 21);
-            lblWindow.TabIndex = 4;
-            lblWindow.Text = "Target:";
             // 
             // lstWindows
             // 
             lstWindows.FormattingEnabled = true;
-            lstWindows.Location = new Point(79, 50);
+            lstWindows.Location = new Point(6, 117);
             lstWindows.Margin = new Padding(3, 2, 3, 2);
             lstWindows.Name = "lstWindows";
             lstWindows.ScrollAlwaysVisible = true;
-            lstWindows.Size = new Size(317, 109);
+            lstWindows.Size = new Size(748, 214);
             lstWindows.TabIndex = 1;
             // 
-            // chkCloseWindow
+            // lblCloseRemainingTimeValue
             // 
-            chkCloseWindow.AutoSize = true;
-            chkCloseWindow.Location = new Point(18, 26);
-            chkCloseWindow.Margin = new Padding(3, 2, 3, 2);
-            chkCloseWindow.Name = "chkCloseWindow";
-            chkCloseWindow.Size = new Size(129, 25);
-            chkCloseWindow.TabIndex = 0;
-            chkCloseWindow.Text = "Close Window";
-            chkCloseWindow.UseVisualStyleBackColor = true;
-            chkCloseWindow.CheckedChanged += ChkCloseWindow_CheckedChanged;
+            lblCloseRemainingTimeValue.AutoSize = true;
+            lblCloseRemainingTimeValue.Location = new Point(344, 63);
+            lblCloseRemainingTimeValue.Name = "lblCloseRemainingTimeValue";
+            lblCloseRemainingTimeValue.Size = new Size(95, 21);
+            lblCloseRemainingTimeValue.TabIndex = 6;
+            lblCloseRemainingTimeValue.Text = "Not Enabled";
+            // 
+            // lblCloseRemainingTimeLabel
+            // 
+            lblCloseRemainingTimeLabel.AutoSize = true;
+            lblCloseRemainingTimeLabel.Location = new Point(208, 63);
+            lblCloseRemainingTimeLabel.Name = "lblCloseRemainingTimeLabel";
+            lblCloseRemainingTimeLabel.Size = new Size(130, 21);
+            lblCloseRemainingTimeLabel.TabIndex = 5;
+            lblCloseRemainingTimeLabel.Text = "Remaining Time: ";
+            // 
+            // btnCloseWindow
+            // 
+            btnCloseWindow.Location = new Point(6, 26);
+            btnCloseWindow.Margin = new Padding(3, 2, 3, 2);
+            btnCloseWindow.Name = "btnCloseWindow";
+            btnCloseWindow.Size = new Size(196, 30);
+            btnCloseWindow.TabIndex = 0;
+            btnCloseWindow.Text = "Schedule Close Window";
+            btnCloseWindow.UseVisualStyleBackColor = true;
+            btnCloseWindow.Click += BtnCloseWindow_Click;
             // 
             // timer1
             // 
@@ -187,7 +197,7 @@ namespace StayAwake.Forms
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(484, 361);
+            ClientSize = new Size(784, 461);
             Controls.Add(grpClose);
             Controls.Add(grpSleep);
             FormBorderStyle = FormBorderStyle.FixedSingle;
@@ -208,13 +218,14 @@ namespace StayAwake.Forms
         private System.Windows.Forms.Label lblSleepDuration;
         private System.Windows.Forms.Label lblRemainingTime;
         private System.Windows.Forms.GroupBox grpClose;
-        private System.Windows.Forms.CheckBox chkCloseWindow;
+        private System.Windows.Forms.Button btnCloseWindow;
         private System.Windows.Forms.ListBox lstWindows;
-        private System.Windows.Forms.Label lblWindow;
         private System.Windows.Forms.ComboBox cmbCloseDuration;
         private System.Windows.Forms.Label lblCloseDuration;
         private System.Windows.Forms.Button btnRefresh;
         private System.Windows.Forms.Timer timer1;
         private Label lblSleepRemainingTime;
+        private Label lblCloseRemainingTimeLabel;
+        private Label lblCloseRemainingTimeValue;
     }
 }

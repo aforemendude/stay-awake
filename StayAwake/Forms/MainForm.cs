@@ -7,6 +7,7 @@ namespace StayAwake.Forms
         private DateTime? _sleepUntil;
         private DateTime? _closeUntil;
         private bool _isStayAwakeActive;
+        private bool _isCloseWindowActive;
 
         public MainForm()
         {
@@ -98,19 +99,14 @@ namespace StayAwake.Forms
             PowerManager.KeepAwake(false);
         }
 
-        private void ChkCloseWindow_CheckedChanged(object? sender, EventArgs e)
+        private void BtnCloseWindow_Click(object? sender, EventArgs e)
         {
-            bool enable = chkCloseWindow.Checked;
-            lstWindows.Enabled = !enable;
-            cmbCloseDuration.Enabled = !enable;
-            btnRefresh.Enabled = !enable;
-
-            if (enable)
+            if (!_isCloseWindowActive)
             {
+                // Start
                 if (lstWindows.SelectedItem == null)
                 {
                     MessageBox.Show("Please select a window.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    chkCloseWindow.Checked = false;
                     return;
                 }
 
@@ -118,19 +114,41 @@ namespace StayAwake.Forms
                 {
                     var duration = item.Duration;
                     _closeUntil = DateTime.Now.Add(duration);
+
+                    _isCloseWindowActive = true;
+                    btnCloseWindow.Text = "Stop";
+
+                    // UI changes
+                    lstWindows.Enabled = false;
+                    cmbCloseDuration.Enabled = false;
+                    btnRefresh.Enabled = false;
                 }
             }
             else
             {
-                _closeUntil = null;
+                // Stop
+                StopCloseWindow();
             }
 
             UpdateTimerState();
         }
 
+        private void StopCloseWindow()
+        {
+            _isCloseWindowActive = false;
+            btnCloseWindow.Text = "Close Window";
+            _closeUntil = null;
+
+            // UI changes
+            lstWindows.Enabled = true;
+            cmbCloseDuration.Enabled = true;
+            btnRefresh.Enabled = true;
+            lblCloseRemainingTimeValue.Text = "Not Enabled";
+        }
+
         private void UpdateTimerState()
         {
-            if (_isStayAwakeActive || chkCloseWindow.Checked)
+            if (_isStayAwakeActive || _isCloseWindowActive)
             {
                 timer1.Start();
             }
@@ -162,22 +180,25 @@ namespace StayAwake.Forms
             }
 
             // Handle Close Window
-            if (chkCloseWindow.Checked && _closeUntil.HasValue)
+            if (_isCloseWindowActive && _closeUntil.HasValue)
             {
                 if (now >= _closeUntil.Value)
                 {
                     WindowInfo? target = lstWindows.SelectedItem as WindowInfo;
-                    chkCloseWindow.Checked = false;
+                    StopCloseWindow();
+                    UpdateTimerState();
 
                     if (target != null)
                     {
                         WindowCloser.CloseWindow(target.Handle);
                         MessageBox.Show($"Window '{target.Title}' closed.", "Window Closer", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        RefreshWindows();
                     }
                 }
                 else
                 {
-                    // Optionally update status with remaining time
+                    TimeSpan remaining = _closeUntil.Value - now;
+                    lblCloseRemainingTimeValue.Text = remaining.ToString(@"hh\:mm\:ss");
                 }
             }
         }
