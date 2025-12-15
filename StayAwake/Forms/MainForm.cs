@@ -94,7 +94,7 @@ namespace StayAwake.Forms
 
             // UI changes
             cmbSleepDuration.Enabled = true;
-            lblRemainingTime.Text = "Not Enabled";
+            lblSleepRemainingTimeValue.Text = "Not Enabled";
 
             PowerManager.KeepAwake(false);
         }
@@ -175,7 +175,7 @@ namespace StayAwake.Forms
                 }
                 else
                 {
-                    lblRemainingTime.Text = remaining.ToString(@"hh\:mm\:ss");
+                    lblSleepRemainingTimeValue.Text = remaining.ToString(@"hh\:mm\:ss");
                 }
             }
 

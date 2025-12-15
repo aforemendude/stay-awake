@@ -17,8 +17,8 @@ namespace StayAwake.Forms
         {
             components = new System.ComponentModel.Container();
             grpSleep = new GroupBox();
-            lblSleepRemainingTime = new Label();
-            lblRemainingTime = new Label();
+            lblSleepRemainingTimeLabel = new Label();
+            lblSleepRemainingTimeValue = new Label();
             lblSleepDuration = new Label();
             cmbSleepDuration = new ComboBox();
             btnStayAwake = new Button();
@@ -37,8 +37,8 @@ namespace StayAwake.Forms
             // 
             // grpSleep
             // 
-            grpSleep.Controls.Add(lblSleepRemainingTime);
-            grpSleep.Controls.Add(lblRemainingTime);
+            grpSleep.Controls.Add(lblSleepRemainingTimeLabel);
+            grpSleep.Controls.Add(lblSleepRemainingTimeValue);
             grpSleep.Controls.Add(lblSleepDuration);
             grpSleep.Controls.Add(cmbSleepDuration);
             grpSleep.Controls.Add(btnStayAwake);
@@ -52,23 +52,23 @@ namespace StayAwake.Forms
             grpSleep.TabStop = false;
             grpSleep.Text = "Stay Awake";
             // 
-            // lblSleepRemainingTime
+            // lblSleepRemainingTimeLabel
             // 
-            lblSleepRemainingTime.AutoSize = true;
-            lblSleepRemainingTime.Location = new Point(208, 63);
-            lblSleepRemainingTime.Name = "lblSleepRemainingTime";
-            lblSleepRemainingTime.Size = new Size(130, 21);
-            lblSleepRemainingTime.TabIndex = 4;
-            lblSleepRemainingTime.Text = "Remaining Time: ";
+            lblSleepRemainingTimeLabel.AutoSize = true;
+            lblSleepRemainingTimeLabel.Location = new Point(208, 63);
+            lblSleepRemainingTimeLabel.Name = "lblSleepRemainingTimeLabel";
+            lblSleepRemainingTimeLabel.Size = new Size(130, 21);
+            lblSleepRemainingTimeLabel.TabIndex = 4;
+            lblSleepRemainingTimeLabel.Text = "Remaining Time: ";
             // 
-            // lblRemainingTime
+            // lblSleepRemainingTimeValue
             // 
-            lblRemainingTime.AutoSize = true;
-            lblRemainingTime.Location = new Point(344, 63);
-            lblRemainingTime.Name = "lblRemainingTime";
-            lblRemainingTime.Size = new Size(95, 21);
-            lblRemainingTime.TabIndex = 2;
-            lblRemainingTime.Text = "Not Enabled";
+            lblSleepRemainingTimeValue.AutoSize = true;
+            lblSleepRemainingTimeValue.Location = new Point(344, 63);
+            lblSleepRemainingTimeValue.Name = "lblSleepRemainingTimeValue";
+            lblSleepRemainingTimeValue.Size = new Size(95, 21);
+            lblSleepRemainingTimeValue.TabIndex = 2;
+            lblSleepRemainingTimeValue.Text = "Not Enabled";
             // 
             // lblSleepDuration
             // 
@@ -162,7 +162,7 @@ namespace StayAwake.Forms
             // lblCloseRemainingTimeValue
             // 
             lblCloseRemainingTimeValue.AutoSize = true;
-            lblCloseRemainingTimeValue.Location = new Point(344, 63);
+            lblCloseRemainingTimeValue.Location = new Point(344, 68);
             lblCloseRemainingTimeValue.Name = "lblCloseRemainingTimeValue";
             lblCloseRemainingTimeValue.Size = new Size(95, 21);
             lblCloseRemainingTimeValue.TabIndex = 6;
@@ -171,7 +171,7 @@ namespace StayAwake.Forms
             // lblCloseRemainingTimeLabel
             // 
             lblCloseRemainingTimeLabel.AutoSize = true;
-            lblCloseRemainingTimeLabel.Location = new Point(208, 63);
+            lblCloseRemainingTimeLabel.Location = new Point(208, 68);
             lblCloseRemainingTimeLabel.Name = "lblCloseRemainingTimeLabel";
             lblCloseRemainingTimeLabel.Size = new Size(130, 21);
             lblCloseRemainingTimeLabel.TabIndex = 5;
@@ -216,7 +216,7 @@ namespace StayAwake.Forms
         private System.Windows.Forms.Button btnStayAwake;
         private System.Windows.Forms.ComboBox cmbSleepDuration;
         private System.Windows.Forms.Label lblSleepDuration;
-        private System.Windows.Forms.Label lblRemainingTime;
+        private System.Windows.Forms.Label lblSleepRemainingTimeValue;
         private System.Windows.Forms.GroupBox grpClose;
         private System.Windows.Forms.Button btnCloseWindow;
         private System.Windows.Forms.ListBox lstWindows;
@@ -224,7 +224,7 @@ namespace StayAwake.Forms
         private System.Windows.Forms.Label lblCloseDuration;
         private System.Windows.Forms.Button btnRefresh;
         private System.Windows.Forms.Timer timer1;
-        private Label lblSleepRemainingTime;
+        private Label lblSleepRemainingTimeLabel;
         private Label lblCloseRemainingTimeLabel;
         private Label lblCloseRemainingTimeValue;
     }
