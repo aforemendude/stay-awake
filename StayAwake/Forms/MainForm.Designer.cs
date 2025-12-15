@@ -22,16 +22,16 @@ namespace StayAwake.Forms
             lblSleepDuration = new Label();
             cmbSleepDuration = new ComboBox();
             btnStayAwake = new Button();
-            grpKill = new GroupBox();
+            grpClose = new GroupBox();
             btnRefresh = new Button();
-            lblKillDuration = new Label();
-            cmbKillDuration = new ComboBox();
-            lblProcess = new Label();
-            cmbProcesses = new ComboBox();
-            chkKillApp = new CheckBox();
+            lblCloseDuration = new Label();
+            cmbCloseDuration = new ComboBox();
+            lblWindow = new Label();
+            lstWindows = new ListBox();
+            chkCloseWindow = new CheckBox();
             timer1 = new System.Windows.Forms.Timer(components);
             grpSleep.SuspendLayout();
-            grpKill.SuspendLayout();
+            grpClose.SuspendLayout();
             SuspendLayout();
             // 
             // grpSleep
@@ -99,27 +99,27 @@ namespace StayAwake.Forms
             btnStayAwake.UseVisualStyleBackColor = true;
             btnStayAwake.Click += BtnStayAwake_Click;
             // 
-            // grpKill
+            // grpClose
             // 
-            grpKill.Controls.Add(btnRefresh);
-            grpKill.Controls.Add(lblKillDuration);
-            grpKill.Controls.Add(cmbKillDuration);
-            grpKill.Controls.Add(lblProcess);
-            grpKill.Controls.Add(cmbProcesses);
-            grpKill.Controls.Add(chkKillApp);
-            grpKill.Font = new Font("Segoe UI", 12F);
-            grpKill.Location = new Point(12, 115);
-            grpKill.Margin = new Padding(3, 2, 3, 2);
-            grpKill.Name = "grpKill";
-            grpKill.Padding = new Padding(3, 2, 3, 2);
-            grpKill.Size = new Size(460, 222);
-            grpKill.TabIndex = 1;
-            grpKill.TabStop = false;
-            grpKill.Text = "Process Terminator";
+            grpClose.Controls.Add(btnRefresh);
+            grpClose.Controls.Add(lblCloseDuration);
+            grpClose.Controls.Add(cmbCloseDuration);
+            grpClose.Controls.Add(lblWindow);
+            grpClose.Controls.Add(lstWindows);
+            grpClose.Controls.Add(chkCloseWindow);
+            grpClose.Font = new Font("Segoe UI", 12F);
+            grpClose.Location = new Point(12, 115);
+            grpClose.Margin = new Padding(3, 2, 3, 2);
+            grpClose.Name = "grpClose";
+            grpClose.Padding = new Padding(3, 2, 3, 2);
+            grpClose.Size = new Size(460, 222);
+            grpClose.TabIndex = 1;
+            grpClose.TabStop = false;
+            grpClose.Text = "Window Closer";
             // 
             // btnRefresh
             // 
-            btnRefresh.Location = new Point(315, 50);
+            btnRefresh.Location = new Point(402, 50);
             btnRefresh.Margin = new Padding(3, 2, 3, 2);
             btnRefresh.Name = "btnRefresh";
             btnRefresh.Size = new Size(52, 23);
@@ -128,55 +128,56 @@ namespace StayAwake.Forms
             btnRefresh.UseVisualStyleBackColor = true;
             btnRefresh.Click += BtnRefresh_Click;
             // 
-            // lblKillDuration
+            // lblCloseDuration
             // 
-            lblKillDuration.AutoSize = true;
-            lblKillDuration.Location = new Point(18, 79);
-            lblKillDuration.Name = "lblKillDuration";
-            lblKillDuration.Size = new Size(47, 21);
-            lblKillDuration.TabIndex = 3;
-            lblKillDuration.Text = "After:";
+            lblCloseDuration.AutoSize = true;
+            lblCloseDuration.Location = new Point(18, 170);
+            lblCloseDuration.Name = "lblCloseDuration";
+            lblCloseDuration.Size = new Size(47, 21);
+            lblCloseDuration.TabIndex = 3;
+            lblCloseDuration.Text = "After:";
             // 
-            // cmbKillDuration
+            // cmbCloseDuration
             // 
-            cmbKillDuration.DropDownStyle = ComboBoxStyle.DropDownList;
-            cmbKillDuration.FormattingEnabled = true;
-            cmbKillDuration.Location = new Point(79, 76);
-            cmbKillDuration.Margin = new Padding(3, 2, 3, 2);
-            cmbKillDuration.Name = "cmbKillDuration";
-            cmbKillDuration.Size = new Size(158, 29);
-            cmbKillDuration.TabIndex = 3;
+            cmbCloseDuration.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbCloseDuration.FormattingEnabled = true;
+            cmbCloseDuration.Location = new Point(79, 167);
+            cmbCloseDuration.Margin = new Padding(3, 2, 3, 2);
+            cmbCloseDuration.Name = "cmbCloseDuration";
+            cmbCloseDuration.Size = new Size(158, 29);
+            cmbCloseDuration.TabIndex = 3;
             // 
-            // lblProcess
+            // lblWindow
             // 
-            lblProcess.AutoSize = true;
-            lblProcess.Location = new Point(18, 52);
-            lblProcess.Name = "lblProcess";
-            lblProcess.Size = new Size(55, 21);
-            lblProcess.TabIndex = 4;
-            lblProcess.Text = "Target:";
+            lblWindow.AutoSize = true;
+            lblWindow.Location = new Point(18, 52);
+            lblWindow.Name = "lblWindow";
+            lblWindow.Size = new Size(71, 21);
+            lblWindow.TabIndex = 4;
+            lblWindow.Text = "Target:";
             // 
-            // cmbProcesses
+            // lstWindows
             // 
-            cmbProcesses.DropDownStyle = ComboBoxStyle.DropDownList;
-            cmbProcesses.FormattingEnabled = true;
-            cmbProcesses.Location = new Point(79, 50);
-            cmbProcesses.Margin = new Padding(3, 2, 3, 2);
-            cmbProcesses.Name = "cmbProcesses";
-            cmbProcesses.Size = new Size(228, 29);
-            cmbProcesses.TabIndex = 1;
+            lstWindows.FormattingEnabled = true;
+            lstWindows.ItemHeight = 21;
+            lstWindows.Location = new Point(79, 50);
+            lstWindows.Margin = new Padding(3, 2, 3, 2);
+            lstWindows.Name = "lstWindows";
+            lstWindows.ScrollAlwaysVisible = true;
+            lstWindows.Size = new Size(317, 109);
+            lstWindows.TabIndex = 1;
             // 
-            // chkKillApp
+            // chkCloseWindow
             // 
-            chkKillApp.AutoSize = true;
-            chkKillApp.Location = new Point(18, 26);
-            chkKillApp.Margin = new Padding(3, 2, 3, 2);
-            chkKillApp.Name = "chkKillApp";
-            chkKillApp.Size = new Size(107, 25);
-            chkKillApp.TabIndex = 0;
-            chkKillApp.Text = "Kill Process";
-            chkKillApp.UseVisualStyleBackColor = true;
-            chkKillApp.CheckedChanged += ChkKillApp_CheckedChanged;
+            chkCloseWindow.AutoSize = true;
+            chkCloseWindow.Location = new Point(18, 26);
+            chkCloseWindow.Margin = new Padding(3, 2, 3, 2);
+            chkCloseWindow.Name = "chkCloseWindow";
+            chkCloseWindow.Size = new Size(128, 25);
+            chkCloseWindow.TabIndex = 0;
+            chkCloseWindow.Text = "Close Window";
+            chkCloseWindow.UseVisualStyleBackColor = true;
+            chkCloseWindow.CheckedChanged += ChkCloseWindow_CheckedChanged;
             // 
             // timer1
             // 
@@ -188,7 +189,7 @@ namespace StayAwake.Forms
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(484, 361);
-            Controls.Add(grpKill);
+            Controls.Add(grpClose);
             Controls.Add(grpSleep);
             FormBorderStyle = FormBorderStyle.FixedSingle;
             Margin = new Padding(3, 2, 3, 2);
@@ -197,8 +198,8 @@ namespace StayAwake.Forms
             Text = "Stay Awake";
             grpSleep.ResumeLayout(false);
             grpSleep.PerformLayout();
-            grpKill.ResumeLayout(false);
-            grpKill.PerformLayout();
+            grpClose.ResumeLayout(false);
+            grpClose.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
 
@@ -209,12 +210,12 @@ namespace StayAwake.Forms
         private System.Windows.Forms.ComboBox cmbSleepDuration;
         private System.Windows.Forms.Label lblSleepDuration;
         private System.Windows.Forms.Label lblRemainingTime;
-        private System.Windows.Forms.GroupBox grpKill;
-        private System.Windows.Forms.CheckBox chkKillApp;
-        private System.Windows.Forms.ComboBox cmbProcesses;
-        private System.Windows.Forms.Label lblProcess;
-        private System.Windows.Forms.ComboBox cmbKillDuration;
-        private System.Windows.Forms.Label lblKillDuration;
+        private System.Windows.Forms.GroupBox grpClose;
+        private System.Windows.Forms.CheckBox chkCloseWindow;
+        private System.Windows.Forms.ListBox lstWindows;
+        private System.Windows.Forms.Label lblWindow;
+        private System.Windows.Forms.ComboBox cmbCloseDuration;
+        private System.Windows.Forms.Label lblCloseDuration;
         private System.Windows.Forms.Button btnRefresh;
         private System.Windows.Forms.Timer timer1;
         private Label lblSleepRemainingTime;

@@ -5,10 +5,9 @@ namespace StayAwake.Forms
     public partial class MainForm : Form
     {
         private readonly PowerManager _powerManager;
-        private readonly AppTerminator _appTerminator;
 
         private DateTime? _sleepUntil;
-        private DateTime? _killUntil;
+        private DateTime? _closeUntil;
         private bool _isStayAwakeActive;
 
         public MainForm()
@@ -16,10 +15,9 @@ namespace StayAwake.Forms
             InitializeComponent();
 
             _powerManager = new PowerManager();
-            _appTerminator = new AppTerminator();
 
             LoadDurations();
-            RefreshProcesses();
+            RefreshWindows();
         }
 
         private void LoadDurations()
@@ -42,33 +40,24 @@ namespace StayAwake.Forms
             if (cmbSleepDuration.Items.Count > 0)
                 cmbSleepDuration.SelectedIndex = 0;
 
-            cmbKillDuration.Items.AddRange([
+            cmbCloseDuration.Items.AddRange([
                 new DurationItem(TimeSpan.FromMinutes(1).ToString(@"hh\:mm\:ss"), TimeSpan.FromMinutes(1)),
                 new DurationItem(TimeSpan.FromMinutes(30).ToString(@"hh\:mm\:ss"), TimeSpan.FromMinutes(30)),
                 new DurationItem(TimeSpan.FromHours(1).ToString(@"hh\:mm\:ss"), TimeSpan.FromHours(1)),
                 new DurationItem(TimeSpan.FromHours(2).ToString(@"hh\:mm\:ss"), TimeSpan.FromHours(2))
             ]);
-            cmbKillDuration.SelectedIndex = 0;
+            cmbCloseDuration.SelectedIndex = 0;
         }
 
-        private void RefreshProcesses()
+        private void RefreshWindows()
         {
-            cmbProcesses.Items.Clear();
-            cmbProcesses.Items.AddRange(AppTerminator.GetRunningProcesses());
-
-            if (cmbProcesses.SelectedItem is string current && cmbProcesses.Items.Contains(current))
-            {
-                cmbProcesses.SelectedItem = current;
-            }
-            else if (cmbProcesses.Items.Count > 0)
-            {
-                cmbProcesses.SelectedIndex = 0;
-            }
+            lstWindows.Items.Clear();
+            lstWindows.Items.AddRange([.. WindowCloser.GetOpenWindows()]);
         }
 
         private void BtnRefresh_Click(object sender, EventArgs e)
         {
-            RefreshProcesses();
+            RefreshWindows();
         }
 
         private void BtnStayAwake_Click(object? sender, EventArgs e)
@@ -113,33 +102,31 @@ namespace StayAwake.Forms
             _powerManager.KeepAwake(false);
         }
 
-        private void ChkKillApp_CheckedChanged(object? sender, EventArgs e)
+        private void ChkCloseWindow_CheckedChanged(object? sender, EventArgs e)
         {
-            bool enable = chkKillApp.Checked;
-            cmbProcesses.Enabled = !enable;
-            cmbKillDuration.Enabled = !enable;
+            bool enable = chkCloseWindow.Checked;
+            lstWindows.Enabled = !enable;
+            cmbCloseDuration.Enabled = !enable;
             btnRefresh.Enabled = !enable;
 
             if (enable)
             {
-                if (cmbProcesses.SelectedItem == null)
+                if (lstWindows.SelectedItem == null)
                 {
-                    MessageBox.Show("Please select a process.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    chkKillApp.Checked = false;
+                    MessageBox.Show("Please select a window.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    chkCloseWindow.Checked = false;
                     return;
                 }
 
-                if (cmbKillDuration.SelectedItem is DurationItem item)
+                if (cmbCloseDuration.SelectedItem is DurationItem item)
                 {
                     var duration = item.Duration;
-                    _killUntil = DateTime.Now.Add(duration);
-
+                    _closeUntil = DateTime.Now.Add(duration);
                 }
             }
             else
             {
-                _killUntil = null;
-
+                _closeUntil = null;
             }
 
             UpdateTimerState();
@@ -147,7 +134,7 @@ namespace StayAwake.Forms
 
         private void UpdateTimerState()
         {
-            if (_isStayAwakeActive || chkKillApp.Checked)
+            if (_isStayAwakeActive || chkCloseWindow.Checked)
             {
                 timer1.Start();
             }
@@ -178,20 +165,18 @@ namespace StayAwake.Forms
                 }
             }
 
-            // Handle Kill
-            if (chkKillApp.Checked && _killUntil.HasValue)
+            // Handle Close Window
+            if (chkCloseWindow.Checked && _closeUntil.HasValue)
             {
-                if (now >= _killUntil.Value)
+                if (now >= _closeUntil.Value)
                 {
-                    string? target = cmbProcesses.SelectedItem as string;
-                    chkKillApp.Checked = false;
+                    WindowInfo? target = lstWindows.SelectedItem as WindowInfo;
+                    chkCloseWindow.Checked = false;
 
-                    if (!string.IsNullOrEmpty(target))
+                    if (target != null)
                     {
-                        bool killed = AppTerminator.KillProcess(target);
-                        string msg = killed ? $"Process {target} terminated." : $"Process {target} not found or could not be terminated.";
-
-                        MessageBox.Show(msg, "Terminator", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        WindowCloser.CloseWindow(target.Handle);
+                        MessageBox.Show($"Window '{target.Title}' closed.", "Window Closer", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                 }
                 else
