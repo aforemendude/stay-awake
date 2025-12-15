@@ -4,8 +4,6 @@ namespace StayAwake.Forms
 {
     public partial class MainForm : Form
     {
-        private readonly PowerManager _powerManager;
-
         private DateTime? _sleepUntil;
         private DateTime? _closeUntil;
         private bool _isStayAwakeActive;
@@ -13,8 +11,6 @@ namespace StayAwake.Forms
         public MainForm()
         {
             InitializeComponent();
-
-            _powerManager = new PowerManager();
 
             LoadDurations();
             RefreshWindows();
@@ -76,7 +72,7 @@ namespace StayAwake.Forms
                     // UI changes
                     cmbSleepDuration.Enabled = false;
 
-                    _powerManager.KeepAwake(true);
+                    PowerManager.KeepAwake(true);
                 }
             }
             else
@@ -99,7 +95,7 @@ namespace StayAwake.Forms
             cmbSleepDuration.Enabled = true;
             lblRemainingTime.Text = "Not Enabled";
 
-            _powerManager.KeepAwake(false);
+            PowerManager.KeepAwake(false);
         }
 
         private void ChkCloseWindow_CheckedChanged(object? sender, EventArgs e)

@@ -54,7 +54,7 @@ namespace StayAwake.Forms
             // lblSleepRemainingTime
             // 
             lblSleepRemainingTime.AutoSize = true;
-            lblSleepRemainingTime.Location = new Point(148, 59);
+            lblSleepRemainingTime.Location = new Point(148, 63);
             lblSleepRemainingTime.Name = "lblSleepRemainingTime";
             lblSleepRemainingTime.Size = new Size(130, 21);
             lblSleepRemainingTime.TabIndex = 4;
@@ -63,9 +63,9 @@ namespace StayAwake.Forms
             // lblRemainingTime
             // 
             lblRemainingTime.AutoSize = true;
-            lblRemainingTime.Location = new Point(284, 59);
+            lblRemainingTime.Location = new Point(284, 63);
             lblRemainingTime.Name = "lblRemainingTime";
-            lblRemainingTime.Size = new Size(70, 21);
+            lblRemainingTime.Size = new Size(95, 21);
             lblRemainingTime.TabIndex = 2;
             lblRemainingTime.Text = "Not Enabled";
             // 
@@ -112,7 +112,7 @@ namespace StayAwake.Forms
             grpClose.Margin = new Padding(3, 2, 3, 2);
             grpClose.Name = "grpClose";
             grpClose.Padding = new Padding(3, 2, 3, 2);
-            grpClose.Size = new Size(460, 222);
+            grpClose.Size = new Size(460, 235);
             grpClose.TabIndex = 1;
             grpClose.TabStop = false;
             grpClose.Text = "Window Closer";
@@ -152,14 +152,13 @@ namespace StayAwake.Forms
             lblWindow.AutoSize = true;
             lblWindow.Location = new Point(18, 52);
             lblWindow.Name = "lblWindow";
-            lblWindow.Size = new Size(71, 21);
+            lblWindow.Size = new Size(55, 21);
             lblWindow.TabIndex = 4;
             lblWindow.Text = "Target:";
             // 
             // lstWindows
             // 
             lstWindows.FormattingEnabled = true;
-            lstWindows.ItemHeight = 21;
             lstWindows.Location = new Point(79, 50);
             lstWindows.Margin = new Padding(3, 2, 3, 2);
             lstWindows.Name = "lstWindows";
@@ -173,7 +172,7 @@ namespace StayAwake.Forms
             chkCloseWindow.Location = new Point(18, 26);
             chkCloseWindow.Margin = new Padding(3, 2, 3, 2);
             chkCloseWindow.Name = "chkCloseWindow";
-            chkCloseWindow.Size = new Size(128, 25);
+            chkCloseWindow.Size = new Size(129, 25);
             chkCloseWindow.TabIndex = 0;
             chkCloseWindow.Text = "Close Window";
             chkCloseWindow.UseVisualStyleBackColor = true;
@@ -201,8 +200,6 @@ namespace StayAwake.Forms
             grpClose.ResumeLayout(false);
             grpClose.PerformLayout();
             ResumeLayout(false);
-            PerformLayout();
-
         }
 
         private System.Windows.Forms.GroupBox grpSleep;
