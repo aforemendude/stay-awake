@@ -222,7 +222,6 @@ namespace StayAwake.Forms
                     if (target != null)
                     {
                         WindowCloser.CloseWindow(target.Handle);
-                        MessageBox.Show($"Window '{target.Title}' closed.", "Window Closer", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         RefreshWindows();
                     }
                 }
