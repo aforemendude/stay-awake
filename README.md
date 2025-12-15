@@ -22,9 +22,15 @@ A lightweight utility for Windows that prevents the system from sleeping and pro
 
 ## Requirements
 
-- **OS**: Windows
+- **OS**: Windows 11
 - **Runtime**: .NET 10.0 Desktop Runtime (Windows)
 - **Framework**: .NET 10.0-windows
+
+## Releases
+
+Download release builds from the [Releases](https://github.com/aforemendude/stay-awake/releases) page.
+
+Note: Due to file size, a self-contained release build will not be provided. You need to install the .NET 10.0 runtime separately.
 
 ## Build Instructions
 
@@ -44,13 +50,6 @@ To build the application for production (optimized):
 dotnet build -c Release
 ```
 The output will be in `StayAwake/bin/Release/net10.0-windows/`.
-
-### Publish (Single File)
-To publish as a self-contained single-file executable (no external .NET runtime required):
-```bash
-dotnet publish -c Release -r win-x64 --self-contained -p:PublishSingleFile=true
-```
-The executable will be located in `StayAwake/bin/Release/net10.0-windows/win-x64/publish/`.
 
 ## AI Disclosure
 
