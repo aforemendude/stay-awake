@@ -19,9 +19,9 @@ namespace StayAwake.Forms
 
         private void LoadDurations()
         {
+            // Stay Awake Durations: 30 min to 8 hours in 15 min increments
             cmbSleepDuration.Items.Clear();
 
-            // 30 min to 8 hours in 15 min increments
             var durations = new List<DurationItem>();
             TimeSpan current = TimeSpan.FromMinutes(30);
             TimeSpan end = TimeSpan.FromHours(8);
@@ -34,16 +34,31 @@ namespace StayAwake.Forms
             }
 
             cmbSleepDuration.Items.AddRange([.. durations]);
-            if (cmbSleepDuration.Items.Count > 0)
-                cmbSleepDuration.SelectedIndex = 0;
 
-            cmbCloseDuration.Items.AddRange([
-                new DurationItem(TimeSpan.FromMinutes(1).ToString(@"hh\:mm\:ss"), TimeSpan.FromMinutes(1)),
-                new DurationItem(TimeSpan.FromMinutes(30).ToString(@"hh\:mm\:ss"), TimeSpan.FromMinutes(30)),
-                new DurationItem(TimeSpan.FromHours(1).ToString(@"hh\:mm\:ss"), TimeSpan.FromHours(1)),
-                new DurationItem(TimeSpan.FromHours(2).ToString(@"hh\:mm\:ss"), TimeSpan.FromHours(2))
-            ]);
-            cmbCloseDuration.SelectedIndex = 0;
+            // Default 2 hours. 
+            // 30min(0), 45min(1), 1h(2), 1h15(3), 1h30(4), 1h45(5), 2h(6).
+            // Hard coded index without checking as requested.
+            cmbSleepDuration.SelectedIndex = 6;
+
+            // Close Window Durations: 15 min to 8h in 15 min increments
+            cmbCloseDuration.Items.Clear();
+
+            var closeDurations = new List<DurationItem>();
+            TimeSpan closeCurrent = TimeSpan.FromMinutes(15);
+            TimeSpan closeEnd = TimeSpan.FromHours(8);
+
+            while (closeCurrent <= closeEnd)
+            {
+                string label = closeCurrent.ToString(@"hh\:mm\:ss");
+                closeDurations.Add(new DurationItem(label, closeCurrent));
+                closeCurrent = closeCurrent.Add(TimeSpan.FromMinutes(15));
+            }
+
+            cmbCloseDuration.Items.AddRange([.. closeDurations]);
+
+            // Default 1h.
+            // 15min(0), 30min(1), 45min(2), 1h(3).
+            cmbCloseDuration.SelectedIndex = 3;
         }
 
         private void RefreshWindows()
