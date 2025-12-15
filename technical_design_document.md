@@ -17,7 +17,8 @@ A lightweight Windows desktop application effectively managing power states and 
 - **Flag**: `ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED`
 - **Behavior**:
   - The app will call this API to reset the system idle timer.
-  - When the timer expires, the app will clear the flags (`ES_CONTINUOUS`).
+  - When the timer expires or the user stops it, the app will clear the flags (`ES_CONTINUOUS`).
+- **Durations**: 30 minutes to 8 hours (15-minute increments). Default: 2 hours.
 
 ### 3.2. Window Closer
 **Mechanism**: Win32 API `SendMessage` with `WM_CLOSE`.
@@ -26,22 +27,32 @@ A lightweight Windows desktop application effectively managing power states and 
   - A timer counts down.
   - On zero, the app finds the target window handle.
   - Sends `WM_CLOSE` message to gracefully close the window.
+  - Updates the GroupBox text with closure details (Handle, Time, Process Name).
+- **Durations**: 15 minutes to 8 hours (15-minute increments). Default: 1 hour.
 
 ### 3.3. Architecture Diagram
 ```mermaid
 graph TD
-    UI[MainForm UI] -->|Configures| Manager[PowerManager]
-    UI -->|Configures| Closer[WindowCloser]
+    UI[MainForm UI] -->|Configures| Manager[PowerManager (Static)]
+    UI -->|Configures| Closer[WindowCloser (Static)]
     Manager -->|PInvoke| Win32[kernel32.dll / SetThreadExecutionState]
     Closer -->|Monitors| Timer[System.Windows.Forms.Timer]
     Timer -->|Triggers| WinUser[user32.dll / SendMessage]
 ```
 
 ## 4. UI Design
-A simple single-window interface.
-- **Top Section**: "Stay Awake" toggle & Duration (Dropdown: 30m, 1h, 2h, Indefinite).
-- **Bottom Section**: "Close Window" toggle, Target Window (List/ListView with scroll), Duration.
-- **Status Bar**: showing current active rules.
+A simple single-window interface (`FixedSingle`, Non-resizable).
+- **Top Section (Stay Awake)**:
+  - "Stay Awake" / "Stop" Button.
+  - Duration Dropdown (Disabled when active).
+  - Remaining Time Label.
+- **Bottom Section (Window Closer)**:
+  - List of open windows (ListBox).
+  - "Refresh" Button.
+  - Process Name and Window Handle text fields (Read-only display).
+  - "Close Window" / "Stop" Button.
+  - Duration Dropdown (Disabled when active).
+  - Remaining Time Label.
 
 ## 5. Win32 API Details
 ```csharp
@@ -65,7 +76,7 @@ private const UInt32 WM_CLOSE = 0x0010;
 
 ## 6. Resource Efficiency Plan
 - **Event-Driven**: Use `System.Windows.Forms.Timer` (runs on UI thread message loop) instead of `Thread.Sleep` loops to minimize CPU context switching.
-- **Stateless**: Logic will not cache process handles, it will lookup only when needed to avoid stale handles.
+- **Stateless**: Logic will not cache process handles long-term; it resolves them as needed.
 
 ## 7. Security considerations
 - Needs standard user privileges.
