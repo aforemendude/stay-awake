@@ -51,3 +51,7 @@ To publish as a self-contained single-file executable (no external .NET runtime 
 dotnet publish -c Release -r win-x64 --self-contained -p:PublishSingleFile=true
 ```
 The executable will be located in `StayAwake/bin/Release/net10.0-windows/win-x64/publish/`.
+
+## AI Disclosure
+
+This project's code and documentation were generated with the assistance of an AI coding agent.
