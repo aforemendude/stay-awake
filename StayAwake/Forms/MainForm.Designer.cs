@@ -152,7 +152,7 @@ namespace StayAwake.Forms
             // lstWindows
             // 
             lstWindows.FormattingEnabled = true;
-            lstWindows.Location = new Point(6, 117);
+            lstWindows.Location = new Point(6, 113);
             lstWindows.Margin = new Padding(3, 2, 3, 2);
             lstWindows.Name = "lstWindows";
             lstWindows.ScrollAlwaysVisible = true;
