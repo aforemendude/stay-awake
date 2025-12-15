@@ -64,6 +64,8 @@ namespace StayAwake.Forms
         private void RefreshWindows()
         {
             lstWindows.Items.Clear();
+            txtProcessName.Text = string.Empty;
+            txtWindowHandle.Text = string.Empty;
             lstWindows.Items.AddRange([.. WindowCloser.GetOpenWindows()]);
         }
 
