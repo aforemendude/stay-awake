@@ -39,9 +39,9 @@ namespace StayAwake.Forms
             contextMenuStrip = new ContextMenuStrip(components);
             showToolStripMenuItem = new ToolStripMenuItem();
             quitToolStripMenuItem = new ToolStripMenuItem();
-            contextMenuStrip.SuspendLayout();
             grpSleep.SuspendLayout();
             grpClose.SuspendLayout();
+            contextMenuStrip.SuspendLayout();
             SuspendLayout();
             // 
             // grpSleep
@@ -241,28 +241,11 @@ namespace StayAwake.Forms
             timer1.Interval = 1000;
             timer1.Tick += Timer1_Tick;
             // 
-            // MainForm
-            // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
-            AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(784, 461);
-            Controls.Add(grpClose);
-            Controls.Add(grpSleep);
-            FormBorderStyle = FormBorderStyle.FixedSingle;
-            Margin = new Padding(3, 2, 3, 2);
-            MaximizeBox = false;
-            FormClosing += MainForm_FormClosing;
-            Name = "MainForm";
-            Text = "Stay Awake";
-            grpSleep.ResumeLayout(false);
-            grpSleep.PerformLayout();
-            grpClose.ResumeLayout(false);
-            grpClose.PerformLayout();
-            // 
             // notifyIcon
             // 
-            notifyIcon.Text = "Stay Awake";
             notifyIcon.ContextMenuStrip = contextMenuStrip;
+            notifyIcon.Text = "Stay Awake";
+            notifyIcon.Visible = true;
             notifyIcon.MouseClick += NotifyIcon_MouseClick;
             // 
             // contextMenuStrip
@@ -284,6 +267,24 @@ namespace StayAwake.Forms
             quitToolStripMenuItem.Size = new Size(103, 22);
             quitToolStripMenuItem.Text = "Quit";
             quitToolStripMenuItem.Click += QuitToolStripMenuItem_Click;
+            // 
+            // MainForm
+            // 
+            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(784, 461);
+            Controls.Add(grpClose);
+            Controls.Add(grpSleep);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            Margin = new Padding(3, 2, 3, 2);
+            MaximizeBox = false;
+            Name = "MainForm";
+            Text = "Stay Awake";
+            FormClosing += MainForm_FormClosing;
+            grpSleep.ResumeLayout(false);
+            grpSleep.PerformLayout();
+            grpClose.ResumeLayout(false);
+            grpClose.PerformLayout();
             contextMenuStrip.ResumeLayout(false);
             ResumeLayout(false);
         }
