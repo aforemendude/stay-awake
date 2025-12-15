@@ -1,5 +1,7 @@
 # Stay Awake
 
+![Stay Awake Icon](StayAwake/icon.png)
+
 A lightweight utility for Windows that prevents the system from sleeping and provides a tool to automatically close specific windows after a scheduled duration.
 
 ## Features
