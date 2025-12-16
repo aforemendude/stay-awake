@@ -293,6 +293,10 @@ namespace StayAwake.Forms
 
         private void ShowForm()
         {
+            if (!_isCloseWindowActive)
+            {
+                RefreshWindows();
+            }
             Show();
             WindowState = FormWindowState.Normal;
             Activate();
