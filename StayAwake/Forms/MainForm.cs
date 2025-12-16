@@ -8,6 +8,7 @@ namespace StayAwake.Forms
         private DateTime? _closeUntil;
         private bool _isStayAwakeActive;
         private bool _isCloseWindowActive;
+        private bool _isFirstShowProcessed = false;
         private bool _isExplicitClose = false;
 
         public MainForm(EventWaitHandle? showEvent = null)
@@ -91,6 +92,15 @@ namespace StayAwake.Forms
             txtProcessName.Text = string.Empty;
             txtWindowHandle.Text = string.Empty;
             lstWindows.Items.AddRange([.. WindowCloser.GetOpenWindows()]);
+        }
+
+        private void MainForm_Shown(object sender, EventArgs e)
+        {
+            if (!_isFirstShowProcessed)
+            {
+                _isFirstShowProcessed = true;
+                Hide();
+            }
         }
 
         private void LstWindows_SelectedIndexChanged(object? sender, EventArgs e)

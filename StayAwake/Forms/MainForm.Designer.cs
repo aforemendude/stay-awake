@@ -283,6 +283,7 @@ namespace StayAwake.Forms
             Name = "MainForm";
             Text = "Stay Awake";
             FormClosing += MainForm_FormClosing;
+            Shown += MainForm_Shown;
             grpSleep.ResumeLayout(false);
             grpSleep.PerformLayout();
             grpClose.ResumeLayout(false);
