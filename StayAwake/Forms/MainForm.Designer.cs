@@ -18,11 +18,12 @@ namespace StayAwake.Forms
             components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             grpSleep = new GroupBox();
+            btnStayAwakeRequireSystem = new Button();
             lblSleepRemainingTimeLabel = new Label();
             lblSleepRemainingTimeValue = new Label();
             lblSleepDuration = new Label();
             cmbSleepDuration = new ComboBox();
-            btnStayAwake = new Button();
+            btnStayAwakeRequireDisplay = new Button();
             grpClose = new GroupBox();
             btnRefresh = new Button();
             lblCloseDuration = new Label();
@@ -47,11 +48,12 @@ namespace StayAwake.Forms
             // 
             // grpSleep
             // 
+            grpSleep.Controls.Add(btnStayAwakeRequireSystem);
             grpSleep.Controls.Add(lblSleepRemainingTimeLabel);
             grpSleep.Controls.Add(lblSleepRemainingTimeValue);
             grpSleep.Controls.Add(lblSleepDuration);
             grpSleep.Controls.Add(cmbSleepDuration);
-            grpSleep.Controls.Add(btnStayAwake);
+            grpSleep.Controls.Add(btnStayAwakeRequireDisplay);
             grpSleep.Font = new Font("Segoe UI", 12F);
             grpSleep.Location = new Point(12, 11);
             grpSleep.Margin = new Padding(3, 2, 3, 2);
@@ -61,6 +63,17 @@ namespace StayAwake.Forms
             grpSleep.TabIndex = 0;
             grpSleep.TabStop = false;
             grpSleep.Text = "Stay Awake";
+            // 
+            // btnStayAwakeRequireSystem
+            // 
+            btnStayAwakeRequireSystem.Location = new Point(6, 63);
+            btnStayAwakeRequireSystem.Margin = new Padding(3, 2, 3, 2);
+            btnStayAwakeRequireSystem.Name = "btnStayAwakeRequireSystem";
+            btnStayAwakeRequireSystem.Size = new Size(196, 30);
+            btnStayAwakeRequireSystem.TabIndex = 5;
+            btnStayAwakeRequireSystem.Text = "Require System";
+            btnStayAwakeRequireSystem.UseVisualStyleBackColor = true;
+            btnStayAwakeRequireSystem.Click += BtnStayAwakeRequireSystem_Click;
             // 
             // lblSleepRemainingTimeLabel
             // 
@@ -99,16 +112,16 @@ namespace StayAwake.Forms
             cmbSleepDuration.Size = new Size(151, 29);
             cmbSleepDuration.TabIndex = 1;
             // 
-            // btnStayAwake
+            // btnStayAwakeRequireDisplay
             // 
-            btnStayAwake.Location = new Point(6, 26);
-            btnStayAwake.Margin = new Padding(3, 2, 3, 2);
-            btnStayAwake.Name = "btnStayAwake";
-            btnStayAwake.Size = new Size(196, 30);
-            btnStayAwake.TabIndex = 0;
-            btnStayAwake.Text = "Stay Awake";
-            btnStayAwake.UseVisualStyleBackColor = true;
-            btnStayAwake.Click += BtnStayAwake_Click;
+            btnStayAwakeRequireDisplay.Location = new Point(6, 26);
+            btnStayAwakeRequireDisplay.Margin = new Padding(3, 2, 3, 2);
+            btnStayAwakeRequireDisplay.Name = "btnStayAwakeRequireDisplay";
+            btnStayAwakeRequireDisplay.Size = new Size(196, 30);
+            btnStayAwakeRequireDisplay.TabIndex = 0;
+            btnStayAwakeRequireDisplay.Text = "Require Display";
+            btnStayAwakeRequireDisplay.UseVisualStyleBackColor = true;
+            btnStayAwakeRequireDisplay.Click += BtnStayAwakeRequireDisplay_Click;
             // 
             // grpClose
             // 
@@ -293,7 +306,7 @@ namespace StayAwake.Forms
         }
 
         private System.Windows.Forms.GroupBox grpSleep;
-        private System.Windows.Forms.Button btnStayAwake;
+        private System.Windows.Forms.Button btnStayAwakeRequireDisplay;
         private System.Windows.Forms.ComboBox cmbSleepDuration;
         private System.Windows.Forms.Label lblSleepDuration;
         private System.Windows.Forms.Label lblSleepRemainingTimeValue;
@@ -315,5 +328,6 @@ namespace StayAwake.Forms
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip;
         private System.Windows.Forms.ToolStripMenuItem showToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem quitToolStripMenuItem;
+        private Button btnStayAwakeRequireSystem;
     }
 }

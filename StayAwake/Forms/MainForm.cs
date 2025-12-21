@@ -122,7 +122,17 @@ namespace StayAwake.Forms
             RefreshWindows();
         }
 
-        private void BtnStayAwake_Click(object? sender, EventArgs e)
+        private void BtnStayAwakeRequireDisplay_Click(object? sender, EventArgs e)
+        {
+            StartStayAwake(true);
+        }
+
+        private void BtnStayAwakeRequireSystem_Click(object? sender, EventArgs e)
+        {
+            StartStayAwake(false);
+        }
+
+        private void StartStayAwake(bool requireDisplay)
         {
             if (!_isStayAwakeActive)
             {
@@ -131,14 +141,22 @@ namespace StayAwake.Forms
                 {
                     var duration = item.Duration;
                     _sleepUntil = DateTime.Now.Add(duration);
-
                     _isStayAwakeActive = true;
-                    btnStayAwake.Text = "Stop";
 
                     // UI changes
+                    if (requireDisplay)
+                    {
+                        btnStayAwakeRequireDisplay.Text = "Stop Require Display";
+                        btnStayAwakeRequireSystem.Enabled = false;
+                    }
+                    else
+                    {
+                        btnStayAwakeRequireDisplay.Enabled = false;
+                        btnStayAwakeRequireSystem.Text = "Stop Require System";
+                    }
                     cmbSleepDuration.Enabled = false;
 
-                    PowerManager.KeepAwake(true);
+                    PowerManager.KeepAwake(true, requireDisplay);
                 }
             }
             else
@@ -153,12 +171,17 @@ namespace StayAwake.Forms
         private void StopStayAwake()
         {
             _isStayAwakeActive = false;
-            btnStayAwake.Text = "Stay Awake";
-
             _sleepUntil = null;
 
             // UI changes
+            btnStayAwakeRequireDisplay.Text = "Require Display";
+            btnStayAwakeRequireDisplay.Enabled = true;
+
+            btnStayAwakeRequireSystem.Text = "Require System";
+            btnStayAwakeRequireSystem.Enabled = true;
+
             cmbSleepDuration.Enabled = true;
+
             lblSleepRemainingTimeValue.Text = "Not Enabled";
 
             PowerManager.KeepAwake(false);
