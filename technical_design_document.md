@@ -14,7 +14,9 @@ A lightweight Windows desktop application effectively managing power states and 
 
 ### 3.1. Sleep Prevention
 **Mechanism**: Win32 API `SetThreadExecutionState`.
-- **Flag**: `ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED`
+- **Modes**:
+  - **Require Display**: Keeps system running and display on (`ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED`).
+  - **Require System**: Keeps system running but allows display to sleep (`ES_CONTINUOUS | ES_SYSTEM_REQUIRED`).
 - **Behavior**:
   - The app will call this API to reset the system idle timer.
   - When the timer expires or the user stops it, the app will clear the flags (`ES_CONTINUOUS`).
@@ -53,7 +55,8 @@ graph TD
 ## 4. UI Design
 A simple single-window interface (`FixedSingle`, Non-resizable).
 - **Top Section (Stay Awake)**:
-  - "Stay Awake" / "Stop" Button.
+  - "Require Display" / "Stop Require Display" Button.
+  - "Require System" / "Stop Require System" Button.
   - Duration Dropdown (Disabled when active).
   - Remaining Time Label.
 - **Bottom Section (Window Closer)**:

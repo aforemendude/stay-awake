@@ -7,6 +7,9 @@ A lightweight utility for Windows that prevents the system from sleeping and pro
 ## Features
 
 ### Sleep Prevention
+- **Two Modes**:
+  - **Require Display**: Keeps the system awake and the display turned on.
+  - **Require System**: Keeps the system awake (background tasks running) but allows the display to turn off.
 - Keeps the system awake by resetting the system idle timer.
 - Configurable duration: 30 minutes to 8 hours (in 15-minute increments).
 - Real-time countdown timer.
