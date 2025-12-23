@@ -155,6 +155,7 @@ namespace StayAwake.Forms
                         btnStayAwakeRequireSystem.Text = "Stop Require System";
                     }
                     cmbSleepDuration.Enabled = false;
+                    grpSleep.Text = "Stay Awake";
 
                     PowerManager.KeepAwake(true, requireDisplay);
                 }
@@ -262,6 +263,7 @@ namespace StayAwake.Forms
                 {
                     StopStayAwake();
                     UpdateTimerState();
+                    grpSleep.Text = $"Stay Awake - Ended At {now:MM/dd HH:mm:ss}";
                 }
                 else
                 {
