@@ -10,6 +10,7 @@ namespace StayAwake.Forms
         private bool _isCloseWindowActive;
         private bool _isFirstShowProcessed = false;
         private bool _isExplicitClose = false;
+        private bool _requireDisplay;
 
         public MainForm(EventWaitHandle? showEvent = null)
         {
@@ -142,6 +143,7 @@ namespace StayAwake.Forms
                     var duration = item.Duration;
                     _sleepUntil = DateTime.Now.Add(duration);
                     _isStayAwakeActive = true;
+                    _requireDisplay = requireDisplay;
 
                     // UI changes
                     if (requireDisplay)
@@ -261,9 +263,10 @@ namespace StayAwake.Forms
 
                 if (remaining <= TimeSpan.Zero)
                 {
+                    string type = _requireDisplay ? "Display" : "System";
                     StopStayAwake();
                     UpdateTimerState();
-                    grpSleep.Text = $"Stay Awake - Ended At {now:MM/dd HH:mm:ss}";
+                    grpSleep.Text = $"Stay Awake - Require {type} Ended At {now:MM/dd HH:mm:ss}";
                 }
                 else
                 {
@@ -276,11 +279,10 @@ namespace StayAwake.Forms
             {
                 if (now >= _closeUntil.Value)
                 {
-                    WindowInfo? target = lstWindows.SelectedItem as WindowInfo;
                     StopCloseWindow();
                     UpdateTimerState();
 
-                    if (target != null)
+                    if (lstWindows.SelectedItem is WindowInfo target)
                     {
                         WindowCloser.CloseWindow(target.Handle);
                         grpClose.Text = $"Window Closer - Closed {target.Handle:X} At {now:MM/dd HH:mm} ({target.ProcessName})";
