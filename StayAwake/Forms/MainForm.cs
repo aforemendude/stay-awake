@@ -12,18 +12,11 @@ namespace StayAwake.Forms
         private bool _isExplicitClose = false;
         private bool _requireDisplay;
         private OverlayForm? _overlay;
-        private System.Windows.Forms.Timer _highlightTimer;
+        private bool _isHighlightActive;
 
         public MainForm(EventWaitHandle? showEvent = null)
         {
             InitializeComponent();
-
-            _highlightTimer = new System.Windows.Forms.Timer { Interval = 1500 };
-            _highlightTimer.Tick += (s, e) =>
-            {
-                _overlay?.Hide();
-                _highlightTimer.Stop();
-            };
 
             if (showEvent != null)
             {
@@ -129,23 +122,31 @@ namespace StayAwake.Forms
 
                     txtWindowPositionValue.Text = $"X: {rect.Left}, Y: {rect.Top}, Width: {width}, Height: {height}";
 
-                    if (_overlay == null || _overlay.IsDisposed)
+                    if (_isHighlightActive)
                     {
-                        _overlay = new OverlayForm();
-                    }
+                        if (_overlay == null || _overlay.IsDisposed)
+                        {
+                            _overlay = new OverlayForm();
+                        }
 
-                    if (width > 0 && height > 0)
+                        if (width > 0 && height > 0)
+                        {
+                            _overlay.Bounds = new Rectangle(rect.Left, rect.Top, width, height);
+                            if (!_overlay.Visible)
+                            {
+                                _overlay.Show();
+                            }
+                        }
+                    }
+                    else
                     {
-                        _overlay.Bounds = new Rectangle(rect.Left, rect.Top, width, height);
-                        _overlay.Show();
-                        _highlightTimer.Stop();
-                        _highlightTimer.Start();
+                        _overlay?.Hide();
                     }
                 }
                 else
                 {
                     txtWindowPositionValue.Text = "Unable to retrieve position";
-                    MessageBox.Show("Unable to retrieve window position.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    _overlay?.Hide();
                 }
             }
             else
@@ -153,6 +154,7 @@ namespace StayAwake.Forms
                 txtProcessName.Text = string.Empty;
                 txtWindowHandle.Text = string.Empty;
                 txtWindowPositionValue.Text = string.Empty;
+                _overlay?.Hide();
             }
         }
 
@@ -342,6 +344,13 @@ namespace StayAwake.Forms
                 e.Cancel = true;
                 Hide();
 
+                if (_isHighlightActive)
+                {
+                    _isHighlightActive = false;
+                    btnHighlightWindow.Text = "Highlight Selected";
+                    _overlay?.Hide();
+                }
+
                 GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, true, true);
             }
         }
@@ -363,6 +372,22 @@ namespace StayAwake.Forms
         {
             _isExplicitClose = true;
             Application.Exit();
+        }
+
+        private void BtnHighlightWindow_Click(object sender, EventArgs e)
+        {
+            if (_isHighlightActive)
+            {
+                _isHighlightActive = false;
+                btnHighlightWindow.Text = "Highlight Selected";
+                _overlay?.Hide();
+            }
+            else
+            {
+                _isHighlightActive = true;
+                btnHighlightWindow.Text = "Stop Highlighting";
+                LstWindows_SelectedIndexChanged(sender, e);
+            }
         }
 
         private void ShowForm()
