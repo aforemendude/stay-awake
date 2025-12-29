@@ -11,10 +11,19 @@ namespace StayAwake.Forms
         private bool _isFirstShowProcessed = false;
         private bool _isExplicitClose = false;
         private bool _requireDisplay;
+        private OverlayForm? _overlay;
+        private System.Windows.Forms.Timer _highlightTimer;
 
         public MainForm(EventWaitHandle? showEvent = null)
         {
             InitializeComponent();
+
+            _highlightTimer = new System.Windows.Forms.Timer { Interval = 1500 };
+            _highlightTimer.Tick += (s, e) =>
+            {
+                _overlay?.Hide();
+                _highlightTimer.Stop();
+            };
 
             if (showEvent != null)
             {
@@ -110,6 +119,30 @@ namespace StayAwake.Forms
             {
                 txtProcessName.Text = info.ProcessName;
                 txtWindowHandle.Text = info.Handle.ToString("X");
+
+                // Highlight window
+                if (NativeMethods.GetWindowRect(info.Handle, out NativeMethods.RECT rect))
+                {
+                    if (_overlay == null || _overlay.IsDisposed)
+                    {
+                        _overlay = new OverlayForm();
+                    }
+
+                    int width = rect.Right - rect.Left;
+                    int height = rect.Bottom - rect.Top;
+
+                    if (width > 0 && height > 0)
+                    {
+                        _overlay.Bounds = new Rectangle(rect.Left, rect.Top, width, height);
+                        _overlay.Show();
+                        _highlightTimer.Stop();
+                        _highlightTimer.Start();
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Unable to retrieve window position.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
             }
             else
             {
