@@ -60,4 +60,4 @@ The output will be in `StayAwake/bin/Release/net10.0-windows/`.
 
 ## AI Disclosure
 
-This project's code, documentation, and other assets were generated with the assistance of an AI coding agent.
+This project's code, documentation, and other assets were generated with the assistance of AI.
