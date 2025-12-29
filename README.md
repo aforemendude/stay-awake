@@ -18,7 +18,8 @@ A lightweight utility for Windows that prevents the system from sleeping and pro
 ### Window Closer
 - Automatically closes a selected window after a specified duration.
 - Scans and lists all currently open windows.
-- Displays detailed process information (Process Name, Window Handle).
+- Displays detailed process information (Process Name, Window Handle) and Window Position (X, Y, Width, Height).
+- **Window Highlighting**: Optionally overlays a translucent red box on the selected window to visually verify the target before scheduling closure.
 - Configurable duration: 15 minutes to 8 hours (in 15-minute increments).
 - Logs closure details (Time, Handle, Process Name) in the interface upon completion.
 

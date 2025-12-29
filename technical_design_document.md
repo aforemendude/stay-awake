@@ -31,6 +31,9 @@ A lightweight Windows desktop application effectively managing power states and 
   - Sends `WM_CLOSE` message to gracefully close the window.
   - Updates the GroupBox text with closure details (Handle, Time, Process Name).
 - **Durations**: 15 minutes to 8 hours (15-minute increments). Default: 1 hour.
+- **Window Highlighting**:
+  - **Mechanism**: A translucent `OverlayForm` (red background, low opacity) is positioned over the target window using coordinates retrieved via `GetWindowRect`.
+  - **Behavior**: When enabled, the overlay follows the selected window's position and size to visually confirm the selection. The overlay is click-through (`WS_EX_TRANSPARENT`).
 
 ### 3.3. Architecture Diagram
 ```mermaid
@@ -63,6 +66,8 @@ A simple single-window interface (`FixedSingle`, Non-resizable).
   - List of open windows (ListBox).
   - "Refresh" Button.
   - Process Name and Window Handle text fields (Read-only display).
+  - Window Position text field (Read-only display, shows X, Y, Width, Height).
+  - "Highlight Window" / "Stop Highlighting" Button.
   - "Close Window" / "Stop" Button.
   - Duration Dropdown (Disabled when active).
   - Remaining Time Label.
@@ -109,6 +114,19 @@ public static extern IntPtr GetShellWindow();
 
 [DllImport("user32.dll")]
 public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
+[DllImport("user32.dll")]
+[return: MarshalAs(UnmanagedType.Bool)]
+public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+
+[StructLayout(LayoutKind.Sequential)]
+public struct RECT
+{
+    public int Left;
+    public int Top;
+    public int Right;
+    public int Bottom;
+}
 
 ```
 
