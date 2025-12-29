@@ -295,7 +295,7 @@ namespace StayAwake.Forms
             btnHighlightWindow.Name = "btnHighlightWindow";
             btnHighlightWindow.Size = new Size(196, 30);
             btnHighlightWindow.TabIndex = 11;
-            btnHighlightWindow.Text = "Highlight Selected";
+            btnHighlightWindow.Text = "Highlight Window";
             btnHighlightWindow.UseVisualStyleBackColor = true;
             btnHighlightWindow.Click += BtnHighlightWindow_Click;
             // 

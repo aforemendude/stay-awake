@@ -349,7 +349,7 @@ namespace StayAwake.Forms
                 if (_isHighlightActive)
                 {
                     _isHighlightActive = false;
-                    btnHighlightWindow.Text = "Highlight Selected";
+                    btnHighlightWindow.Text = "Highlight Window";
                     _overlay?.Hide();
                 }
 
@@ -381,7 +381,7 @@ namespace StayAwake.Forms
             if (_isHighlightActive)
             {
                 _isHighlightActive = false;
-                btnHighlightWindow.Text = "Highlight Selected";
+                btnHighlightWindow.Text = "Highlight Window";
                 _overlay?.Hide();
             }
             else
