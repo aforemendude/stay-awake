@@ -41,6 +41,9 @@ namespace StayAwake.Forms
             contextMenuStrip = new ContextMenuStrip(components);
             showToolStripMenuItem = new ToolStripMenuItem();
             quitToolStripMenuItem = new ToolStripMenuItem();
+            btnHighlightWindow = new Button();
+            lblWindowPositionLabel = new Label();
+            txtWindowPositionValue = new TextBox();
             grpSleep.SuspendLayout();
             grpClose.SuspendLayout();
             contextMenuStrip.SuspendLayout();
@@ -125,6 +128,9 @@ namespace StayAwake.Forms
             // 
             // grpClose
             // 
+            grpClose.Controls.Add(txtWindowPositionValue);
+            grpClose.Controls.Add(lblWindowPositionLabel);
+            grpClose.Controls.Add(btnHighlightWindow);
             grpClose.Controls.Add(btnRefresh);
             grpClose.Controls.Add(lblCloseDuration);
             grpClose.Controls.Add(cmbCloseDuration);
@@ -141,7 +147,7 @@ namespace StayAwake.Forms
             grpClose.Margin = new Padding(3, 2, 3, 2);
             grpClose.Name = "grpClose";
             grpClose.Padding = new Padding(3, 2, 3, 2);
-            grpClose.Size = new Size(760, 335);
+            grpClose.Size = new Size(760, 420);
             grpClose.TabIndex = 1;
             grpClose.TabStop = false;
             grpClose.Text = "Window Closer";
@@ -179,11 +185,11 @@ namespace StayAwake.Forms
             // lstWindows
             // 
             lstWindows.FormattingEnabled = true;
-            lstWindows.Location = new Point(6, 113);
+            lstWindows.Location = new Point(6, 136);
             lstWindows.Margin = new Padding(3, 2, 3, 2);
             lstWindows.Name = "lstWindows";
             lstWindows.ScrollAlwaysVisible = true;
-            lstWindows.Size = new Size(748, 214);
+            lstWindows.Size = new Size(748, 277);
             lstWindows.TabIndex = 1;
             lstWindows.SelectedIndexChanged += LstWindows_SelectedIndexChanged;
             // 
@@ -282,11 +288,38 @@ namespace StayAwake.Forms
             quitToolStripMenuItem.Text = "Quit";
             quitToolStripMenuItem.Click += QuitToolStripMenuItem_Click;
             // 
+            // btnHighlightWindow
+            // 
+            btnHighlightWindow.Location = new Point(6, 100);
+            btnHighlightWindow.Margin = new Padding(3, 2, 3, 2);
+            btnHighlightWindow.Name = "btnHighlightWindow";
+            btnHighlightWindow.Size = new Size(196, 30);
+            btnHighlightWindow.TabIndex = 11;
+            btnHighlightWindow.Text = "Highlight Selected";
+            btnHighlightWindow.UseVisualStyleBackColor = true;
+            // 
+            // lblWindowPositionLabel
+            // 
+            lblWindowPositionLabel.AutoSize = true;
+            lblWindowPositionLabel.Location = new Point(208, 105);
+            lblWindowPositionLabel.Name = "lblWindowPositionLabel";
+            lblWindowPositionLabel.Size = new Size(130, 21);
+            lblWindowPositionLabel.TabIndex = 12;
+            lblWindowPositionLabel.Text = "Window Position:";
+            // 
+            // txtWindowPositionValue
+            // 
+            txtWindowPositionValue.Location = new Point(344, 100);
+            txtWindowPositionValue.Name = "txtWindowPositionValue";
+            txtWindowPositionValue.ReadOnly = true;
+            txtWindowPositionValue.Size = new Size(410, 29);
+            txtWindowPositionValue.TabIndex = 13;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(784, 461);
+            ClientSize = new Size(784, 546);
             Controls.Add(grpClose);
             Controls.Add(grpSleep);
             FormBorderStyle = FormBorderStyle.FixedSingle;
@@ -329,5 +362,8 @@ namespace StayAwake.Forms
         private System.Windows.Forms.ToolStripMenuItem showToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem quitToolStripMenuItem;
         private Button btnStayAwakeRequireSystem;
+        private Label lblWindowPositionLabel;
+        private Button btnHighlightWindow;
+        private TextBox txtWindowPositionValue;
     }
 }
