@@ -9,22 +9,20 @@ namespace StayAwake.Forms
             ShowInTaskbar = false;
             TopMost = true;
             BackColor = Color.Red;
-            Opacity = 0.3;
-            DoubleBuffered = true;
+            Opacity = 0.25;
         }
 
-        protected override void OnPaint(PaintEventArgs e)
+        protected override CreateParams CreateParams
         {
-            base.OnPaint(e);
-            // Draw a border. Since background is Red, let's draw a DarkRed border.
-            // Note: With Opacity, this will also receive the alpha value.
-            int thickness = 5;
-            using var pen = new Pen(Color.DarkRed, thickness);
-            pen.Alignment = System.Drawing.Drawing2D.PenAlignment.Inset;
-            e.Graphics.DrawRectangle(pen, 0, 0, Width, Height);
-        }
+            get
+            {
+                CreateParams cp = base.CreateParams;
 
-        // Ensure it doesn't steal focus
-        protected override bool ShowWithoutActivation => true;
+                // WS_EX_TRANSPARENT (0x20) - Mouse clicks pass through
+                cp.ExStyle |= 0x20;
+
+                return cp;
+            }
+        }
     }
 }

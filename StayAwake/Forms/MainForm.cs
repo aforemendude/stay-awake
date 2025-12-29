@@ -135,6 +135,8 @@ namespace StayAwake.Forms
                             if (!_overlay.Visible)
                             {
                                 _overlay.Show();
+                                // Take focus back, only needed when showing the overlay, not needed when moving
+                                Focus();
                             }
                         }
                     }
