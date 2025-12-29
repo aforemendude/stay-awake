@@ -101,6 +101,7 @@ namespace StayAwake.Forms
             lstWindows.Items.Clear();
             txtProcessName.Text = string.Empty;
             txtWindowHandle.Text = string.Empty;
+            txtWindowPositionValue.Text = string.Empty;
             lstWindows.Items.AddRange([.. WindowCloser.GetOpenWindows()]);
         }
 
@@ -123,13 +124,15 @@ namespace StayAwake.Forms
                 // Highlight window
                 if (NativeMethods.GetWindowRect(info.Handle, out NativeMethods.RECT rect))
                 {
+                    int width = rect.Right - rect.Left;
+                    int height = rect.Bottom - rect.Top;
+
+                    txtWindowPositionValue.Text = $"X: {rect.Left}, Y: {rect.Top}, Width: {width}, Height: {height}";
+
                     if (_overlay == null || _overlay.IsDisposed)
                     {
                         _overlay = new OverlayForm();
                     }
-
-                    int width = rect.Right - rect.Left;
-                    int height = rect.Bottom - rect.Top;
 
                     if (width > 0 && height > 0)
                     {
@@ -141,6 +144,7 @@ namespace StayAwake.Forms
                 }
                 else
                 {
+                    txtWindowPositionValue.Text = "Unable to retrieve position";
                     MessageBox.Show("Unable to retrieve window position.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
@@ -148,6 +152,7 @@ namespace StayAwake.Forms
             {
                 txtProcessName.Text = string.Empty;
                 txtWindowHandle.Text = string.Empty;
+                txtWindowPositionValue.Text = string.Empty;
             }
         }
 
