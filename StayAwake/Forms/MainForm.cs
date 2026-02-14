@@ -96,6 +96,10 @@ namespace StayAwake.Forms
                 txtWindowHandle.Text = string.Empty;
                 txtWindowPositionValue.Text = string.Empty;
                 lstWindows.Items.AddRange([.. WindowCloser.GetOpenWindows()]);
+                if (_isHighlightActive)
+                {
+                    StopHighlight();
+                }
             }
             catch (Exception ex)
             {
@@ -379,6 +383,13 @@ namespace StayAwake.Forms
             }
         }
 
+        private void StopHighlight()
+        {
+            _isHighlightActive = false;
+            btnHighlightWindow.Text = "Highlight Window";
+            _overlay?.Hide();
+        }
+
         private void MainForm_FormClosing(object? sender, FormClosingEventArgs e)
         {
             if (!_isExplicitClose)
@@ -388,9 +399,7 @@ namespace StayAwake.Forms
 
                 if (_isHighlightActive)
                 {
-                    _isHighlightActive = false;
-                    btnHighlightWindow.Text = "Highlight Window";
-                    _overlay?.Hide();
+                    StopHighlight();
                 }
 
                 GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, true, true);
@@ -420,9 +429,7 @@ namespace StayAwake.Forms
         {
             if (_isHighlightActive)
             {
-                _isHighlightActive = false;
-                btnHighlightWindow.Text = "Highlight Window";
-                _overlay?.Hide();
+                StopHighlight();
             }
             else
             {
