@@ -1,8 +1,9 @@
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace StayAwake.Core
 {
-    internal static class NativeMethods
+    internal static partial class NativeMethods
     {
         [Flags]
         public enum EXECUTION_STATE : uint
@@ -13,35 +14,35 @@ namespace StayAwake.Core
             ES_SYSTEM_REQUIRED = 0x00000001
         }
 
-        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern EXECUTION_STATE SetThreadExecutionState(EXECUTION_STATE esFlags);
+        [LibraryImport("kernel32.dll")]
+        public static partial EXECUTION_STATE SetThreadExecutionState(EXECUTION_STATE esFlags);
 
         public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
 
-        [DllImport("user32.dll")]
+        [LibraryImport("user32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+        public static partial bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
 
-        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        public static extern int GetWindowText(IntPtr hWnd, System.Text.StringBuilder lpString, int nMaxCount);
+        [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        public static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
 
-        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        public static extern int GetWindowTextLength(IntPtr hWnd);
+        [LibraryImport("user32.dll", EntryPoint = "GetWindowTextLengthW", SetLastError = true)]
+        public static partial int GetWindowTextLength(IntPtr hWnd);
 
-        [DllImport("user32.dll")]
+        [LibraryImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool IsWindowVisible(IntPtr hWnd);
+        public static partial bool IsWindowVisible(IntPtr hWnd);
 
-        [DllImport("user32.dll")]
-        public static extern IntPtr GetShellWindow();
+        [LibraryImport("user32.dll")]
+        public static partial IntPtr GetShellWindow();
 
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        public static extern IntPtr SendMessage(IntPtr hWnd, UInt32 Msg, IntPtr wParam, IntPtr lParam);
+        [LibraryImport("user32.dll", EntryPoint = "SendMessageW", SetLastError = true)]
+        public static partial IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
 
-        public const UInt32 WM_CLOSE = 0x0010;
+        public const uint WM_CLOSE = 0x0010;
 
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+        [LibraryImport("user32.dll", SetLastError = true)]
+        public static partial uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
 
         [StructLayout(LayoutKind.Sequential)]
         public struct RECT
@@ -52,8 +53,8 @@ namespace StayAwake.Core
             public int Bottom;
         }
 
-        [DllImport("user32.dll", SetLastError = true)]
+        [LibraryImport("user32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+        public static partial bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
     }
 }
