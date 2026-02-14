@@ -36,7 +36,7 @@ namespace StayAwake.Forms
             txtProcessName = new TextBox();
             lblWindowHandleLabel = new Label();
             txtWindowHandle = new TextBox();
-            timer1 = new System.Windows.Forms.Timer(components);
+            mainTimer = new System.Windows.Forms.Timer(components);
             notifyIcon = new NotifyIcon(components);
             contextMenuStrip = new ContextMenuStrip(components);
             showToolStripMenuItem = new ToolStripMenuItem();
@@ -48,9 +48,9 @@ namespace StayAwake.Forms
             grpClose.SuspendLayout();
             contextMenuStrip.SuspendLayout();
             SuspendLayout();
-            // 
+            //
             // grpSleep
-            // 
+            //
             grpSleep.Controls.Add(btnStayAwakeRequireSystem);
             grpSleep.Controls.Add(lblSleepRemainingTimeLabel);
             grpSleep.Controls.Add(lblSleepRemainingTimeValue);
@@ -66,9 +66,9 @@ namespace StayAwake.Forms
             grpSleep.TabIndex = 0;
             grpSleep.TabStop = false;
             grpSleep.Text = "Stay Awake";
-            // 
+            //
             // btnStayAwakeRequireSystem
-            // 
+            //
             btnStayAwakeRequireSystem.Location = new Point(6, 63);
             btnStayAwakeRequireSystem.Margin = new Padding(3, 2, 3, 2);
             btnStayAwakeRequireSystem.Name = "btnStayAwakeRequireSystem";
@@ -77,36 +77,36 @@ namespace StayAwake.Forms
             btnStayAwakeRequireSystem.Text = "Require System";
             btnStayAwakeRequireSystem.UseVisualStyleBackColor = true;
             btnStayAwakeRequireSystem.Click += BtnStayAwakeRequireSystem_Click;
-            // 
+            //
             // lblSleepRemainingTimeLabel
-            // 
+            //
             lblSleepRemainingTimeLabel.AutoSize = true;
             lblSleepRemainingTimeLabel.Location = new Point(208, 63);
             lblSleepRemainingTimeLabel.Name = "lblSleepRemainingTimeLabel";
             lblSleepRemainingTimeLabel.Size = new Size(130, 21);
             lblSleepRemainingTimeLabel.TabIndex = 4;
             lblSleepRemainingTimeLabel.Text = "Remaining Time: ";
-            // 
+            //
             // lblSleepRemainingTimeValue
-            // 
+            //
             lblSleepRemainingTimeValue.AutoSize = true;
             lblSleepRemainingTimeValue.Location = new Point(344, 63);
             lblSleepRemainingTimeValue.Name = "lblSleepRemainingTimeValue";
             lblSleepRemainingTimeValue.Size = new Size(95, 21);
             lblSleepRemainingTimeValue.TabIndex = 2;
             lblSleepRemainingTimeValue.Text = "Not Enabled";
-            // 
+            //
             // lblSleepDuration
-            // 
+            //
             lblSleepDuration.AutoSize = true;
             lblSleepDuration.Location = new Point(208, 31);
             lblSleepDuration.Name = "lblSleepDuration";
             lblSleepDuration.Size = new Size(74, 21);
             lblSleepDuration.TabIndex = 3;
             lblSleepDuration.Text = "Duration:";
-            // 
+            //
             // cmbSleepDuration
-            // 
+            //
             cmbSleepDuration.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbSleepDuration.FormattingEnabled = true;
             cmbSleepDuration.Location = new Point(288, 26);
@@ -114,9 +114,9 @@ namespace StayAwake.Forms
             cmbSleepDuration.Name = "cmbSleepDuration";
             cmbSleepDuration.Size = new Size(151, 29);
             cmbSleepDuration.TabIndex = 1;
-            // 
+            //
             // btnStayAwakeRequireDisplay
-            // 
+            //
             btnStayAwakeRequireDisplay.Location = new Point(6, 26);
             btnStayAwakeRequireDisplay.Margin = new Padding(3, 2, 3, 2);
             btnStayAwakeRequireDisplay.Name = "btnStayAwakeRequireDisplay";
@@ -125,9 +125,9 @@ namespace StayAwake.Forms
             btnStayAwakeRequireDisplay.Text = "Require Display";
             btnStayAwakeRequireDisplay.UseVisualStyleBackColor = true;
             btnStayAwakeRequireDisplay.Click += BtnStayAwakeRequireDisplay_Click;
-            // 
+            //
             // grpClose
-            // 
+            //
             grpClose.Controls.Add(txtWindowPositionValue);
             grpClose.Controls.Add(lblWindowPositionLabel);
             grpClose.Controls.Add(btnHighlightWindow);
@@ -151,9 +151,9 @@ namespace StayAwake.Forms
             grpClose.TabIndex = 1;
             grpClose.TabStop = false;
             grpClose.Text = "Window Closer";
-            // 
+            //
             // btnRefresh
-            // 
+            //
             btnRefresh.Location = new Point(6, 63);
             btnRefresh.Margin = new Padding(3, 2, 3, 2);
             btnRefresh.Name = "btnRefresh";
@@ -162,18 +162,18 @@ namespace StayAwake.Forms
             btnRefresh.Text = "Refresh List";
             btnRefresh.UseVisualStyleBackColor = true;
             btnRefresh.Click += BtnRefresh_Click;
-            // 
+            //
             // lblCloseDuration
-            // 
+            //
             lblCloseDuration.AutoSize = true;
             lblCloseDuration.Location = new Point(208, 31);
             lblCloseDuration.Name = "lblCloseDuration";
             lblCloseDuration.Size = new Size(47, 21);
             lblCloseDuration.TabIndex = 3;
             lblCloseDuration.Text = "After:";
-            // 
+            //
             // cmbCloseDuration
-            // 
+            //
             cmbCloseDuration.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbCloseDuration.FormattingEnabled = true;
             cmbCloseDuration.Location = new Point(288, 26);
@@ -181,9 +181,9 @@ namespace StayAwake.Forms
             cmbCloseDuration.Name = "cmbCloseDuration";
             cmbCloseDuration.Size = new Size(151, 29);
             cmbCloseDuration.TabIndex = 3;
-            // 
+            //
             // lstWindows
-            // 
+            //
             lstWindows.FormattingEnabled = true;
             lstWindows.Location = new Point(6, 136);
             lstWindows.Margin = new Padding(3, 2, 3, 2);
@@ -192,27 +192,27 @@ namespace StayAwake.Forms
             lstWindows.Size = new Size(748, 277);
             lstWindows.TabIndex = 1;
             lstWindows.SelectedIndexChanged += LstWindows_SelectedIndexChanged;
-            // 
+            //
             // lblCloseRemainingTimeValue
-            // 
+            //
             lblCloseRemainingTimeValue.AutoSize = true;
             lblCloseRemainingTimeValue.Location = new Point(344, 68);
             lblCloseRemainingTimeValue.Name = "lblCloseRemainingTimeValue";
             lblCloseRemainingTimeValue.Size = new Size(95, 21);
             lblCloseRemainingTimeValue.TabIndex = 6;
             lblCloseRemainingTimeValue.Text = "Not Enabled";
-            // 
+            //
             // lblCloseRemainingTimeLabel
-            // 
+            //
             lblCloseRemainingTimeLabel.AutoSize = true;
             lblCloseRemainingTimeLabel.Location = new Point(208, 68);
             lblCloseRemainingTimeLabel.Name = "lblCloseRemainingTimeLabel";
             lblCloseRemainingTimeLabel.Size = new Size(130, 21);
             lblCloseRemainingTimeLabel.TabIndex = 5;
             lblCloseRemainingTimeLabel.Text = "Remaining Time: ";
-            // 
+            //
             // btnCloseWindow
-            // 
+            //
             btnCloseWindow.Location = new Point(6, 26);
             btnCloseWindow.Margin = new Padding(3, 2, 3, 2);
             btnCloseWindow.Name = "btnCloseWindow";
@@ -221,75 +221,75 @@ namespace StayAwake.Forms
             btnCloseWindow.Text = "Schedule Close Window";
             btnCloseWindow.UseVisualStyleBackColor = true;
             btnCloseWindow.Click += BtnCloseWindow_Click;
-            // 
+            //
             // lblProcessNameLabel
-            // 
+            //
             lblProcessNameLabel.AutoSize = true;
             lblProcessNameLabel.Location = new Point(445, 31);
             lblProcessNameLabel.Name = "lblProcessNameLabel";
             lblProcessNameLabel.Size = new Size(66, 21);
             lblProcessNameLabel.TabIndex = 7;
             lblProcessNameLabel.Text = "Process:";
-            // 
+            //
             // txtProcessName
-            // 
+            //
             txtProcessName.Location = new Point(517, 26);
             txtProcessName.Name = "txtProcessName";
             txtProcessName.ReadOnly = true;
             txtProcessName.Size = new Size(237, 29);
             txtProcessName.TabIndex = 8;
-            // 
+            //
             // lblWindowHandleLabel
-            // 
+            //
             lblWindowHandleLabel.AutoSize = true;
             lblWindowHandleLabel.Location = new Point(445, 68);
             lblWindowHandleLabel.Name = "lblWindowHandleLabel";
             lblWindowHandleLabel.Size = new Size(62, 21);
             lblWindowHandleLabel.TabIndex = 9;
             lblWindowHandleLabel.Text = "Handle:";
-            // 
+            //
             // txtWindowHandle
-            // 
+            //
             txtWindowHandle.Location = new Point(517, 63);
             txtWindowHandle.Name = "txtWindowHandle";
             txtWindowHandle.ReadOnly = true;
             txtWindowHandle.Size = new Size(237, 29);
             txtWindowHandle.TabIndex = 10;
-            // 
-            // timer1
-            // 
-            timer1.Interval = 1000;
-            timer1.Tick += Timer1_Tick;
-            // 
+            //
+            // mainTimer
+            //
+            mainTimer.Interval = 1000;
+            mainTimer.Tick += MainTimer_Tick;
+            //
             // notifyIcon
-            // 
+            //
             notifyIcon.ContextMenuStrip = contextMenuStrip;
             notifyIcon.Text = "Stay Awake";
             notifyIcon.Visible = true;
             notifyIcon.MouseClick += NotifyIcon_MouseClick;
-            // 
+            //
             // contextMenuStrip
-            // 
+            //
             contextMenuStrip.Items.AddRange(new ToolStripItem[] { showToolStripMenuItem, quitToolStripMenuItem });
             contextMenuStrip.Name = "contextMenuStrip";
             contextMenuStrip.Size = new Size(104, 48);
-            // 
+            //
             // showToolStripMenuItem
-            // 
+            //
             showToolStripMenuItem.Name = "showToolStripMenuItem";
             showToolStripMenuItem.Size = new Size(103, 22);
             showToolStripMenuItem.Text = "Show";
             showToolStripMenuItem.Click += ShowToolStripMenuItem_Click;
-            // 
+            //
             // quitToolStripMenuItem
-            // 
+            //
             quitToolStripMenuItem.Name = "quitToolStripMenuItem";
             quitToolStripMenuItem.Size = new Size(103, 22);
             quitToolStripMenuItem.Text = "Quit";
             quitToolStripMenuItem.Click += QuitToolStripMenuItem_Click;
-            // 
+            //
             // btnHighlightWindow
-            // 
+            //
             btnHighlightWindow.Location = new Point(6, 100);
             btnHighlightWindow.Margin = new Padding(3, 2, 3, 2);
             btnHighlightWindow.Name = "btnHighlightWindow";
@@ -298,26 +298,26 @@ namespace StayAwake.Forms
             btnHighlightWindow.Text = "Highlight Window";
             btnHighlightWindow.UseVisualStyleBackColor = true;
             btnHighlightWindow.Click += BtnHighlightWindow_Click;
-            // 
+            //
             // lblWindowPositionLabel
-            // 
+            //
             lblWindowPositionLabel.AutoSize = true;
             lblWindowPositionLabel.Location = new Point(208, 105);
             lblWindowPositionLabel.Name = "lblWindowPositionLabel";
             lblWindowPositionLabel.Size = new Size(130, 21);
             lblWindowPositionLabel.TabIndex = 12;
             lblWindowPositionLabel.Text = "Window Position:";
-            // 
+            //
             // txtWindowPositionValue
-            // 
+            //
             txtWindowPositionValue.Location = new Point(344, 100);
             txtWindowPositionValue.Name = "txtWindowPositionValue";
             txtWindowPositionValue.ReadOnly = true;
             txtWindowPositionValue.Size = new Size(410, 29);
             txtWindowPositionValue.TabIndex = 13;
-            // 
+            //
             // MainForm
-            // 
+            //
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(784, 546);
@@ -350,7 +350,7 @@ namespace StayAwake.Forms
         private System.Windows.Forms.ComboBox cmbCloseDuration;
         private System.Windows.Forms.Label lblCloseDuration;
         private System.Windows.Forms.Button btnRefresh;
-        private System.Windows.Forms.Timer timer1;
+        private System.Windows.Forms.Timer mainTimer;
         private Label lblSleepRemainingTimeLabel;
         private Label lblCloseRemainingTimeLabel;
         private Label lblCloseRemainingTimeValue;

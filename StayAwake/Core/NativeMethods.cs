@@ -14,7 +14,7 @@ namespace StayAwake.Core
             ES_SYSTEM_REQUIRED = 0x00000001
         }
 
-        [LibraryImport("kernel32.dll")]
+        [LibraryImport("kernel32.dll", SetLastError = true)]
         public static partial EXECUTION_STATE SetThreadExecutionState(EXECUTION_STATE esFlags);
 
         public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
@@ -36,10 +36,10 @@ namespace StayAwake.Core
         [LibraryImport("user32.dll")]
         public static partial IntPtr GetShellWindow();
 
+        public const uint WM_CLOSE = 0x0010;
+
         [LibraryImport("user32.dll", EntryPoint = "SendMessageW", SetLastError = true)]
         public static partial IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
-
-        public const uint WM_CLOSE = 0x0010;
 
         [LibraryImport("user32.dll", SetLastError = true)]
         public static partial uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);

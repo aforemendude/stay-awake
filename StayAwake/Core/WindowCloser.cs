@@ -1,3 +1,6 @@
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace StayAwake.Core
@@ -18,44 +21,78 @@ namespace StayAwake.Core
     {
         public static List<WindowInfo> GetOpenWindows()
         {
-            var windows = new List<WindowInfo>();
+            List<WindowInfo> windows = [];
+
             IntPtr shellWindow = NativeMethods.GetShellWindow();
 
-            NativeMethods.EnumWindows(delegate (IntPtr hWnd, IntPtr lParam)
+            if (!NativeMethods.EnumWindows(delegate (IntPtr hWnd, IntPtr lParam)
             {
-                if (hWnd == shellWindow) return true;
-                if (!NativeMethods.IsWindowVisible(hWnd)) return true;
+                // Exclude Shell (explorer.exe)
+                if (hWnd == shellWindow)
+                {
+                    return true;
+                }
 
+                // Exclude hidden windows
+                if (!NativeMethods.IsWindowVisible(hWnd))
+                {
+                    return true;
+                }
+
+                // Exclude windows with no title (or if the title could not be retrieved)
                 int length = NativeMethods.GetWindowTextLength(hWnd);
-                if (length == 0) return true;
-
+                if (length == 0)
+                {
+                    return true;
+                }
                 var builder = new StringBuilder(length + 1);
-                NativeMethods.GetWindowText(hWnd, builder, builder.Capacity);
+                if (NativeMethods.GetWindowText(hWnd, builder, builder.Capacity) == 0)
+                {
+                    return true;
+                }
+
                 string title = builder.ToString();
 
-                // Filter out empty titles or Program Manager
-                if (string.IsNullOrWhiteSpace(title) || title == "Program Manager") return true;
+                // Filter out empty title or Program Manager
+                if (string.IsNullOrWhiteSpace(title) || title == "Program Manager")
+                {
+                    return true;
+                }
 
                 NativeMethods.GetWindowThreadProcessId(hWnd, out uint processId);
                 string processName = "Unknown";
                 try
                 {
-                    using var process = System.Diagnostics.Process.GetProcessById((int)processId);
+                    using var process = Process.GetProcessById((int)processId);
                     processName = process.ProcessName;
                 }
                 catch { }
 
-                windows.Add(new WindowInfo { Title = title, Handle = hWnd, ProcessName = processName });
+                windows.Add(new WindowInfo {
+                    Title = title,
+                    Handle = hWnd,
+                    ProcessName = processName
+                });
                 return true;
-
-            }, IntPtr.Zero);
+            }, IntPtr.Zero))
+            {
+                throw new Win32Exception(Marshal.GetLastWin32Error());
+            }
 
             return [.. windows.OrderBy(w => w.Title)];
         }
 
         public static void CloseWindow(IntPtr hWnd)
         {
+            // TODO: SendMessage is blocking, should run this on another thread or use PostMessage
+
+            // Checking the last error is more reliable than checking the return value
             NativeMethods.SendMessage(hWnd, NativeMethods.WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
+            int lastError = Marshal.GetLastWin32Error();
+            if (lastError != 0)
+            {
+                throw new Win32Exception(lastError);
+            }
         }
     }
 }

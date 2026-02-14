@@ -35,8 +35,6 @@ namespace StayAwake.Forms
 
             notifyIcon.Icon = Icon;
             LoadDurations();
-
-            Hide();
         }
 
         private void LoadDurations()
@@ -60,9 +58,9 @@ namespace StayAwake.Forms
 
             cmbSleepDuration.Items.AddRange([.. durations]);
 
-            // Default 2 hours. 
-            // 30min(0), 45min(1), 1h(2), 1h15(3), 1h30(4), 1h45(5), 2h(6).
-            // Hard coded index without checking as requested.
+            // Default 2 hours
+            // 30min(0), 45min(1), 1h(2), 1h15(3), 1h30(4), 1h45(5), 2h(6)
+            // Hard coded index without checking as requested
             cmbSleepDuration.SelectedIndex = 6;
 
             // Close Window Durations: 15 min to 8h in 15 min increments
@@ -84,18 +82,28 @@ namespace StayAwake.Forms
 
             cmbCloseDuration.Items.AddRange([.. closeDurations]);
 
-            // Default 1h.
-            // 15min(0), 30min(1), 45min(2), 1h(3).
+            // Default 1h
+            // 15min(0), 30min(1), 45min(2), 1h(3)
             cmbCloseDuration.SelectedIndex = 3;
         }
 
-        private void RefreshWindows()
+        private void RefreshWindows(bool isAsync)
         {
-            lstWindows.Items.Clear();
-            txtProcessName.Text = string.Empty;
-            txtWindowHandle.Text = string.Empty;
-            txtWindowPositionValue.Text = string.Empty;
-            lstWindows.Items.AddRange([.. WindowCloser.GetOpenWindows()]);
+            try
+            {
+                lstWindows.Items.Clear();
+                txtProcessName.Text = string.Empty;
+                txtWindowHandle.Text = string.Empty;
+                txtWindowPositionValue.Text = string.Empty;
+                lstWindows.Items.AddRange([.. WindowCloser.GetOpenWindows()]);
+            }
+            catch (Exception ex)
+            {
+                if (!isAsync)
+                {
+                    MessageBox.Show($"Failed to refresh windows list: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
         }
 
         private void MainForm_Shown(object sender, EventArgs e)
@@ -147,7 +155,7 @@ namespace StayAwake.Forms
                 }
                 else
                 {
-                    txtWindowPositionValue.Text = "Unable to retrieve position";
+                    txtWindowPositionValue.Text = "Error getting position";
                     _overlay?.Hide();
                 }
             }
@@ -162,7 +170,7 @@ namespace StayAwake.Forms
 
         private void BtnRefresh_Click(object sender, EventArgs e)
         {
-            RefreshWindows();
+            RefreshWindows(false);
         }
 
         private void BtnStayAwakeRequireDisplay_Click(object? sender, EventArgs e)
@@ -179,67 +187,93 @@ namespace StayAwake.Forms
         {
             if (!_isStayAwakeActive)
             {
-                // Start
-                if (cmbSleepDuration.SelectedItem is DurationItem item)
+                try
                 {
-                    var duration = item.Duration;
-                    _sleepUntil = DateTime.Now.Add(duration);
-                    _isStayAwakeActive = true;
-                    _requireDisplay = requireDisplay;
-
-                    // UI changes
-                    if (requireDisplay)
+                    if (cmbSleepDuration.SelectedItem is DurationItem item)
                     {
-                        btnStayAwakeRequireDisplay.Text = "Stop Require Display";
-                        btnStayAwakeRequireSystem.Enabled = false;
-                    }
-                    else
-                    {
-                        btnStayAwakeRequireDisplay.Enabled = false;
-                        btnStayAwakeRequireSystem.Text = "Stop Require System";
-                    }
-                    cmbSleepDuration.Enabled = false;
-                    grpSleep.Text = "Stay Awake";
+                        var duration = item.Duration;
+                        _sleepUntil = DateTime.Now.Add(duration);
+                        _isStayAwakeActive = true;
+                        _requireDisplay = requireDisplay;
 
-                    PowerManager.KeepAwake(true, requireDisplay);
+                        // UI changes
+                        if (requireDisplay)
+                        {
+                            btnStayAwakeRequireDisplay.Text = "Stop Require Display";
+                            btnStayAwakeRequireSystem.Enabled = false;
+                        }
+                        else
+                        {
+                            btnStayAwakeRequireDisplay.Enabled = false;
+                            btnStayAwakeRequireSystem.Text = "Stop Require System";
+                        }
+                        cmbSleepDuration.Enabled = false;
+                        grpSleep.Text = "Stay Awake";
+
+                        PowerManager.KeepAwake(true, requireDisplay);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (!StopStayAwake(true))
+                    {
+                        // Change this back since there will be a message box
+                        grpSleep.Text = "Stay Awake";
+                    }
+                    MessageBox.Show($"Failed to start stay awake: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             else
             {
-                // Stop
-                StopStayAwake();
+                StopStayAwake(false);
             }
 
             UpdateTimerState();
         }
 
-        private void StopStayAwake()
+        private bool StopStayAwake(bool isAsync)
         {
-            _isStayAwakeActive = false;
-            _sleepUntil = null;
+            try
+            {
+                _isStayAwakeActive = false;
+                _sleepUntil = null;
 
-            // UI changes
-            btnStayAwakeRequireDisplay.Text = "Require Display";
-            btnStayAwakeRequireDisplay.Enabled = true;
+                // UI changes
+                btnStayAwakeRequireDisplay.Text = "Require Display";
+                btnStayAwakeRequireDisplay.Enabled = true;
 
-            btnStayAwakeRequireSystem.Text = "Require System";
-            btnStayAwakeRequireSystem.Enabled = true;
+                btnStayAwakeRequireSystem.Text = "Require System";
+                btnStayAwakeRequireSystem.Enabled = true;
 
-            cmbSleepDuration.Enabled = true;
+                cmbSleepDuration.Enabled = true;
 
-            lblSleepRemainingTimeValue.Text = "Not Enabled";
+                lblSleepRemainingTimeValue.Text = "Not Enabled";
 
-            PowerManager.KeepAwake(false);
+                PowerManager.KeepAwake(false);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                if (isAsync)
+                {
+                    var now = DateTime.Now;
+                    grpSleep.Text = $"Stay Awake - Error Stopping At {now:MM/dd HH:mm:ss}";
+                }
+                else
+                {
+                    MessageBox.Show($"Failed to stop stay awake: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                return false;
+            }
         }
 
         private void BtnCloseWindow_Click(object? sender, EventArgs e)
         {
             if (!_isCloseWindowActive)
             {
-                // Start
                 if (lstWindows.SelectedItem == null)
                 {
-                    MessageBox.Show("Please select a window.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("No window selected.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
@@ -261,7 +295,6 @@ namespace StayAwake.Forms
             }
             else
             {
-                // Stop
                 StopCloseWindow();
             }
 
@@ -285,16 +318,15 @@ namespace StayAwake.Forms
         {
             if (_isStayAwakeActive || _isCloseWindowActive)
             {
-                timer1.Start();
+                mainTimer.Start();
             }
             else
             {
-                timer1.Stop();
-
+                mainTimer.Stop();
             }
         }
 
-        private void Timer1_Tick(object sender, EventArgs e)
+        private void MainTimer_Tick(object sender, EventArgs e)
         {
             var now = DateTime.Now;
 
@@ -305,10 +337,12 @@ namespace StayAwake.Forms
 
                 if (remaining <= TimeSpan.Zero)
                 {
-                    string type = _requireDisplay ? "Display" : "System";
-                    StopStayAwake();
+                    if (StopStayAwake(true))
+                    {
+                        string type = _requireDisplay ? "Display" : "System";
+                        grpSleep.Text = $"Stay Awake - Require {type} Ended At {now:MM/dd HH:mm:ss}";
+                    }
                     UpdateTimerState();
-                    grpSleep.Text = $"Stay Awake - Require {type} Ended At {now:MM/dd HH:mm:ss}";
                 }
                 else
                 {
@@ -321,14 +355,27 @@ namespace StayAwake.Forms
             {
                 if (now >= _closeUntil.Value)
                 {
-                    StopCloseWindow();
-                    UpdateTimerState();
-
                     if (lstWindows.SelectedItem is WindowInfo target)
                     {
-                        WindowCloser.CloseWindow(target.Handle);
-                        grpClose.Text = $"Window Closer - Closed {target.Handle:X} At {now:MM/dd HH:mm} ({target.ProcessName})";
-                        RefreshWindows();
+                        try
+                        {
+                            WindowCloser.CloseWindow(target.Handle);
+                            grpClose.Text = $"Window Closer - Closed {target.Handle:X} At {now:MM/dd HH:mm} ({target.ProcessName})";
+                            StopCloseWindow();
+                            UpdateTimerState();
+                            RefreshWindows(true);
+                        }
+                        catch (Exception ex)
+                        {
+                            grpClose.Text = $"Window Closer - Error: {ex.Message}";
+                            StopCloseWindow();
+                            UpdateTimerState();
+                        }
+                    }
+                    else
+                    {
+                        StopCloseWindow();
+                        UpdateTimerState();
                     }
                 }
                 else
@@ -396,7 +443,7 @@ namespace StayAwake.Forms
         {
             if (!_isCloseWindowActive)
             {
-                RefreshWindows();
+                RefreshWindows(true);
             }
             Show();
             WindowState = FormWindowState.Normal;
