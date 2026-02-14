@@ -68,7 +68,8 @@ namespace StayAwake.Core
                 }
                 catch { }
 
-                windows.Add(new WindowInfo {
+                windows.Add(new WindowInfo
+                {
                     Title = title,
                     Handle = hWnd,
                     ProcessName = processName

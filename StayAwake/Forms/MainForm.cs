@@ -215,11 +215,7 @@ namespace StayAwake.Forms
                 }
                 catch (Exception ex)
                 {
-                    if (!StopStayAwake(true))
-                    {
-                        // Change this back since there will be a message box
-                        grpSleep.Text = "Stay Awake";
-                    }
+                    StopStayAwake(true);
                     MessageBox.Show($"Failed to start stay awake: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
@@ -254,12 +250,7 @@ namespace StayAwake.Forms
             }
             catch (Exception ex)
             {
-                if (isAsync)
-                {
-                    var now = DateTime.Now;
-                    grpSleep.Text = $"Stay Awake - Error Stopping At {now:MM/dd HH:mm:ss}";
-                }
-                else
+                if (!isAsync)
                 {
                     MessageBox.Show($"Failed to stop stay awake: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
@@ -337,10 +328,14 @@ namespace StayAwake.Forms
 
                 if (remaining <= TimeSpan.Zero)
                 {
+                    string type = _requireDisplay ? "Display" : "System";
                     if (StopStayAwake(true))
                     {
-                        string type = _requireDisplay ? "Display" : "System";
                         grpSleep.Text = $"Stay Awake - Require {type} Ended At {now:MM/dd HH:mm:ss}";
+                    }
+                    else
+                    {
+                        grpSleep.Text = $"Stay Awake - Error Ending Require {type} At {now:MM/dd HH:mm:ss}";
                     }
                     UpdateTimerState();
                 }
@@ -361,16 +356,14 @@ namespace StayAwake.Forms
                         {
                             WindowCloser.CloseWindow(target.Handle);
                             grpClose.Text = $"Window Closer - Closed {target.Handle:X} At {now:MM/dd HH:mm} ({target.ProcessName})";
-                            StopCloseWindow();
-                            UpdateTimerState();
-                            RefreshWindows(true);
                         }
-                        catch (Exception ex)
+                        catch
                         {
-                            grpClose.Text = $"Window Closer - Error: {ex.Message}";
-                            StopCloseWindow();
-                            UpdateTimerState();
+                            grpClose.Text = $"Window Closer - Error Closing {target.Handle:X} At {now:MM/dd HH:mm} ({target.ProcessName})";
                         }
+                        StopCloseWindow();
+                        UpdateTimerState();
+                        RefreshWindows(true);
                     }
                     else
                     {

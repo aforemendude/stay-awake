@@ -21,8 +21,8 @@ namespace StayAwake
                 }
                 catch (WaitHandleCannotBeOpenedException)
                 {
-                    // If we can't open it, maybe it's closing or in a weird state.
-                    // Fallback or ignore.
+                    // The other instance may be closing or in an unexpected state
+                    // To be safe, ignore the error and exit
                 }
 
                 // Exit the current (second) instance
@@ -32,7 +32,7 @@ namespace StayAwake
             using var showEvent = new EventWaitHandle(false, EventResetMode.AutoReset, eventKey);
 
             // To customize application configuration such as set high DPI settings or default font,
-            // see https://aka.ms/applicationconfiguration.
+            // see https://aka.ms/applicationconfiguration
             ApplicationConfiguration.Initialize();
             Application.Run(new MainForm(showEvent));
         }
