@@ -16,7 +16,7 @@ namespace StayAwake.Forms
         {
             get
             {
-                CreateParams cp = base.CreateParams;
+                var cp = base.CreateParams;
 
                 // WS_EX_TRANSPARENT (0x20) - Mouse clicks pass through
                 cp.ExStyle |= 0x20;

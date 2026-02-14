@@ -48,7 +48,7 @@ namespace StayAwake.Forms
 
             while (current <= end)
             {
-                string label = current.ToString(@"hh\:mm\:ss");
+                var label = current.ToString(@"hh\:mm\:ss");
                 durations.Add(new DurationItem(label, current));
                 current = current.Add(TimeSpan.FromMinutes(15));
             }
@@ -72,7 +72,7 @@ namespace StayAwake.Forms
 
             while (closeCurrent <= closeEnd)
             {
-                string label = closeCurrent.ToString(@"hh\:mm\:ss");
+                var label = closeCurrent.ToString(@"hh\:mm\:ss");
                 closeDurations.Add(new DurationItem(label, closeCurrent));
                 closeCurrent = closeCurrent.Add(TimeSpan.FromMinutes(15));
             }
@@ -123,10 +123,10 @@ namespace StayAwake.Forms
                 txtWindowHandle.Text = info.Handle.ToString("X");
 
                 // Highlight window
-                if (NativeMethods.GetWindowRect(info.Handle, out NativeMethods.RECT rect))
+                if (NativeMethods.GetWindowRect(info.Handle, out var rect))
                 {
-                    int width = rect.Right - rect.Left;
-                    int height = rect.Bottom - rect.Top;
+                    var width = rect.Right - rect.Left;
+                    var height = rect.Bottom - rect.Top;
 
                     txtWindowPositionValue.Text = $"X: {rect.Left}, Y: {rect.Top}, Width: {width}, Height: {height}";
 
@@ -324,11 +324,11 @@ namespace StayAwake.Forms
             // Handle Sleep
             if (_isStayAwakeActive && _sleepUntil.HasValue)
             {
-                TimeSpan remaining = _sleepUntil.Value - now;
+                var remaining = _sleepUntil.Value - now;
 
                 if (remaining <= TimeSpan.Zero)
                 {
-                    string type = _requireDisplay ? "Display" : "System";
+                    var type = _requireDisplay ? "Display" : "System";
                     if (StopStayAwake(true))
                     {
                         grpSleep.Text = $"Stay Awake - Require {type} Ended At {now:MM/dd HH:mm:ss}";
@@ -373,7 +373,7 @@ namespace StayAwake.Forms
                 }
                 else
                 {
-                    TimeSpan remaining = _closeUntil.Value - now;
+                    var remaining = _closeUntil.Value - now;
                     lblCloseRemainingTimeValue.Text = remaining.ToString(@"hh\:mm\:ss");
                 }
             }

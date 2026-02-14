@@ -1,19 +1,23 @@
 # Technical Design Document - Stay Awake Utility
 
 ## 1. Overview
+
 A lightweight Windows desktop application effectively managing power states and process lifecycles. It allows users to prevent system sleep and schedule automatic closure of specific applications.
 
 ## 2. Technology Stack
+
 - **Language**: C# 13 / 14 (latest supported by .NET 10)
 - **Framework**: .NET 10 (LTS)
 - **UI Framework**: Windows Forms (WinForms)
-  - *Rationale*: Lowest memory footprint (~20MB RAM) compared to WPF (~60MB) or MAUI/Electron (>100MB). Native look and feel, excellent performance.
+  - _Rationale_: Lowest memory footprint (~20MB RAM) compared to WPF (~60MB) or MAUI/Electron (>100MB). Native look and feel, excellent performance.
 - **Distribution**: Framework-dependent executable.
 
 ## 3. Core Features & Architecture
 
 ### 3.1. Sleep Prevention
+
 **Mechanism**: Win32 API `SetThreadExecutionState`.
+
 - **Modes**:
   - **Require Display**: Keeps system running and display on (`ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED`).
   - **Require System**: Keeps system running but allows display to sleep (`ES_CONTINUOUS | ES_SYSTEM_REQUIRED`).
@@ -23,7 +27,9 @@ A lightweight Windows desktop application effectively managing power states and 
 - **Durations**: 30 minutes to 8 hours (15-minute increments). Default: 2 hours.
 
 ### 3.2. Window Closer
+
 **Mechanism**: Win32 API `SendMessage` with `WM_CLOSE`.
+
 - **Input**: Window Title (selected from a list of open windows).
 - **Behavior**:
   - A timer counts down.
@@ -36,6 +42,7 @@ A lightweight Windows desktop application effectively managing power states and 
   - **Behavior**: When enabled, the overlay follows the selected window's position and size to visually confirm the selection. The overlay is click-through (`WS_EX_TRANSPARENT`).
 
 ### 3.3. Architecture Diagram
+
 ```mermaid
 graph TD
     UI["MainForm UI"] -->|Configures| Manager["PowerManager (Static)"]
@@ -46,7 +53,9 @@ graph TD
 ```
 
 ### 3.4. Single Instance Enforcement
+
 **Mechanism**: `System.Threading.Mutex` + `System.Threading.EventWaitHandle`.
+
 - **Logic**:
   - Validates a named mutex on startup.
   - If mutex exists (application is already running):
@@ -56,7 +65,9 @@ graph TD
     - The new instance terminates immediately.
 
 ## 4. UI Design
+
 A simple single-window interface (`FixedSingle`, Non-resizable).
+
 - **Top Section (Stay Awake)**:
   - "Require Display" / "Stop Require Display" Button.
   - "Require System" / "Stop Require System" Button.
@@ -73,6 +84,7 @@ A simple single-window interface (`FixedSingle`, Non-resizable).
   - Remaining Time Label.
 
 ### 4.1. System Tray Interaction
+
 - **Close Button**: Does NOT quit the application; minimizes it to the system tray.
 - **Tray Icon**:
   - **Left Click**: Restores and shows the main window.
@@ -81,6 +93,7 @@ A simple single-window interface (`FixedSingle`, Non-resizable).
     - **Quit**: Fully terminates the application.
 
 ## 5. Win32 API Details
+
 ```csharp
 [Flags]
 public enum EXECUTION_STATE : uint
@@ -131,9 +144,11 @@ public struct RECT
 ```
 
 ## 6. Resource Efficiency Plan
+
 - **Event-Driven**: Use `System.Windows.Forms.Timer` (runs on UI thread message loop) instead of `Thread.Sleep` loops to minimize CPU context switching.
 - **Stateless**: Logic will not cache process handles long-term; it resolves them as needed.
 
 ## 7. Security considerations
+
 - Needs standard user privileges.
 - Closing external apps requires the target app to be owned by the same user, or the utility must be run as Admin. We will target same-user scope by default.

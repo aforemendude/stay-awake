@@ -23,7 +23,7 @@ namespace StayAwake.Core
         {
             List<WindowInfo> windows = [];
 
-            IntPtr shellWindow = NativeMethods.GetShellWindow();
+            var shellWindow = NativeMethods.GetShellWindow();
 
             if (!NativeMethods.EnumWindows(delegate (IntPtr hWnd, IntPtr lParam)
             {
@@ -40,7 +40,7 @@ namespace StayAwake.Core
                 }
 
                 // Exclude windows with no title (or if the title could not be retrieved)
-                int length = NativeMethods.GetWindowTextLength(hWnd);
+                var length = NativeMethods.GetWindowTextLength(hWnd);
                 if (length == 0)
                 {
                     return true;
@@ -51,7 +51,7 @@ namespace StayAwake.Core
                     return true;
                 }
 
-                string title = builder.ToString();
+                var title = builder.ToString();
 
                 // Filter out empty title or Program Manager
                 if (string.IsNullOrWhiteSpace(title) || title == "Program Manager")
@@ -59,8 +59,8 @@ namespace StayAwake.Core
                     return true;
                 }
 
-                NativeMethods.GetWindowThreadProcessId(hWnd, out uint processId);
-                string processName = "Unknown";
+                NativeMethods.GetWindowThreadProcessId(hWnd, out var processId);
+                var processName = "Unknown";
                 try
                 {
                     using var process = Process.GetProcessById((int)processId);
@@ -89,7 +89,7 @@ namespace StayAwake.Core
 
             // Checking the last error is more reliable than checking the return value
             NativeMethods.SendMessage(hWnd, NativeMethods.WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
-            int lastError = Marshal.GetLastWin32Error();
+            var lastError = Marshal.GetLastWin32Error();
             if (lastError != 0)
             {
                 throw new Win32Exception(lastError);
