@@ -38,8 +38,9 @@ namespace StayAwake.Core
 
         public const uint WM_CLOSE = 0x0010;
 
-        [LibraryImport("user32.dll", EntryPoint = "SendMessageW", SetLastError = true)]
-        public static partial IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+        [LibraryImport("user32.dll", EntryPoint = "PostMessageW", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static partial bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
 
         [LibraryImport("user32.dll", SetLastError = true)]
         public static partial uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);

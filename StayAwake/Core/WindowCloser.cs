@@ -85,14 +85,9 @@ namespace StayAwake.Core
 
         public static void CloseWindow(IntPtr hWnd)
         {
-            // TODO: SendMessage is blocking, should run this on another thread or use PostMessage
-
-            // Checking the last error is more reliable than checking the return value
-            NativeMethods.SendMessage(hWnd, NativeMethods.WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
-            var lastError = Marshal.GetLastWin32Error();
-            if (lastError != 0)
+            if (!NativeMethods.PostMessage(hWnd, NativeMethods.WM_CLOSE, IntPtr.Zero, IntPtr.Zero))
             {
-                throw new Win32Exception(lastError);
+                throw new Win32Exception(Marshal.GetLastWin32Error());
             }
         }
     }
