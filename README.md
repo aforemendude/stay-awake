@@ -2,7 +2,8 @@
 
 ![Stay Awake Icon](StayAwake/icon.png)
 
-A lightweight utility for Windows that prevents the system from sleeping and provides a tool to automatically close specific windows after a scheduled duration.
+A lightweight utility for Windows that prevents the system from sleeping and provides a tool to automatically close
+specific windows after a scheduled duration.
 
 ## Features
 
@@ -21,14 +22,17 @@ A lightweight utility for Windows that prevents the system from sleeping and pro
 - Automatically closes a selected window after a specified duration.
 - Scans and lists all currently open windows.
 - Displays detailed process information (Process Name, Window Handle) and Window Position (X, Y, Width, Height).
-- **Window Highlighting**: Optionally overlays a translucent red box on the selected window to visually verify the target before scheduling closure.
+- **Window Highlighting**: Optionally overlays a translucent red box on the selected window to visually verify the
+  target before scheduling closure.
 - Configurable duration: 15 minutes to 8 hours (in 15-minute increments).
 - Logs closure details (Time, Handle, Process Name) in the interface upon completion.
 
 ### General
 
-- **System Tray**: Closing the window minimizes the application to the system tray. Left-click the tray icon to show the window, or right-click for options (Show/Quit).
-- **Single Instance**: Ensures only one instance of the application runs at a time. If a new instance is started, the existing one is brought to the foreground.
+- **System Tray**: Closing the window minimizes the application to the system tray. Left-click the tray icon to show the
+  window, or right-click for options (Show/Quit).
+- **Single Instance**: Ensures only one instance of the application runs at a time. If a new instance is started, the
+  existing one is brought to the foreground.
 
 ## Requirements
 
@@ -40,7 +44,8 @@ A lightweight utility for Windows that prevents the system from sleeping and pro
 
 Download release builds from the [Releases](https://github.com/aforemendude/stay-awake/releases) page.
 
-Note: Due to file size, a self-contained release build will not be provided. You need to install the .NET 10.0 runtime separately.
+Note: Due to file size, a self-contained release build will not be provided. You need to install the .NET 10.0 runtime
+separately.
 
 ## Build Instructions
 
@@ -69,6 +74,18 @@ dotnet build -c Release
 The output will be in `StayAwake/bin/Release/net10.0-windows/`.
 
 ### Code Formatting
+
+Documentation and configuration files use Prettier. Install Node.js 24.19.0 or newer and npm, then run:
+
+```bash
+npm install
+npm run format
+npm run format:check
+```
+
+Prettier wraps prose at 120 columns. Generated build output is excluded from formatting.
+
+Format C# sources with the .NET SDK:
 
 ```bash
 dotnet format

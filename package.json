@@ -1,0 +1,21 @@
+{
+  "description": "Keep Windows awake and automatically close selected windows after a scheduled duration.",
+  "devDependencies": {
+    "prettier": "3.9.6"
+  },
+  "engines": {
+    "node": ">=24.19.0"
+  },
+  "license": "MIT",
+  "name": "stay-awake",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aforemendude/stay-awake.git"
+  },
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "version": "1.0.0"
+}
