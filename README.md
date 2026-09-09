@@ -90,7 +90,3 @@ Format C# sources with the .NET SDK:
 ```bash
 dotnet format
 ```
-
-## AI Disclosure
-
-This project's code, documentation, and other assets were created with the assistance of AI.
