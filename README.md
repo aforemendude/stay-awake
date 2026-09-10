@@ -44,38 +44,67 @@ specific windows after a scheduled duration.
 
 Download release builds from the [Releases](https://github.com/aforemendude/stay-awake/releases) page.
 
-Note: Due to file size, a self-contained release build will not be provided. You need to install the .NET 10.0 runtime
-separately.
+Each build is a single framework-dependent `StayAwake.exe`. Install the .NET 10.0 Desktop Runtime (Windows) matching the
+build's architecture separately; the runtime is not bundled in the executable.
 
 ## Build Instructions
 
 ### Prerequisites
 
-- .NET 10.0 SDK
+- .NET 10.0 SDK on Windows, Linux, or macOS
+- Node.js 24.19.0 or newer and npm for the convenience scripts and Prettier
+
+The project cross-compiles to Windows x64 (`win-x64`) by default. Running the application requires Windows. The first
+build or C# formatting run restores the required Windows targeting packs from NuGet.
+
+### Build Both Configurations
+
+```bash
+npm run build
+```
+
+This publishes both Debug and Release builds. Each `publish/` directory contains only `StayAwake.exe`, with debug
+symbols embedded. The .NET settings use
+[framework-dependent single-file publishing](https://learn.microsoft.com/en-us/dotnet/core/deploying/single-file/overview).
 
 ### Debug Build
 
 To build the application for debugging (includes symbols, non-optimized):
 
 ```bash
-dotnet build -c Debug
+npm run build:debug
+# Or, using only the .NET SDK:
+dotnet publish StayAwake/StayAwake.csproj -c Debug
 ```
 
-The output will be in `StayAwake/bin/Debug/net10.0-windows/`.
+The executable will be `StayAwake/bin/Debug/net10.0-windows/win-x64/publish/StayAwake.exe`.
 
 ### Release Build
 
 To build the application for production (optimized):
 
 ```bash
-dotnet build -c Release
+npm run build:release
+# Or, using only the .NET SDK:
+dotnet publish StayAwake/StayAwake.csproj -c Release
 ```
 
-The output will be in `StayAwake/bin/Release/net10.0-windows/`.
+The executable will be `StayAwake/bin/Release/net10.0-windows/win-x64/publish/StayAwake.exe`.
+
+To target another Windows architecture, pass a runtime identifier, for example:
+
+```bash
+npm run build:release -- --runtime win-arm64
+# Or:
+dotnet publish StayAwake/StayAwake.csproj -c Release --runtime win-arm64
+```
+
+The output path uses the selected runtime identifier in place of `win-x64`. Use the executable from `publish/` for
+distribution; `dotnet build` produces intermediate files without creating the single-file bundle.
 
 ### Code Formatting
 
-Documentation and configuration files use Prettier. Install Node.js 24.19.0 or newer and npm, then run:
+The format commands run Prettier for documentation and configuration files and `dotnet format` for C# sources:
 
 ```bash
 npm install
@@ -85,8 +114,9 @@ npm run format:check
 
 Prettier wraps prose at 120 columns. Generated build output is excluded from formatting.
 
-Format C# sources with the .NET SDK:
+To format or check only C# sources with the .NET SDK:
 
 ```bash
-dotnet format
+dotnet format StayAwake.slnx
+dotnet format StayAwake.slnx --verify-no-changes
 ```

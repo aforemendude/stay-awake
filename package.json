@@ -14,8 +14,11 @@
     "url": "git+https://github.com/aforemendude/stay-awake.git"
   },
   "scripts": {
-    "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "build": "npm run build:debug && npm run build:release",
+    "build:debug": "dotnet publish StayAwake/StayAwake.csproj -c Debug",
+    "build:release": "dotnet publish StayAwake/StayAwake.csproj -c Release",
+    "format": "prettier --write . && dotnet format StayAwake.slnx",
+    "format:check": "prettier --check . && dotnet format StayAwake.slnx --verify-no-changes"
   },
   "version": "1.0.0"
 }
