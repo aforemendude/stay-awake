@@ -184,7 +184,7 @@ feature through a shared fake platform binding; application tests cover coordina
 
 See [AGENTS.md](AGENTS.md) for the architecture and application-only testing boundary, and [TODO.md](TODO.md) for the
 migration decisions, recorded validation, deferred alternatives, and Windows manual acceptance matrix. The
-`CODE_REVIEW_*.md` documents retain their original contents and source links as historical context for the prior
-implementation.
+`CODE_REVIEW_*.md` documents track remaining findings from the prior implementation, retaining the original review
+basis and historical source links for open findings.
 
 Licensed under the [MIT License](LICENSE).

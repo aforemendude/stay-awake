@@ -33,7 +33,8 @@ exposes its portable controller as a library that can be built and tested native
 - `README.md` is the user/contributor guide. `TODO.md` records migration choices, validation evidence, and pending
   Windows manual acceptance.
 - `CODE_REVIEW_CORE.md`, `CODE_REVIEW_INTERFACE_TIMERS.md`, and `CODE_REVIEW_STARTUP_BUILD_DOCS.md` describe the former
-  implementation. Preserve their contents and historical links; completing every finding is outside this port's scope.
+  implementation's remaining review findings. Preserve unresolved findings and their historical links; remove resolved
+  items after checking the current implementation. Completing every finding is outside this port's scope.
 
 ## Testing Requirements
 
