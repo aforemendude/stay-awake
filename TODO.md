@@ -29,8 +29,8 @@ correctness fixes belong in the port; more involved alternatives below can remai
 
 - [ ] Use the actual source as the behavior specification. The README omits some existing behavior and includes a
       screen-lock guarantee that the implementation does not establish.
-- [ ] Preserve a usable reference to the pre-migration revision in the implementation notes or commit history. Once
-      deleted, the C# paths below can be inspected through Git; do not retain a second .NET implementation in the tree.
+- [ ] Preserve a usable reference to the pre-migration revision in the commit history. Once deleted, the C# paths below
+      can be inspected through Git; do not retain a second .NET implementation in the tree.
 - [ ] Capture a Windows baseline of the layout and interactions if Windows is available. If it is unavailable, proceed
       from the source and leave visual verification pending rather than claiming it passed.
 
@@ -178,10 +178,10 @@ the identity option, and never silently substitute a different row or a newly re
   maintains the layout while keeping long process names/errors accessible at all DPIs. Cons: may require a modest
   fixed-size adjustment. Captions alone are closer to the old layout but can clip completion information; a new log
   panel is more complexity than the current single-result display needs.
-- **Own-window filtering: preserve current eligibility, or exclude StayAwake's own windows.** Preserving it is closest
-  to the source but can allow scheduling the main window to hide itself. Excluding the application's own PID is a small,
-  sensible default that avoids self-targeting; it deliberately narrows the list. Keep other applications' ordinary
-  Explorer windows eligible.
+- **Own-window filtering: preserve current eligibility, or (recommended) exclude StayAwake's own windows.** Preserving
+  it is closest to the source but can allow scheduling the main window to hide itself. Excluding the application's own
+  PID is a small, sensible default that avoids self-targeting; it deliberately narrows the list. Keep other
+  applications' ordinary Explorer windows eligible.
 
 ### D10. Native runtime packaging and GUI entry point
 
@@ -190,8 +190,9 @@ the identity option, and never silently substitute a different row or a newly re
   fixes require rebuilding. Inspect actual imports rather than assuming flags prove self-containment.
 - **Ship MinGW runtime DLLs alongside the executable.** Pros: smaller executable and explicit shared runtime files.
   Cons: multi-file distribution and additional packaging/version matching. This departs from the reference's workflow.
-- **Entry option A: keep portable `main()` and use MinGW's supported GUI-subsystem startup.** Pros: closest to the
-  reference and minimal glue. Cons: confirm linking with the chosen toolchains; this is not an automatic MSVC promise.
+- **Entry option A (recommended): keep portable `main()` and use MinGW's supported GUI-subsystem startup.** Pros:
+  closest to the reference and minimal glue. Cons: confirm linking with the chosen toolchains; this is not an automatic
+  MSVC promise.
 - **Entry option B: a tiny Windows `wWinMain` wrapper calling a portable `RunApplication()`.** Pros: explicit GUI entry
   point and easier future MSVC support. Cons: one extra platform source. In either case, put no Win32 code in the
   portable composition root and make Explorer launch free of a console window.
@@ -208,17 +209,16 @@ the identity option, and never silently substitute a different row or a newly re
 
 ### D12. High DPI on a small monitor work area
 
-- **Keep one fixed logical client size at every scale.** Pros: simplest interpretation of fixed size and consistent
-  layout. Cons: the scaled window may exceed a small screen's work area. Document the usable work-area requirement;
-  moving the window alone does not guarantee every control can be reached.
-- **Recommended fallback: keep the normal fixed layout, but reduce the list viewport when needed to fit the monitor.**
-  Pros: preserves control/font scaling, layout order, and access to actions without enabling user resizing. Cons: fewer
-  visible list rows and extra work-area calculations; extremely small work areas may still need a documented limit.
+- **Recommended: Keep one fixed logical client size at every scale.** Pros: simplest interpretation of fixed size and
+  consistent layout. Cons: the scaled window may exceed a small screen's work area. Document the usable work-area
+  requirement; moving the window alone does not guarantee every control can be reached.
+- **Keep the normal fixed layout, but reduce the list viewport when needed to fit the monitor.** Pros: preserves
+  control/font scaling, layout order, and access to actions without enabling user resizing. Cons: fewer visible list
+  rows and extra work-area calculations; extremely small work areas may still need a documented limit.
 - **Scroll the entire fixed logical layout inside a bounded viewport.** Pros: all content remains reachable even when
   the monitor cannot fit the normal window. Cons: extra navigation and scrolling behavior unlike the current UI.
 
-Do not fit a high-DPI screen by silently shrinking fonts or disabling DPI awareness. Select and document the fallback
-before defining the supported small-screen acceptance cases.
+Do not fit a high-DPI screen by silently shrinking fonts or disabling DPI awareness.
 
 ## 3. Target repository structure and ownership
 
@@ -234,7 +234,7 @@ cmake/
   toolchains/mingw-w64-x86_64.cmake
 include/stay_awake/
   application.hpp
-  application_state.hpp        # durations, selections, feature/view state, result values
+  application_state.hpp       # durations, selections, feature/view state, result values
   platform_binding.hpp
   platform_factory.hpp
 src/
