@@ -66,8 +66,8 @@ void Application::Handle(const ApplicationEvent& event)
             events_.pop_front();
             Process(next);
             Publish();
-            // Complete transitions and render BEFORE a modal dialog can deliver another event. Reentrant events
-            // are queued until presentation returns, preventing duplicate expiry and stale UI writes.
+            // Complete transitions and render BEFORE a modal dialog can deliver another event. Reentrant events are
+            // queued until presentation returns, preventing duplicate expiry and stale UI writes.
             auto error = std::exchange(pending_error_, {});
             if (!error.empty() && !state_.stopped)
             {
