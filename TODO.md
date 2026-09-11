@@ -1,7 +1,7 @@
 # TODO: Port Stay Awake to C++ and Win32
 
 This is the execution plan for replacing the .NET application with a Windows C++ application that can be cross-compiled
-from Linux. Creating this plan does not perform the migration.
+from Linux. The native implementation and Linux validation are complete; Windows acceptance remains pending.
 
 Use `/home/sudoer/workspace-example/DoubleClickHotkey` as the reference project throughout implementation. That
 directory will remain available. Match its CMake workflows, portable application/platform boundary, formatting, and
@@ -9,27 +9,49 @@ application-only unit testing approach; adapt its console application structure 
 
 ## Scope and completion criteria
 
-- [ ] Replace the C# application, solution, and .NET build/format commands with C++17, CMake, and MinGW-w64 workflows.
+- [x] Replace the C# application, solution, and .NET build/format commands with C++17, CMake, and MinGW-w64 workflows.
 - [ ] Preserve existing functionality, layout, displayed information, tray behavior, and independent timers, subject to
       the small corrections explicitly identified below.
 - [ ] Build a Windows x64 `StayAwake.exe` from Linux and Windows. Build and run portable application tests natively on
       both hosts. Linux does not need an application UI or a power-management implementation.
-- [ ] Implement the UI through direct Win32 APIs. Keep the window fixed in logical size, with proper DPI scaling at
+- [x] Implement the UI through direct Win32 APIs. Keep the window fixed in logical size, with proper DPI scaling at
       startup and when DPI changes. No WinForms, WPF, Qt, or other UI framework is needed.
-- [ ] Add an `AGENTS.md` adapted from the reference, documenting the architecture, commands, and testing boundaries.
-- [ ] Keep `CODE_REVIEW_CORE.md`, `CODE_REVIEW_INTERFACE_TIMERS.md`, and `CODE_REVIEW_STARTUP_BUILD_DOCS.md` intact as
+- [x] Add an `AGENTS.md` adapted from the reference, documenting the architecture, commands, and testing boundaries.
+- [x] Keep `CODE_REVIEW_CORE.md`, `CODE_REVIEW_INTERFACE_TIMERS.md`, and `CODE_REVIEW_STARTUP_BUILD_DOCS.md` intact as
       historical documents. Resolving every review finding is not a prerequisite for this port.
-- [ ] Preserve the license, project identity, and existing icon assets. Remove obsolete runtime/build documentation.
+- [x] Preserve the license, project identity, and existing icon assets. Remove obsolete runtime/build documentation.
 
 Do not expand this work into settings persistence, new command-line features, a Linux GUI, forced process termination,
 an installer, a new release pipeline, or a comprehensive review-remediation project. Straightforward lifecycle and
 correctness fixes belong in the port; more involved alternatives below can remain deferred with their limits recorded.
 
+Implementation checkboxes record code/repository work and available build/test evidence. They do not certify native
+Windows behavior: **every scenario in the Windows manual acceptance matrix remains pending**. Font/caption measurement
+at the listed DPIs, actual overlay click-through, Windows-host clock linkage/builds, and the visual baseline remain
+unchecked. The worker-listener and composition-root-test alternatives were not selected, so no such components/tests
+were added.
+
+## Implementation decisions and baseline
+
+The pre-migration source is preserved at Git revision `a35cd700f02b2827e83cc2d41711014468fd82a3`. For example,
+`git show a35cd700:StayAwake/Forms/MainForm.cs` retrieves the behavior baseline. No Windows desktop is available in the
+implementation environment; visual baseline and native acceptance are pending.
+
+The implementation selects the recommended defaults D1–D12 before building the affected components: C++17/CMake
+3.28/Ninja and x64 MinGW; controls created with `CreateWindowExW`; one portable binding/controller/view;
+suspend-inclusive `QueryInterruptTime` with separate local timestamps; original session-local mutex/event names with
+bounded readiness retry on the UI thread; captured HWND value plus PID revalidation; snapshot highlighting; UTF-8 model
+and Windows locale title sorting; both 10-second choices, consistent idle caption, rounded-up countdowns, copyable
+completion details and own-PID exclusion; static runtime and portable `main` with GUI subsystem; visible release failure
+and manual retry; fixed 784 × 606 logical client area (60 extra units for completion detail fields). Mixed-elevation
+activation is limited to the same elevation. Stronger window identity, live highlighting, alternate
+architectures/toolchains, and small-screen scrolling remain deferred. The work area must fit the scaled fixed window.
+
 ## 1. Establish the behavior baseline before deleting C# sources
 
-- [ ] Use the actual source as the behavior specification. The README omits some existing behavior and includes a
+- [x] Use the actual source as the behavior specification. The README omits some existing behavior and includes a
       screen-lock guarantee that the implementation does not establish.
-- [ ] Preserve a usable reference to the pre-migration revision in the commit history. Once deleted, the C# paths below
+- [x] Preserve a usable reference to the pre-migration revision in the commit history. Once deleted, the C# paths below
       can be inspected through Git; do not retain a second .NET implementation in the tree.
 - [ ] Capture a Windows baseline of the layout and interactions if Windows is available. If it is unavailable, proceed
       from the source and leave visual verification pending rather than claiming it passed.
@@ -273,20 +295,20 @@ TODO.md
 CODE_REVIEW_*.md              # preserve the three existing documents
 ```
 
-- [ ] Keep `windows.h`, HWND/HANDLE, window procedures, resource IDs, OS flags, and `#ifdef _WIN32` out of public
+- [x] Keep `windows.h`, HWND/HANDLE, window procedures, resource IDs, OS flags, and `#ifdef _WIN32` out of public
       application headers, `src/application/`, and unit tests. Windows-only helpers belong under the adapter directory.
-- [ ] Define portable types for duration choices, awake mode, window identity, signed rectangle coordinates, selected
+- [x] Define portable types for duration choices, awake mode, window identity, signed rectangle coordinates, selected
       metadata, countdown/status text, operation results, and control availability. Native handles may cross the
       boundary only as opaque values such as a strongly typed `std::uintptr_t`, never as a dereferenceable native API.
-- [ ] The controller owns selection, captured schedule target, durations, deadlines, active/error states, highlight
+- [x] The controller owns selection, captured schedule target, durations, deadlines, active/error states, highlight
       intent, show/refresh policy, and user-visible results. It decides which native operations to request.
-- [ ] The binding owns native resource lifetimes, event delivery, clocks, enumeration/geometry queries, locale-specific
+- [x] The binding owns native resource lifetimes, event delivery, clocks, enumeration/geometry queries, locale-specific
       services, power requests, close posting, overlay display, and presentation of controller state.
-- [ ] Route typed application events from control notifications, tray commands, timer ticks, activation, and shutdown.
+- [x] Route typed application events from control notifications, tray commands, timer ticks, activation, and shutdown.
       Keep layout/control code free of timer-expiry and scheduling decisions.
-- [ ] Keep all controller calls and execution-state changes on the UI thread. Document callback lifetime and reentrancy:
+- [x] Keep all controller calls and execution-state changes on the UI thread. Document callback lifetime and reentrancy:
       modal dialogs can pump messages, so finish state transitions before presenting an error.
-- [ ] Use RAII for owned Win32 handles, GDI objects, icons, menus, and event registrations. Distinguish borrowed/shared
+- [x] Use RAII for owned Win32 handles, GDI objects, icons, menus, and event registrations. Distinguish borrowed/shared
       handles from owned resources. No exception may escape a Win32 callback or a destructor.
 
 ## 4. Implement the CMake and tooling foundation
@@ -294,24 +316,24 @@ CODE_REVIEW_*.md              # preserve the three existing documents
 Reference files: `CMakeLists.txt`, `CMakePresets.json`, `cmake/toolchains/mingw-w64-x86_64.cmake`,
 `cmake/ClangFormat.cmake`, `tests/CMakeLists.txt`, `scripts/cmake.mjs`, and formatting files in DoubleClickHotkey.
 
-- [ ] Create project `StayAwake` and namespaced targets such as `StayAwake::core` and `StayAwake::platform`; produce
+- [x] Create project `StayAwake` and namespaced targets such as `StayAwake::core` and `StayAwake::platform`; produce
       `StayAwake.exe`. Preserve existing project version/license metadata unless there is a separate reason to change
       it.
-- [ ] Define `STAY_AWAKE_BUILD_APP`, defaulting on for Windows targets. With it off, compile only portable code/tests;
+- [x] Define `STAY_AWAKE_BUILD_APP`, defaulting on for Windows targets. With it off, compile only portable code/tests;
       explicitly requesting an app on an unsupported target should fail with an understandable configure error.
-- [ ] Apply C++17, disabled compiler extensions, and the reference's target-scoped warning settings. Define `UNICODE`,
+- [x] Apply C++17, disabled compiler extensions, and the reference's target-scoped warning settings. Define `UNICODE`,
       `_UNICODE`, `NOMINMAX`, `WIN32_LEAN_AND_MEAN`, and the chosen Windows API baseline only on native targets.
-- [ ] Select Windows sources and libraries in CMake. Link required libraries for the implementation, normally `user32`,
+- [x] Select Windows sources and libraries in CMake. Link required libraries for the implementation, normally `user32`,
       `gdi32`, and `shell32`, plus `comctl32`, `advapi32`, or others only when the selected APIs require them.
-- [ ] Configure the GUI subsystem, selected startup strategy, and static runtime flags on the app target. Keep the
+- [x] Configure the GUI subsystem, selected startup strategy, and static runtime flags on the app target. Keep the
       GoogleTest executable a normal console test executable.
-- [ ] Enable the RC language only when building the Windows app. Use the cross toolchain's target `windres`, and attach
+- [x] Enable the RC language only when building the Windows app. Use the cross toolchain's target `windres`, and attach
       the `.rc` directly to the executable so its icon/manifest cannot disappear through static-library extraction.
-- [ ] Embed the existing icon and an application manifest declaring Per-Monitor V2 awareness, normal `asInvoker`
+- [x] Embed the existing icon and an application manifest declaring Per-Monitor V2 awareness, normal `asInvoker`
       execution, and common-controls v6 if used. No external icon/manifest file should be required at runtime.
-- [ ] Use target-only include/library/package searches and host program searches in the MinGW toolchain, following the
+- [x] Use target-only include/library/package searches and host program searches in the MinGW toolchain, following the
       reference. Keep output under `build/<preset>` and enable compile command export.
-- [ ] Add matching configure/build presets:
+- [x] Add matching configure/build presets:
 
 | Preset                  | App | Tests | Execution                                                                     |
 | ----------------------- | --- | ----- | ----------------------------------------------------------------------------- |
@@ -321,54 +343,54 @@ Reference files: `CMakeLists.txt`, `CMakePresets.json`, `cmake/toolchains/mingw-
 | `windows-mingw-debug`   | On  | On    | Build app and run portable tests natively on Windows.                         |
 | `windows-mingw-release` | On  | Off   | Build release app on Windows.                                                 |
 
-- [ ] Add CTest presets only for native test environments. Adopt the reference's pinned GoogleTest FetchContent URL and
+- [x] Add CTest presets only for native test environments. Adopt the reference's pinned GoogleTest FetchContent URL and
       hash, and `gtest_discover_tests(... DISCOVERY_MODE PRE_TEST)` to avoid executing Windows tests while building on
       Linux. Explain the first-configuration network requirement; release configuration should not fetch GoogleTest.
-- [ ] Adapt the Node preset dispatcher so `npm run build` builds Debug and Release Windows applications for the host,
+- [x] Adapt the Node preset dispatcher so `npm run build` builds Debug and Release Windows applications for the host,
       `npm run test` builds/runs native tests, and formatting invokes the appropriate CMake target. Propagate errors.
-- [ ] Retain useful existing `build:debug` and `build:release` shortcuts by extending the dispatcher, or explicitly
+- [x] Retain useful existing `build:debug` and `build:release` shortcuts by extending the dispatcher, or explicitly
       document their replacement. Keeping them has little cost and avoids breaking established commands.
-- [ ] Copy/adapt `.clang-format` and CMake format targets. Keep the maintained source list complete, including new
+- [x] Copy/adapt `.clang-format` and CMake format targets. Keep the maintained source list complete, including new
       headers/tests; retain Prettier for Markdown/JSON/JavaScript. Exclude `build/` and dependency/generated output.
-- [ ] Keep Node/npm optional for direct CMake use. Update `package-lock.json` only when package metadata/dependencies
+- [x] Keep Node/npm optional for direct CMake use. Update `package-lock.json` only when package metadata/dependencies
       require it; no new JavaScript framework or runtime dependency is necessary.
 
 ## 5. Port portable application behavior
 
-- [ ] Generate duration values rather than hard-coding selected indexes. Select defaults by duration value. Awake list:
+- [x] Generate duration values rather than hard-coding selected indexes. Select defaults by duration value. Awake list:
       31 quarter-hour choices plus 10 seconds; close list: 32 quarter-hour choices plus 10 seconds.
-- [ ] Implement independent awake and scheduled-close state machines. Starting/stopping one must not reset the other.
+- [x] Implement independent awake and scheduled-close state machines. Starting/stopping one must not reset the other.
       Derive button captions, enablement, and timer-needed state from the model, not from current control text.
-- [ ] Start awake protection only after a valid selection and successful native request. Save the requested mode and
+- [x] Start awake protection only after a valid selection and successful native request. Save the requested mode and
       deadline, update the display immediately, and prevent mode switching while active.
-- [ ] Implement manual and timed awake stop, including the chosen release-error state. Preserve mode/time/outcome
+- [x] Implement manual and timed awake stop, including the chosen release-error state. Preserve mode/time/outcome
       information at expiry; manual stop does not need to invent an expiry record.
-- [ ] Use an injected duration clock and separate timestamp source. Compute remaining time from a deadline on every tick
+- [x] Use an injected duration clock and separate timestamp source. Compute remaining time from a deadline on every tick
       rather than subtracting one second per callback. Clamp display to zero; process late ticks and resume correctly
       without repeated completion actions.
-- [ ] Implement refresh/selection state, metadata display, and highlight intent. Preserve the old filtering rules except
+- [x] Implement refresh/selection state, metadata display, and highlight intent. Preserve the old filtering rules except
       any explicitly chosen own-window exclusion. Preserve duplicate titles as distinct selectable targets.
-- [ ] Require a selected window to schedule a close; capture its identity and display metadata. Ignore stale UI events
+- [x] Require a selected window to schedule a close; capture its identity and display metadata. Ignore stale UI events
       that attempt to replace the target, refresh, or alter the close duration while a schedule is active.
-- [ ] Cancel without closing; at expiry consume the schedule once, request a guarded close, store its result, restore
+- [x] Cancel without closing; at expiry consume the schedule once, request a guarded close, store its result, restore
       controls, and refresh automatically. Preserve the result even if that refresh fails.
-- [ ] Report successful posting as `Close requested` rather than `Closed`, keeping time, handle, and process name. A
+- [x] Report successful posting as `Close requested` rather than `Closed`, keeping time, handle, and process name. A
       queued message does not establish that the target handled it or closed; see
       [PostMessageW](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-postmessagew).
-- [ ] Clear highlight state consistently on refresh/hide even when enumeration fails. Suppress stale overlays after
+- [x] Clear highlight state consistently on refresh/hide even when enumeration fails. Suppress stale overlays after
       invalid selection or geometry. Highlight with no selection may remain enabled as an intent, as in the current
       code, but must display no overlay until there is a valid selection.
-- [ ] Show/second-launch events refresh only when no close is scheduled, then restore/activate the main window. Hide
+- [x] Show/second-launch events refresh only when no close is scheduled, then restore/activate the main window. Hide
       events stop highlight and preserve schedules; Quit/confirmed session-end events cancel schedules and request
       cleanup.
-- [ ] Keep user-initiated errors visible and automatic completion errors in status. Do not generate recurring modal
+- [x] Keep user-initiated errors visible and automatic completion errors in status. Do not generate recurring modal
       dialogs every second or erase a useful result just because automatic refresh failed.
 
 ## 6. Implement the native window and DPI layout
 
-- [ ] Start from the designer's 784 × 546 client area as a reference, defining a fixed logical layout at 96 DPI. Do not
+- [x] Start from the designer's 784 × 546 client area as a reference, defining a fixed logical layout at 96 DPI. Do not
       assume the WinForms font-scaled dimensions are a pixel-perfect DPI specification; modest changes are acceptable.
-- [ ] Preserve this control arrangement:
+- [x] Preserve this control arrangement:
 
 ```text
 Stay Awake
@@ -382,78 +404,78 @@ Window Closer
   [large, single-selection list of window titles                              ]
 ```
 
-- [ ] Use a caption/system menu/minimize style without a resizable frame or maximize box. Enforce the chosen logical
+- [x] Use a caption/system menu/minimize style without a resizable frame or maximize box. Enforce the chosen logical
       client size for normal sizing, accounting for the non-client frame at each DPI.
-- [ ] Apply the selected D12 work-area fallback on small monitors, preserving the same control order and readable fonts.
+- [x] Apply the selected D12 work-area fallback on small monitors, preserving the same control order and readable fonts.
       Keep the window reachable after monitor removal or a work-area change.
-- [ ] Establish DPI awareness before creating any HWND. Use current window DPI, scaled layout constants, DPI-sized fonts
+- [x] Establish DPI awareness before creating any HWND. Use current window DPI, scaled layout constants, DPI-sized fonts
       and icons, and `AdjustWindowRectExForDpi` for the outer rectangle. Apply the font to all controls.
-- [ ] Reuse one layout routine at creation and DPI changes. Handle `WM_DPICHANGED`, applying the suggested rectangle and
+- [x] Reuse one layout routine at creation and DPI changes. Handle `WM_DPICHANGED`, applying the suggested rectangle and
       rebuilding font/icon/layout resources. Consider `WM_GETDPISCALEDSIZE` if custom fixed-size rounding needs to
       influence that rectangle; avoid cumulative scaling and recursive DPI changes. Follow Microsoft's
       [Win32 DPI guidance](https://learn.microsoft.com/en-us/windows/win32/hidpi/high-dpi-desktop-application-development-on-windows).
 - [ ] Scale control spacing, rows, button widths, combo dropdown height, list item height, and status areas as well as
       the outer window. Measure long captions/details so all information remains available without clipping.
-- [ ] Support keyboard traversal, visible focus, button activation, combo/list navigation, and copying read-only
+- [x] Support keyboard traversal, visible focus, button activation, combo/list navigation, and copying read-only
       details. With a plain top-level window, explicitly provide dialog-style navigation such as `IsDialogMessageW`.
-- [ ] Preserve single selection, a useful visible scrollbar, full Unicode titles, and accessible long list entries using
+- [x] Preserve single selection, a useful visible scrollbar, full Unicode titles, and accessible long list entries using
       horizontal extent or an equivalent native presentation. Do not use truncated display text as identity.
-- [ ] Keep native rectangle coordinates in screen pixels for metadata and overlay positioning, including negative
+- [x] Keep native rectangle coordinates in screen pixels for metadata and overlay positioning, including negative
       multi-monitor coordinates. Do not apply the main window's UI scale to a target rectangle a second time.
-- [ ] Make error/status text readable in the fixed layout; preserve full details through a read-only field or tooltip if
+- [x] Make error/status text readable in the fixed layout; preserve full details through a read-only field or tooltip if
       captions cannot fit. Avoid introducing a persistent history feature just to preserve one completion result.
 
 ## 7. Implement native services and lifecycle fixes
 
 ### Instance ownership, tray, and shutdown
 
-- [ ] Acquire single-instance ownership atomically before starting application services; distinguish already-running
+- [x] Acquire single-instance ownership atomically before starting application services; distinguish already-running
       from actual creation/access errors. Keep the ownership resource until teardown finishes.
-- [ ] Create the hidden main window, controls, and tray before consuming Show requests. Do not briefly show then hide at
+- [x] Create the hidden main window, controls, and tray before consuming Show requests. Do not briefly show then hide at
       startup. A request received during initialization must not be overwritten by a later initial-hide action.
-- [ ] Handle the mutex-created/event-not-created interval with bounded retry or explicit readiness. Retain an already
+- [x] Handle the mutex-created/event-not-created interval with bounded retry or explicit readiness. Retain an already
       signaled event until the receiver is ready. Handle primary exit during activation without starting two owners,
       indefinite waiting, or silently disabling all future Show requests.
-- [ ] If a worker listener is selected instead of the recommended combined loop, provide cancellation, join it before
+- [x] If a worker listener is selected instead of the recommended combined loop, provide cancellation, join it before
       destroying the UI, and marshal through a valid native recipient. Do not recreate the old unobserved waiter.
-- [ ] Add the `Stay Awake` tray icon, left-click Show, and right-click Show/Quit menu using `Shell_NotifyIconW` and
+- [x] Add the `Stay Awake` tray icon, left-click Show, and right-click Show/Quit menu using `Shell_NotifyIconW` and
       native menus. Restore a minimized window and request foreground activation; handle Windows foreground restrictions
       without claiming activation is guaranteed under every policy.
-- [ ] Re-add the tray icon after Explorer's `TaskbarCreated` message. If initial tray creation fails, show a usable
+- [x] Re-add the tray icon after Explorer's `TaskbarCreated` message. If initial tray creation fails, show a usable
       window/error rather than leaving an unreachable hidden process.
-- [ ] Handle user `WM_CLOSE` as hide-to-tray; keep scheduled operations alive and hide/disable highlight. Keep ordinary
+- [x] Handle user `WM_CLOSE` as hide-to-tray; keep scheduled operations alive and hide/disable highlight. Keep ordinary
       minimize behavior. Only actual shutdown destroys the window and exits the message loop.
-- [ ] Accept `WM_QUERYENDSESSION`; complete cleanup on `WM_ENDSESSION(TRUE)` without blocking dialogs. If end-session is
+- [x] Accept `WM_QUERYENDSESSION`; complete cleanup on `WM_ENDSESSION(TRUE)` without blocking dialogs. If end-session is
       canceled (`FALSE`), continue running. Do not conflate these messages with close-to-tray. See Microsoft's
       [session query](https://learn.microsoft.com/en-us/windows/win32/shutdown/wm-queryendsession) and
       [session completion](https://learn.microsoft.com/en-us/windows/win32/shutdown/wm-endsession) contracts.
-- [ ] Make Quit/confirmed session-end/startup-failure cleanup idempotent: prevent new callbacks, stop timers and pending
+- [x] Make Quit/confirmed session-end/startup-failure cleanup idempotent: prevent new callbacks, stop timers and pending
       schedules, release awake protection on its owning thread, remove overlay/tray, destroy native resources, then
       release instance ownership. Pending activation must not resurrect a closing window.
 
 ### Power, timer, window catalog, and overlay
 
-- [ ] Implement `SetThreadExecutionState` using `ES_CONTINUOUS | ES_SYSTEM_REQUIRED`, plus `ES_DISPLAY_REQUIRED` for
+- [x] Implement `SetThreadExecutionState` using `ES_CONTINUOUS | ES_SYSTEM_REQUIRED`, plus `ES_DISPLAY_REQUIRED` for
       display mode; clear with `ES_CONTINUOUS` on the same thread. Check failure and return a useful operation result.
       Do not introduce away mode or simulated input. The API does not block explicit user sleep or screensavers; see
       [SetThreadExecutionState](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-setthreadexecutionstate).
-- [ ] Drive controller ticks with a roughly one-second Win32 timer, running only while required by active features (and
+- [x] Drive controller ticks with a roughly one-second Win32 timer, running only while required by active features (and
       optional live highlighting if selected). Hidden windows must continue receiving ticks. Handle timer setup failure
       so an operation cannot remain active indefinitely without expiry processing.
 - [ ] Implement the chosen duration clock and local timestamp formatting without adding Windows types to the core. If
       using biased interrupt time, verify declarations/import-library support in both MinGW environments.
-- [ ] Enumerate with `EnumWindows` and retrieve Unicode title, visibility, shell identity, owning process, process name,
+- [x] Enumerate with `EnumWindows` and retrieve Unicode title, visibility, shell identity, owning process, process name,
       and rectangle as needed. Use limited process-query rights; an inaccessible process name must not abort the entire
       list. Return the executable basename without extension to match `Process.ProcessName`.
-- [ ] Tolerate windows disappearing or titles changing during enumeration. Distinguish whole-enumeration failure from
+- [x] Tolerate windows disappearing or titles changing during enumeration. Distinguish whole-enumeration failure from
       unavailable metadata on a single window. Keep app eligibility rules and native querying responsibilities clear.
-- [ ] Revalidate the captured target according to D6, then use asynchronous `PostMessageW(..., WM_CLOSE, ...)`. Return
+- [x] Revalidate the captured target according to D6, then use asynchronous `PostMessageW(..., WM_CLOSE, ...)`. Return
       missing/changed target or posting failure honestly, including access-denied cases. Do not block on the foreign
       window, kill its process, dismiss its save prompts, or repeatedly resend after a successful request.
 - [ ] Create the overlay as a red layered, borderless, topmost tool window at approximately 25% alpha. Use no-activate
       display/positioning and appropriate transparent hit behavior; verify actual click-through on Windows rather than
       relying on the old `WS_EX_TRANSPARENT` comment as proof.
-- [ ] Apply target screen bounds directly; suppress invalid/zero-size rectangles and keep the overlay off the taskbar
+- [x] Apply target screen bounds directly; suppress invalid/zero-size rectangles and keep the overlay off the taskbar
       and out of Alt-Tab. Stop/destroy it on the appropriate application events. Reuse it safely across toggles.
 
 ## 8. Add application-only unit tests
@@ -463,83 +485,83 @@ on Linux and Windows, link only the portable core plus GoogleTest, and use fake 
 unit tests, Windows headers, conditional test skips, real desktop interaction, or real sleeps to this suite. Platform
 behavior is verified by builds and the separate Windows manual checks below.
 
-- [ ] Duration generation: exact endpoints, 15-minute increments, appended 10-second choice, counts, formatted labels,
+- [x] Duration generation: exact endpoints, 15-minute increments, appended 10-second choice, counts, formatted labels,
       and 2-hour/1-hour defaults; reject absent or invalid choices.
-- [ ] Initial state: both features idle, default selections, correct captions, no selected window/overlay, hidden
+- [x] Initial state: both features idle, default selections, correct captions, no selected window/overlay, hidden
       startup intent, and no unnecessary repeating timer.
-- [ ] Awake starts in either mode; competing mode disabled; stop/expiry restores expected state; failed start does not
+- [x] Awake starts in either mode; competing mode disabled; stop/expiry restores expected state; failed start does not
       leave an active deadline; failed release follows D11 and remains observable/retryable.
-- [ ] Both timers active at once; stopping/expiring one leaves the other unaffected; timer-needed output becomes false
+- [x] Both timers active at once; stopping/expiring one leaves the other unaffected; timer-needed output becomes false
       only when nothing needs ticks. Include both deadlines expiring on one callback.
-- [ ] Deadline edges: before/exactly at/after expiry, delayed/multiple ticks, restart after cancellation, immediate and
+- [x] Deadline edges: before/exactly at/after expiry, delayed/multiple ticks, restart after cancellation, immediate and
       rounded/truncated countdown presentation, and no duplicate power-release or close requests.
-- [ ] Wall-clock jumps change completion timestamps but not remaining duration. Simulate the selected suspend policy
+- [x] Wall-clock jumps change completion timestamps but not remaining duration. Simulate the selected suspend policy
       through fake elapsed time; do not test actual OS clocks.
-- [ ] List filtering policy if implemented in the core; distinct targets with identical titles; supplied ordering;
+- [x] List filtering policy if implemented in the core; distinct targets with identical titles; supplied ordering;
       selection/details clearing; process/rectangle fallback results; refresh failure; Unicode data round trips.
-- [ ] Close without selection reports an error; scheduling captures identity; later list events cannot replace it;
+- [x] Close without selection reports an error; scheduling captures identity; later list events cannot replace it;
       cancellation sends nothing; success/failure/missing/changed-target results preserve metadata and restore controls.
-- [ ] A successful close request produces request wording, not verified-closure wording. Completion runs once and
+- [x] A successful close request produces request wording, not verified-closure wording. Completion runs once and
       automatic refresh cannot erase the result or accidentally restart the schedule.
-- [ ] Highlight toggles with/without selection, changes target on selection, and is cleared on refresh/hide/exit,
+- [x] Highlight toggles with/without selection, changes target on selection, and is cleared on refresh/hide/exit,
       including refresh failure. Unavailable geometry suppresses the overlay; no selection may retain highlight intent
       as specified above. Scheduled close does not disable the highlight action.
-- [ ] Show/activation refreshes only when permitted, user close hides without canceling deadlines, Quit/confirmed
+- [x] Show/activation refreshes only when permitted, user close hides without canceling deadlines, Quit/confirmed
       session-end requests cleanup, and canceled session-end leaves the application running.
-- [ ] User versus automatic error presentation and callback-after-shutdown handling. Exercise reentrant events where the
+- [x] User versus automatic error presentation and callback-after-shutdown handling. Exercise reentrant events where the
       fake can expose a meaningful duplicate-completion or lifetime regression.
-- [ ] Test a portable composition root only if it contains meaningful behavior; do not mechanically copy the reference's
+- [x] Test a portable composition root only if it contains meaningful behavior; do not mechanically copy the reference's
       renamed-`main` test trick when this project's entry point merely constructs and runs the controller.
 
 ## 9. Finish repository migration and contributor documentation
 
-- [ ] Move `StayAwake/icon.ico` and `StayAwake/icon.png` into `assets/` without changing their content. Update the
+- [x] Move `StayAwake/icon.ico` and `StayAwake/icon.png` into `assets/` without changing their content. Update the
       README image path and resource references before removing the original directory.
-- [ ] Once the native implementation and portable tests are present, delete `StayAwake.slnx`,
+- [x] Once the native implementation and portable tests are present, delete `StayAwake.slnx`,
       `StayAwake/StayAwake.csproj`, every C# source/designer file, and `MainForm.resx`. Extract/preserve any needed
       embedded resources first. Remove the now-obsolete `StayAwake/` directory; do not merely disable the old build.
-- [ ] Replace the large .NET-focused `.gitignore` with relevant CMake, Node, editor, and local-file exclusions,
+- [x] Replace the large .NET-focused `.gitignore` with relevant CMake, Node, editor, and local-file exclusions,
       following the reference. Preserve useful existing protections such as `.env`; ignore `build/`, local CMake
       presets, and root compile-command links. Review `.vscode/settings.json` for obsolete C# vocabulary/settings.
-- [ ] Add `AGENTS.md` using the reference's Repository Map, Testing Requirements, and Common Commands pattern. Describe
+- [x] Add `AGENTS.md` using the reference's Repository Map, Testing Requirements, and Common Commands pattern. Describe
       StayAwake's portable state/controller, platform factory/binding, Win32 services, resources, and DPI
       responsibilities.
-- [ ] Explicitly require application-only portable unit tests and keep native APIs out of the core. Document npm/direct
+- [x] Explicitly require application-only portable unit tests and keep native APIs out of the core. Document npm/direct
       CMake workflows and link to the updated README. Explain that `CODE_REVIEW_*.md` describes the prior implementation
       and remains historical context, rather than an obligation to complete all findings in this port.
-- [ ] Rewrite README requirements and build/test/format/output/install instructions for Windows 11 x64, CMake, Ninja,
+- [x] Rewrite README requirements and build/test/format/output/install instructions for Windows 11 x64, CMake, Ninja,
       MinGW-w64, optional Node/npm, clang-format, and pinned GoogleTest fetching. Include both Linux and Windows
       presets.
-- [ ] Remove .NET SDK/runtime, NuGet, `dotnet publish`, `dotnet format`, and old `bin/.../publish` instructions from
+- [x] Remove .NET SDK/runtime, NuGet, `dotnet publish`, `dotnet format`, and old `bin/.../publish` instructions from
       active documentation/scripts. Document new output `build/<windows-release-preset>/StayAwake.exe`, with the actual
       preset names, and direct commands for users who do not use npm.
-- [ ] Describe hidden startup, tray Show/Quit, both timer ranges/defaults and 10-second choices, chosen suspend policy,
+- [x] Describe hidden startup, tray Show/Quit, both timer ranges/defaults and 10-second choices, chosen suspend policy,
       highlighting behavior, selected-window close requests, and any intentionally changed wording/filtering.
-- [ ] Describe sleep prevention accurately; remove the unsupported promise that this application prevents screen
+- [x] Describe sleep prevention accurately; remove the unsupported promise that this application prevents screen
       locking. Do not add simulated input or security-policy changes to make that old sentence true.
-- [ ] Preserve all three review documents without rewriting their historical source links. Note intentional differences
+- [x] Preserve all three review documents without rewriting their historical source links. Note intentional differences
       and deferred alternatives in this TODO or implementation notes instead.
-- [ ] Audit tracked files for stale .NET build/runtime references. Expected historical mentions in `CODE_REVIEW_*.md`
+- [x] Audit tracked files for stale .NET build/runtime references. Expected historical mentions in `CODE_REVIEW_*.md`
       and this migration plan are not a reason to delete those documents.
 
 ## 10. Validate builds and native behavior
 
 ### Build and repository checks
 
-- [ ] Configure/build/test `linux-native-debug` successfully without Windows headers/libraries or a .NET SDK.
-- [ ] Build `linux-mingw-debug` and `linux-mingw-release`, including resources and the GUI executable. Confirm cross
+- [x] Configure/build/test `linux-native-debug` successfully without Windows headers/libraries or a .NET SDK.
+- [x] Build `linux-mingw-debug` and `linux-mingw-release`, including resources and the GUI executable. Confirm cross
       configuration/build does not try to execute the generated Windows test binary.
 - [ ] On Windows, build Debug/Release with the documented MinGW environment and run `windows-mingw-debug` CTest.
-- [ ] Run `npm run build`, `npm run test`, `npm run format:check`, and any retained individual build shortcuts. Verify
+- [x] Run `npm run build`, `npm run test`, `npm run format:check`, and any retained individual build shortcuts. Verify
       direct CMake commands too where not already exercised by those scripts.
-- [ ] Inspect the PE architecture, GUI subsystem, imports, embedded icon, and DPI manifest using suitable toolchain
+- [x] Inspect the PE architecture, GUI subsystem, imports, embedded icon, and DPI manifest using suitable toolchain
       inspection tools. Confirm no CLR dependency and no unshipped MinGW runtime DLL dependencies.
 - [ ] Launch the Release executable from an otherwise empty folder on Windows without .NET installed. Confirm no console
       flash and no missing adjacent assets/runtime files. Exercise `cmake --install` if an install rule is added.
-- [ ] Review dependency direction and includes: the test target must not depend on or link the Windows adapter. The
+- [x] Review dependency direction and includes: the test target must not depend on or link the Windows adapter. The
       Linux native preset must not compile it; Windows presets can build it separately for the app. No Win32 types or
       platform gates should have slipped into portable application tests.
-- [ ] Check formatting, `git diff --check`, icon preservation, removal of the .NET project, updated documentation, and
+- [x] Check formatting, `git diff --check`, icon preservation, removal of the .NET project, updated documentation, and
       preservation of all three review documents. Do not run a blanket formatter that rewrites those historical files.
 
 ### Windows manual acceptance matrix
@@ -566,8 +588,52 @@ platform checks, not a second unit-test suite.
 | Mixed-DPI target windows and monitors left/above the primary display               | Metadata and overlay use the correct screen coordinates, including negative X/Y, without double scaling.                                                                  |
 | Keyboard-only use and long repeated show/hide/highlight cycles                     | Usable tab/focus/navigation behavior; no growing collection of tray icons, overlays, GDI objects, or stale callbacks.                                                     |
 
-- [ ] Record commands/environments actually used, passing checks, any deliberate differences from the baseline, and
+- [x] Record commands/environments actually used, passing checks, any deliberate differences from the baseline, and
       remaining limitations. A successful Linux cross-build is not evidence that Windows UI/DPI behavior passed.
 - [ ] Mark the migration complete only after the native build, portable tests, required native acceptance checks,
       documentation, cleanup, and preservation requirements above are satisfied. Leave unavailable checks explicitly
       pending for execution on the appropriate Windows environment.
+
+## Validation record (2026-09-11)
+
+Environment: Ubuntu 24.04.4 x64; CMake 3.28.3; Ninja 1.11.1; host GCC 13.3.0; MinGW-w64 GCC 13-win32; clang-format
+18.1.3; Node 24.20.0; npm 11.19.0. No Windows desktop was available.
+
+Passed:
+
+- Direct configure/build/CTest for `linux-native-debug`: **38 portable application tests passed**.
+- Direct configure/build for `linux-mingw-debug` and `linux-mingw-release`: Windows x64 GUI app produced; Debug also
+  built the same portable tests as a Windows console executable. No PE test execution/discovery occurred on Linux.
+- `npm ci`, `npm run build`, `npm run build:debug`, `npm run build:release`, `npm run test`, `npm run format`, and
+  `npm run format:check`. The existing lockfile did not require changes.
+- PE inspection with `file`, MinGW `objdump`, and a Python binary-resource reader: both executables are x64 GUI PE32+;
+  CLR header absent; version/icon/manifest embedded. The icon image matches the original ICO data. Manifest declares
+  `asInvoker`, common controls v6, and Per-Monitor V2.
+- Imports contain only Windows system DLLs: COMCTL32, GDI32, KERNEL32, SHELL32, USER32, MSVCRT, and Windows API-set
+  contracts (including `api-ms-win-core-realtime-l1-1-2`). No libgcc, libstdc++, or libwinpthread DLL is required.
+  `QueryInterruptTime` links through MinGW's `mincore` import library; the initial kernel32-only link failure was fixed.
+- `cmake --install build/linux-mingw-release --prefix ./build/install`: installed `build/install/bin/StayAwake.exe`,
+  byte-identical to the Release output.
+- An explicit native Linux app request with `STAY_AWAKE_BUILD_APP=ON` is rejected with an understandable configure
+  error. Native Linux compile commands include no Windows adapter; tests link only the core and GoogleTest. Release has
+  no fetched test dependency. All 31 maintained C++ files are listed in the formatting target.
+- `git diff --check`; removal of the old application/solution; active documentation/script audit; byte comparison of all
+  three review documents, license, and lockfile against the baseline. Icon hashes are unchanged: `icon.ico` SHA-256
+  `def08286d9ab629a9043cc74d1e6260ca7e2431bac59e0568cb6ddb35a3863f6`; `icon.png` SHA-256
+  `6838cb895c8694311bb5b7e9a7d8ffe60d4b8e502f6824c8409f6113bbccd971`. The old `.resx` contained only the same icon plus
+  designer metadata, so no unique runtime resource was lost.
+
+Deliberate differences: 784 × 606 logical client area with copyable result/list-status fields and a slightly shorter
+list viewport; consistent idle close caption; immediate rounded-up countdowns; own-PID filtering; truthful close-request
+wording; visible power-release retry state; no claimed screen-lock guarantee. An added system-menu Quit action provides
+an exit when the tray cannot be created. Tray creation/recreation failure keeps the main window reachable. Explorer's
+registered restart message is explicitly allowed through the message filter for elevated launches. Kernel object names
+retain compatibility with the previous implementation; mixed-elevation activation itself remains limited.
+
+Remaining limitations and acceptance work: run both Windows presets and Windows CTest; launch Release from an empty
+folder; execute every native matrix scenario, especially scaling/font/caption measurement, mixed-monitor coordinates,
+keyboard use, real click-through, tray/menu shutdown reentrancy, Explorer restart, startup/exit launch races, and power
+requests/suspend behavior. Show events can be delayed by modal dialogs. The Show event acknowledges enqueueing only; a
+receiver that begins exiting immediately after a signal may exit before displaying the window (launch again).
+Same-process handle reuse/final posting race, snapshot highlight staleness, and undersized monitor work areas remain the
+documented D6/D7/D12 limits. No Windows acceptance result is claimed, and the migration is not marked fully complete.

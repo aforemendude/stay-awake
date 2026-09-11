@@ -14,11 +14,12 @@
     "url": "git+https://github.com/aforemendude/stay-awake.git"
   },
   "scripts": {
-    "build": "npm run build:debug && npm run build:release",
-    "build:debug": "dotnet publish StayAwake/StayAwake.csproj -c Debug",
-    "build:release": "dotnet publish StayAwake/StayAwake.csproj -c Release",
-    "format": "prettier --write . && dotnet format StayAwake.slnx",
-    "format:check": "prettier --check . && dotnet format StayAwake.slnx --verify-no-changes"
+    "build": "node scripts/cmake.mjs build",
+    "build:debug": "node scripts/cmake.mjs build:debug",
+    "build:release": "node scripts/cmake.mjs build:release",
+    "test": "node scripts/cmake.mjs test",
+    "format": "prettier --write . && node scripts/cmake.mjs format",
+    "format:check": "prettier --check . && node scripts/cmake.mjs format-check"
   },
   "version": "1.0.0"
 }
