@@ -2,107 +2,71 @@
 
 ![Stay Awake Icon](assets/icon.png)
 
-A lightweight Windows 11 x64 tray utility that keeps the system awake for a chosen duration and requests a selected
-window to close after an independent countdown. The native executable includes its icon and needs no separately
-installed application runtime or adjacent assets.
+A Windows 11 x64 tray utility that keeps the system awake for a chosen duration and requests a selected window to close
+after an independent countdown.
+
+Published builds are available on the [Releases](https://github.com/aforemendude/stay-awake/releases) page and may
+differ from the current source described below. To build this version, see
+[Build, test, and format](#build-test-and-format).
 
 ## Using Stay Awake
 
-Launch `StayAwake.exe`; it starts hidden with both features inactive. Left-click the tray icon or choose **Show** from
-its right-click menu to open the window. A second launch requests Show on the existing instance in the same interactive
-session. Activation requires the same elevation and remains subject to Windows foreground restrictions. A launch during
-initialization retries for up to two seconds; an error explains when the existing instance is unavailable.
+Launch `StayAwake.exe`; it starts in the tray with both features inactive. Left-click the tray icon or choose **Show**
+from its right-click menu to open the window. Launching again at the same elevation requests the existing window to
+show.
 
-Closing the window with **X** or **Alt-F4** hides it to the tray and stops highlighting. Both countdowns continue.
-Ordinary minimize remains minimize. Use tray **Quit**, or **Quit Stay Awake** in the window's system menu, to exit and
-release resources. The system-menu action also provides an exit if tray creation fails; in that case the window stays
-available. Explorer restart restores the tray icon. Confirmed sign-out/shutdown releases resources; a canceled shutdown
-leaves the app running.
+**X** and **Alt-F4** hide the window and stop highlighting; both countdowns continue. To exit, choose tray **Quit** or
+**Quit Stay Awake** in the window's system menu. The latter also works if the tray icon cannot be created.
 
 ### Sleep prevention
 
+Choose a duration, then start one mode:
+
 - **Require Display** keeps the system and display awake.
 - **Require System** keeps the system awake while allowing the display to turn off.
-- Choices run from 30 minutes through 8 hours in 15-minute increments, plus `00:00:10` in all builds. The default is 2
-  hours. Only one awake mode can run at a time.
-- The active button becomes **Stop Require Display** or **Stop Require System**. Click it to release protection early.
-  Timed completion records the mode, outcome, and local time. If release fails, the active button remains available for
-  manual retry and the result describes the error.
 
-The app uses Windows execution-state requests to prevent idle sleep. These requests do not guarantee prevention of
-screen locking, screensavers, or explicit user sleep. See Microsoft's
-[SetThreadExecutionState contract](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-setthreadexecutionstate).
+Click the active mode's **Stop** button to end it early. If releasing sleep prevention fails, the result shows the error
+and the button remains available to retry.
+
+These
+[Windows power requests](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-setthreadexecutionstate)
+prevent idle sleep; they do not guarantee prevention of screen locking, screensavers, or sleep explicitly requested by
+the user.
 
 ### Window Closer
 
-Select a window, choose a duration, and click **Schedule Close Window**. Choices run from 15 minutes through 8 hours in
-15-minute increments, plus `00:00:10` in all builds. The default is 1 hour. **Stop** cancels the schedule without
-requesting a close. Sleep prevention and window-close scheduling run independently.
+Select a window, choose a duration, and click **Schedule Close Window**. **Stop** cancels the schedule. **Refresh List**
+clears selection and highlighting; showing the main window refreshes the list automatically unless a close is scheduled.
 
-The list contains visible top-level windows with nonblank titles, ordered using Windows locale collation. The shell,
-exact title `Program Manager`, and Stay Awake's own windows are excluded; ordinary Explorer windows remain eligible.
-Duplicate titles are distinct selectable windows. **Refresh List** clears selection and highlighting. Showing the main
-window refreshes automatically unless a close is scheduled.
+**Highlight Window** marks the selected window with a red overlay that lets clicks pass through. It captures the
+window's current position and size without following later movement, resizing, or disappearance; toggle it to update the
+overlay.
 
-Selected details show the process basename, uppercase hexadecimal window handle, and signed screen coordinates/size.
-Unavailable metadata appears as `Unknown` or `Error getting position`. Read-only detail and result fields can be
-scrolled and copied; the window list has horizontal scrolling for long titles. Tab, Shift-Tab, Enter/Space on buttons,
-and native list/combo navigation support keyboard use; Ctrl+A and Ctrl+C select/copy read-only field contents.
+**Close requested** means a close message was queued. The target may show a save prompt, ignore the request, or remain
+unresponsive; Stay Awake does not force termination or verify closure. If the target's identity cannot be verified or
+Windows denies access, the request fails. Windows whose process identity cannot be read cannot be highlighted either.
 
-At expiry the captured window handle, owning process ID, and process creation time are revalidated, then one
-asynchronous `WM_CLOSE` is posted. **Close requested** records the handle, process, and local time. The target can show
-a save prompt, ignore the request, or remain unresponsive: this app does not kill processes or verify that the window
-closed. Missing targets, changed owners or creation times, unavailable creation times, and denied requests produce a
-result describing the failure. Windows whose process creation time cannot be read remain listed, but close and highlight
-requests are rejected. See
-[PostMessageW](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-postmessagew).
+Targeting is best effort:
+[reused window handles](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-iswindow) or a window
+replaced during the request can cause a different window to receive it, even after checking process identity.
 
-**Window targeting is best effort and is not guaranteed to be correct.** A process can destroy a window and create
-another using the same handle, and a window can be replaced between validation and posting. Even with the process
-creation-time check, a scheduled request can therefore close a different window from the one originally selected. See
-[IsWindow](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-iswindow).
-
-**Highlight Window** displays a red, approximately 25%-opaque, non-activating overlay that passes mouse clicks through.
-It captures geometry on selection/toggle; it does not track later movement, resizing, or disappearance. Refresh,
-deselection, invalid geometry, hiding, and exit remove the overlay. Highlight intent can be enabled without a selected
-window and remains independent of scheduling.
-
-### Time and display scaling
-
-Both countdowns use monotonic elapsed time that includes suspend/hibernate. After resume, overdue operations run once on
-the next timer callback. Manual clock, time-zone, and daylight-saving changes affect local result timestamps, not the
-durations. Countdown text appears immediately and rounds positive fractional seconds up. The adapter uses biased
-[Windows interrupt time](https://learn.microsoft.com/en-us/windows/win32/sysinfo/interrupt-time).
-
-The window has a fixed 784 × 606 logical client area with Per-Monitor V2 DPI awareness; controls, fonts, and icons scale
-at startup and when moving between monitors. The usable monitor work area must fit that scaled client area plus the
-window frame. Small work areas are not handled by shrinking fonts or adding scrolling. Window metadata and overlay
-bounds remain native screen pixels, including monitors left of or above the primary display.
-
-## Releases
-
-Existing published builds are available on the [Releases](https://github.com/aforemendude/stay-awake/releases) page.
-This source migration does not publish a new release. Build the native executable below; Windows UI/manual acceptance
-for this migration remains pending as recorded in [TODO.md](TODO.md#10-validate-builds-and-native-behavior).
+Both countdowns include time spent asleep or hibernating; overdue operations run after resume. Clock and time-zone
+changes affect result timestamps, not durations. The fixed-size window scales with display DPI and must fit the
+monitor's work area.
 
 ## Build, test, and format
 
-### Requirements
+Run commands from the repository root. Build hosts are Linux or Windows; the GUI runs only on Windows.
 
-- Runtime platform: Windows 11 x64.
-- Build hosts: Linux or Windows, CMake 3.28+, Ninja, and an x64 MinGW-w64 C++ toolchain with Windows 10 API declarations
-  and `mincore` import-library support. Linux native tests additionally need a host C++17 compiler.
-- Tests fetch GoogleTest at commit `063de7e9578f82b369302001269680b4b1553359` with a pinned SHA-256. The first
-  Debug/test configuration needs network access to GitHub. Release builds disable tests and do not fetch GoogleTest.
-- Formatting C++ requires clang-format (validated with 18). Markdown/JSON/JavaScript use the pinned Prettier dependency.
-- Optional convenience scripts: Node.js 24.19.0+ and npm. Node is not needed for direct CMake build/test/install
-  commands.
+- **Build tools:** CMake 3.28+, Ninja, and a C++17 compiler. Windows app builds need an x64 MinGW-w64 toolchain with
+  Windows 10 APIs and `mincore` support. Linux tests use the host compiler.
+- **Windows setup:** use an MSYS2 UCRT64 environment with matching `gcc`, `g++`, `windres`, `cmake`, and `ninja` on
+  PATH.
+- **Optional tools:** Node.js and npm for shortcuts (see the [Node version requirement](package.json)); clang-format for
+  C++ formatting. Prettier is installed by `npm ci`.
 
-Linux package names commonly include `cmake`, `ninja-build`, `g++`, `g++-mingw-w64-x86-64`, `binutils-mingw-w64-x86-64`,
-and `clang-format`. Ensure the packaged CMake meets the minimum version. Windows builds use a MinGW environment such as
-the MSYS2 UCRT64 shell, with `gcc`, `g++`, `windres`, `cmake`, and `ninja` on PATH; install the matching x64 UCRT64
-toolchain/CMake/Ninja packages. Keep tools from the same environment together. MSVC, ARM64, and macOS workflows are not
-part of the supported matrix.
+Debug/test configurations download pinned GoogleTest sources from GitHub on first configuration. Release presets disable
+tests and do not fetch GoogleTest.
 
 ### npm shortcuts
 
@@ -114,83 +78,36 @@ npm run format
 npm run format:check
 ```
 
-`build` builds Debug and Release Windows executables: Linux cross-compiles with MinGW-w64; Windows uses native MinGW.
-`test` builds and runs the portable application tests on the current host (the Windows Debug preset also builds the
-app). `build:debug` and `build:release` remain available for individual configurations. The dispatcher propagates
-configuration/build/test failures.
+`build` produces Debug and Release Windows executables, cross-compiling on Linux. `test` builds and runs the portable
+tests on the current host. `format` and `format:check` run Prettier for documentation/configuration and clang-format for
+C++; generated build output and dependencies are ignored.
 
-`format` runs Prettier for maintained documentation/configuration and clang-format for C++. `format:check` verifies
-both. Generated output and the three historical review documents are excluded.
+### Direct CMake
 
-### Direct CMake: Linux
+Choose a preset from [CMakePresets.json](CMakePresets.json):
+
+| Host    | Preset                  | Builds                         |
+| ------- | ----------------------- | ------------------------------ |
+| Linux   | `linux-native-debug`    | Portable core and native tests |
+| Linux   | `linux-mingw-debug`     | Windows app and tests          |
+| Linux   | `linux-mingw-release`   | Windows app                    |
+| Windows | `windows-mingw-debug`   | Windows app and native tests   |
+| Windows | `windows-mingw-release` | Windows app                    |
+
+Use that preset for both configuration and build. For example, to cross-compile the Release app on Linux:
 
 ```sh
-# Portable core and native Linux tests; no Windows code is compiled.
-cmake --preset linux-native-debug
-cmake --build --preset linux-native-debug
-ctest --preset linux-native-debug
-
-# Windows Debug app and test executable, cross-compiled without running Windows binaries.
-cmake --preset linux-mingw-debug
-cmake --build --preset linux-mingw-debug
-
-# Windows Release app, without downloading/building test dependencies.
 cmake --preset linux-mingw-release
 cmake --build --preset linux-mingw-release
-
-cmake --build --preset linux-native-debug --target format
-cmake --build --preset linux-native-debug --target format-check
 ```
 
-### Direct CMake: Windows
+After building a native test preset, run `ctest --preset linux-native-debug` on Linux or
+`ctest --preset windows-mingw-debug` on Windows. Run cross-built Windows tests on Windows. For C++ formatting, append
+`--target format` or `--target format-check` to the build command; clang-format must be installed before configuration.
 
-Run these in the configured x64 MinGW environment:
+Executables are written to `build/<preset>/StayAwake.exe`. Copy the Release executable to a Windows 11 x64 machine and
+launch it; icons and the MinGW runtime are embedded, so no adjacent assets or separately installed runtime are needed.
 
-```sh
-cmake --preset windows-mingw-debug
-cmake --build --preset windows-mingw-debug
-ctest --preset windows-mingw-debug
-
-cmake --preset windows-mingw-release
-cmake --build --preset windows-mingw-release
-
-cmake --build --preset windows-mingw-debug --target format
-cmake --build --preset windows-mingw-debug --target format-check
-```
-
-CTest presets exist only for native execution. Tests link the portable core and GoogleTest, with no Windows adapter,
-desktop interaction, platform skips, or real sleeps. Cross-built test discovery is deferred until CTest runs on Windows.
-To build only the portable core in a custom configuration, set `STAY_AWAKE_BUILD_APP=OFF`; requesting the app on a
-non-Windows target produces a configure error. Linux has no GUI or power-management implementation.
-
-### Output and installation
-
-| Build host | Debug executable                          | Release executable                          |
-| ---------- | ----------------------------------------- | ------------------------------------------- |
-| Linux      | `build/linux-mingw-debug/StayAwake.exe`   | `build/linux-mingw-release/StayAwake.exe`   |
-| Windows    | `build/windows-mingw-debug/StayAwake.exe` | `build/windows-mingw-release/StayAwake.exe` |
-
-Copy the Release `StayAwake.exe` into any folder on a Windows x64 machine and launch it. Icons, manifest, and the MinGW
-runtime are linked into the application; only Windows system DLLs are required. There is no console window or installer.
-An optional CMake install rule copies the executable to `<prefix>/bin/StayAwake.exe`:
-
-```sh
-cmake --install build/linux-mingw-release --prefix ./build/install
-# On Windows:
-cmake --install build/windows-mingw-release --prefix ./build/install
-```
-
-## Contributor notes
-
-The portable `Application` coordinates event delivery, lifecycle, the shared countdown timer, and presentation.
-`AwakeController` owns sleep prevention and release retries; `CloseController` owns close scheduling and captured
-targets; `WindowSelection` owns the catalog, selection details, and highlighting. Each class owns its feature state, and
-`Application` composes their grouped `ViewState` snapshots for the Windows view. Matching test files exercise each
-feature through a shared fake platform binding; application tests cover coordination, reentrant events, and shutdown.
-
-See [AGENTS.md](AGENTS.md) for the architecture and application-only testing boundary, and [TODO.md](TODO.md) for the
-migration decisions, recorded validation, deferred alternatives, and Windows manual acceptance matrix. The
-`CODE_REVIEW_*.md` documents track remaining findings from the prior implementation, retaining the original review basis
-and historical source links for open findings.
+See [AGENTS.md](AGENTS.md) for development constraints and Windows validation guidance.
 
 Licensed under the [MIT License](LICENSE).
