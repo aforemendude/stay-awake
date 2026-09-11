@@ -26,10 +26,13 @@ struct WindowIdentity
 {
     std::uintptr_t handle = 0;
     std::uint32_t process_id = 0;
+    // Opaque process-lifetime timestamp; absent when the platform cannot read it.
+    std::optional<std::uint64_t> process_creation_time = std::nullopt;
 
     bool operator==(const WindowIdentity& other) const
     {
-        return handle == other.handle && process_id == other.process_id;
+        return handle == other.handle && process_id == other.process_id &&
+               process_creation_time == other.process_creation_time;
     }
 };
 

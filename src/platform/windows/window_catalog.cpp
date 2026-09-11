@@ -10,16 +10,25 @@ namespace stay_awake::windows
 {
 namespace
 {
-std::string ProcessName(const DWORD process_id)
+std::optional<std::uint64_t> ProcessCreationTime(const HANDLE process)
 {
-    UniqueHandle process(OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, process_id));
-    if (!process.Get())
+    FILETIME creation{}, exit{}, kernel{}, user{};
+    if (!process || !GetProcessTimes(process, &creation, &exit, &kernel, &user))
+    {
+        return std::nullopt;
+    }
+    return (static_cast<std::uint64_t>(creation.dwHighDateTime) << 32) | creation.dwLowDateTime;
+}
+
+std::string ProcessName(const HANDLE process)
+{
+    if (!process)
     {
         return "Unknown";
     }
     std::wstring path(32768, L'\0');
     DWORD count = static_cast<DWORD>(path.size());
-    if (!QueryFullProcessImageNameW(process.Get(), 0, path.data(), &count))
+    if (!QueryFullProcessImageNameW(process, 0, path.data(), &count))
     {
         return "Unknown";
     }
@@ -84,7 +93,10 @@ BOOL CALLBACK CollectWindow(HWND window, LPARAM parameter) noexcept
         {
             return TRUE;
         }
-        WindowInfo info{{reinterpret_cast<std::uintptr_t>(window), pid}, ToUtf8(title), ProcessName(pid)};
+        UniqueHandle process(OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid));
+        WindowInfo info{{reinterpret_cast<std::uintptr_t>(window), pid, ProcessCreationTime(process.Get())},
+                        ToUtf8(title),
+                        ProcessName(process.Get())};
         enumeration.entries.push_back({std::move(title), std::move(info)});
         return TRUE;
     }
@@ -106,6 +118,24 @@ OperationResult Validate(const WindowIdentity identity)
     if (!identity.process_id || pid != identity.process_id)
     {
         return {false, "Target window owner changed"};
+    }
+    if (!identity.process_creation_time)
+    {
+        return {false, "Target window process creation time unavailable"};
+    }
+    UniqueHandle process(OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid));
+    if (!process.Get())
+    {
+        return {false, NativeError("OpenProcess")};
+    }
+    const auto creation_time = ProcessCreationTime(process.Get());
+    if (!creation_time)
+    {
+        return {false, NativeError("GetProcessTimes")};
+    }
+    if (creation_time != identity.process_creation_time)
+    {
+        return {false, "Target window process changed"};
     }
     return {};
 }
@@ -162,7 +192,8 @@ OperationResult RequestClose(const WindowIdentity identity)
     {
         return result;
     }
-    // This rejects missing/different-PID targets, but cannot eliminate same-process HWND reuse or the final race.
+    // Handle, PID, and process creation time provide best-effort targeting, not a correctness guarantee:
+    // same-process HWND reuse and replacement between validation and posting remain possible.
     if (!PostMessageW(NativeWindow(identity), WM_CLOSE, 0, 0))
     {
         return {false, NativeError("PostMessage(WM_CLOSE)")};

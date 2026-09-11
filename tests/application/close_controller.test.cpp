@@ -15,7 +15,7 @@ class CloseControllerTest : public testing::Test
   protected:
     FakePlatformBinding platform;
     CloseController close{platform};
-    WindowInfo target{{0xABC, 12}, "Same title", "alpha"};
+    WindowInfo target{{0xABC, 12, 0x100000001ULL}, "Same title", "alpha"};
 
     void Start()
     {
@@ -76,7 +76,7 @@ TEST_F(CloseControllerTest, CapturesTargetAndConsumesScheduleOnceAtExactDeadline
     Start();
     EXPECT_FALSE(State().inputs_enabled);
     EXPECT_EQ(State().caption, "Stop");
-    target = {{0xDEF, 34}, "Same title", "beta"};
+    target = {{0xDEF, 34, 0x200000002ULL}, "Same title", "beta"};
     close.SetDuration(1h);
     EXPECT_EQ(State().duration, 10s);
     platform.now = 9999ms;
@@ -86,7 +86,7 @@ TEST_F(CloseControllerTest, CapturesTargetAndConsumesScheduleOnceAtExactDeadline
     platform.now = 10s;
     EXPECT_TRUE(close.Tick(platform.now));
     ASSERT_EQ(platform.close_requests.size(), 1U);
-    EXPECT_EQ(platform.close_requests[0], (WindowIdentity{0xABC, 12}));
+    EXPECT_EQ(platform.close_requests[0], (WindowIdentity{0xABC, 12, 0x100000001ULL}));
     EXPECT_EQ(State().status, "Close requested ABC At 09/11 12:34 (alpha)");
     EXPECT_EQ(State().status.find("Closed"), std::string::npos);
     EXPECT_FALSE(close.Active());
@@ -97,9 +97,24 @@ TEST_F(CloseControllerTest, CapturesTargetAndConsumesScheduleOnceAtExactDeadline
     EXPECT_EQ(State().group_caption, "Window Closer");
 }
 
+TEST_F(CloseControllerTest, CapturesProcessLifetimeWhenHandleAndPidAreReused)
+{
+    Start();
+    target.identity.process_creation_time = 0x200000001ULL;
+    platform.now = 10s;
+    EXPECT_TRUE(close.Tick(platform.now));
+    ASSERT_EQ(platform.close_requests.size(), 1U);
+    EXPECT_EQ(platform.close_requests[0].process_creation_time, 0x100000001ULL);
+    EXPECT_FALSE(platform.close_requests[0] == target.identity);
+    target.identity.process_creation_time.reset();
+    EXPECT_FALSE(platform.close_requests[0] == target.identity);
+}
+
 TEST_F(CloseControllerTest, FailedRequestUsesCapturedMetadataAndDoesNotRetry)
 {
-    for (const auto* failure : {"Target window no longer exists", "Target window owner changed", "access denied"})
+    for (const auto* failure :
+         {"Target window no longer exists", "Target window owner changed", "Target window process changed",
+          "Target window process creation time unavailable", "access denied"})
     {
         Start();
         platform.close_result = {false, failure};
@@ -112,7 +127,7 @@ TEST_F(CloseControllerTest, FailedRequestUsesCapturedMetadataAndDoesNotRetry)
         EXPECT_FALSE(close.Tick(platform.now));
         EXPECT_TRUE(platform.errors.empty());
     }
-    EXPECT_EQ(platform.close_requests.size(), 3U);
+    EXPECT_EQ(platform.close_requests.size(), 5U);
 }
 
 TEST_F(CloseControllerTest, MissingProcessNameUsesFallback)

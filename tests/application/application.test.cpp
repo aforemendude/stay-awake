@@ -185,11 +185,12 @@ TEST_F(ApplicationTest, ScheduleCapturesIdentityAndIgnoresStaleListAndDurationEv
     EXPECT_EQ(platform.refreshes, refreshes);
     EXPECT_EQ(State().selection.selected_window, 0U);
     EXPECT_EQ(State().close.duration, 10s);
-    platform.catalog.windows[0] = {{0xAAA, 99}, "replacement", "other"};
+    platform.catalog.windows[0] = {{0xABC, 12, 0x200000001ULL}, "replacement", "other"};
     platform.now = 10s;
     Send(EventKind::tick);
     ASSERT_EQ(platform.close_requests.size(), 1U);
-    EXPECT_EQ(platform.close_requests[0], (WindowIdentity{0xABC, 12}));
+    EXPECT_EQ(platform.close_requests[0], (WindowIdentity{0xABC, 12, 0x100000001ULL}));
+    EXPECT_EQ(platform.close_requests[0].process_creation_time, 0x100000001ULL);
     EXPECT_EQ(State().close.status, "Close requested ABC At 09/11 12:34 (alpha)");
     EXPECT_EQ(State().close.status.find("Closed"), std::string::npos);
     EXPECT_FALSE(State().selection.selected_window);

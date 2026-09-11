@@ -89,7 +89,9 @@ class FakePlatformBinding final : public PlatformBinding
 
     ElapsedTime now{0};
     std::string timestamp = "09/11 12:34:56";
-    WindowListResult catalog{{}, {{{0xABC, 12}, "Same title", "alpha"}, {{0xDEF, 34}, "Same title", "beta"}}};
+    WindowListResult catalog{
+        {},
+        {{{0xABC, 12, 0x100000001ULL}, "Same title", "alpha"}, {{0xDEF, 34, 0x200000002ULL}, "Same title", "beta"}}};
     std::optional<Rectangle> rectangle = Rectangle{-900, -200, 800, 600};
     std::optional<Rectangle> overlay;
     OperationResult service_result;

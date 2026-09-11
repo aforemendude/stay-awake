@@ -49,12 +49,18 @@ Unavailable metadata appears as `Unknown` or `Error getting position`. Read-only
 scrolled and copied; the window list has horizontal scrolling for long titles. Tab, Shift-Tab, Enter/Space on buttons,
 and native list/combo navigation support keyboard use; Ctrl+A and Ctrl+C select/copy read-only field contents.
 
-At expiry the captured handle and owning process ID are revalidated, then one asynchronous `WM_CLOSE` is posted. **Close
-requested** records the handle, process, and local time. The target can show a save prompt, ignore the request, or
-remain unresponsive: this app does not kill processes or verify that the window closed. Missing targets, changed owners,
-and denied requests produce a result describing the failure. Handle/PID checks cannot eliminate same-process handle
-reuse or the race between validation and posting. See
+At expiry the captured window handle, owning process ID, and process creation time are revalidated, then one
+asynchronous `WM_CLOSE` is posted. **Close requested** records the handle, process, and local time. The target can show
+a save prompt, ignore the request, or remain unresponsive: this app does not kill processes or verify that the window
+closed. Missing targets, changed owners or creation times, unavailable creation times, and denied requests produce a
+result describing the failure. Windows whose process creation time cannot be read remain listed, but close and highlight
+requests are rejected. See
 [PostMessageW](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-postmessagew).
+
+**Window targeting is best effort and is not guaranteed to be correct.** A process can destroy a window and create
+another using the same handle, and a window can be replaced between validation and posting. Even with the process
+creation-time check, a scheduled request can therefore close a different window from the one originally selected. See
+[IsWindow](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-iswindow).
 
 **Highlight Window** displays a red, approximately 25%-opaque, non-activating overlay that passes mouse clicks through.
 It captures geometry on selection/toggle; it does not track later movement, resizing, or disappearance. Refresh,
@@ -184,7 +190,7 @@ feature through a shared fake platform binding; application tests cover coordina
 
 See [AGENTS.md](AGENTS.md) for the architecture and application-only testing boundary, and [TODO.md](TODO.md) for the
 migration decisions, recorded validation, deferred alternatives, and Windows manual acceptance matrix. The
-`CODE_REVIEW_*.md` documents track remaining findings from the prior implementation, retaining the original review
-basis and historical source links for open findings.
+`CODE_REVIEW_*.md` documents track remaining findings from the prior implementation, retaining the original review basis
+and historical source links for open findings.
 
 Licensed under the [MIT License](LICENSE).

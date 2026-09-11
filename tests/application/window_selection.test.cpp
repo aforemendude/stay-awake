@@ -27,7 +27,7 @@ TEST_F(WindowSelectionTest, PreservesSuppliedOrderingDuplicateTitlesAndUnicodeMe
     EXPECT_TRUE(selection.Refresh(false).success);
     ASSERT_EQ(State().windows.size(), 2U);
     EXPECT_EQ(State().windows[0].title, u8"窗口 — Café 🌙");
-    EXPECT_EQ(State().windows[1].identity, (WindowIdentity{0xDEF, 34}));
+    EXPECT_EQ(State().windows[1].identity, (WindowIdentity{0xDEF, 34, 0x200000002ULL}));
     EXPECT_TRUE(selection.Select(0).success);
     EXPECT_EQ(State().process_name, u8"编辑器");
     EXPECT_EQ(State().window_handle, "ABC");
@@ -38,16 +38,20 @@ TEST_F(WindowSelectionTest, PreservesSuppliedOrderingDuplicateTitlesAndUnicodeMe
     EXPECT_EQ(State().catalog_revision, revision + 1);
     EXPECT_TRUE(selection.Select(1).success);
     ASSERT_TRUE(selection.SelectedWindow());
-    EXPECT_EQ(selection.SelectedWindow()->identity, (WindowIdentity{0xDEF, 34}));
+    EXPECT_EQ(selection.SelectedWindow()->identity, (WindowIdentity{0xDEF, 34, 0x200000002ULL}));
+    EXPECT_EQ(selection.SelectedWindow()->identity.process_creation_time, 0x200000002ULL);
 }
 
 TEST_F(WindowSelectionTest, MissingMetadataUsesFallbackAndDeselectClearsDetails)
 {
     platform.catalog.windows[0].process_name.clear();
+    platform.catalog.windows[0].identity.process_creation_time.reset();
     platform.rectangle.reset();
     EXPECT_TRUE(selection.Refresh(false).success);
     EXPECT_TRUE(selection.Select(0).success);
     EXPECT_EQ(State().process_name, "Unknown");
+    ASSERT_TRUE(selection.SelectedWindow());
+    EXPECT_FALSE(selection.SelectedWindow()->identity.process_creation_time);
     EXPECT_EQ(State().window_position, "Error getting position");
     EXPECT_TRUE(selection.Select(100).success);
     EXPECT_FALSE(State().selected_window);
@@ -92,7 +96,7 @@ TEST_F(WindowSelectionTest, HighlightIntentWorksWithoutSelectionAndFollowsSelect
     EXPECT_EQ(State().overlay->x, -900); // No live tracking selected.
     EXPECT_TRUE(selection.Select(1).success);
     EXPECT_EQ(State().overlay->x, 500);
-    EXPECT_EQ(platform.geometry_targets.back(), (WindowIdentity{0xDEF, 34}));
+    EXPECT_EQ(platform.geometry_targets.back(), (WindowIdentity{0xDEF, 34, 0x200000002ULL}));
     EXPECT_TRUE(selection.Select(std::nullopt).success);
     EXPECT_FALSE(State().overlay);
     EXPECT_TRUE(State().highlight_active);
