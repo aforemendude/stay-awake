@@ -61,33 +61,39 @@ struct DurationChoice
 };
 
 std::vector<DurationChoice> MakeDurations(std::chrono::minutes first);
+bool ValidDuration(const std::vector<DurationChoice>& choices, std::optional<std::chrono::seconds> duration);
 std::string FormatRemaining(ElapsedTime remaining);
 std::string FormatHandle(WindowIdentity identity);
 
-struct ViewState
+struct AwakeViewState
 {
-    std::vector<DurationChoice> awake_durations = MakeDurations(std::chrono::minutes(30));
-    std::vector<DurationChoice> close_durations = MakeDurations(std::chrono::minutes(15));
-    std::optional<std::chrono::seconds> awake_duration = std::chrono::hours(2);
-    std::optional<std::chrono::seconds> close_duration = std::chrono::hours(1);
-    bool visible = false;
-    bool stopped = false;
-    bool timer_needed = false;
-    bool awake_duration_enabled = true;
+    std::vector<DurationChoice> durations = MakeDurations(std::chrono::minutes(30));
+    std::optional<std::chrono::seconds> duration = std::chrono::hours(2);
+    bool duration_enabled = true;
     bool display_enabled = true;
     bool system_enabled = true;
-    bool close_inputs_enabled = true;
-    bool highlight_active = false;
     std::string display_caption = "Require Display";
     std::string system_caption = "Require System";
-    std::string close_caption = "Schedule Close Window";
+    std::string remaining = "Not Enabled";
+    std::string caption = "Stay Awake";
+    std::string status;
+};
+
+struct CloseViewState
+{
+    std::vector<DurationChoice> durations = MakeDurations(std::chrono::minutes(15));
+    std::optional<std::chrono::seconds> duration = std::chrono::hours(1);
+    bool inputs_enabled = true;
+    std::string caption = "Schedule Close Window";
+    std::string remaining = "Not Enabled";
+    std::string group_caption = "Window Closer";
+    std::string status;
+};
+
+struct WindowSelectionViewState
+{
+    bool highlight_active = false;
     std::string highlight_caption = "Highlight Window";
-    std::string awake_remaining = "Not Enabled";
-    std::string close_remaining = "Not Enabled";
-    std::string awake_caption = "Stay Awake";
-    std::string close_group_caption = "Window Closer";
-    std::string awake_status;
-    std::string close_status;
     std::string catalog_status;
     std::vector<WindowInfo> windows;
     std::uint64_t catalog_revision = 0;
@@ -96,6 +102,17 @@ struct ViewState
     std::string window_handle;
     std::string window_position;
     std::optional<Rectangle> overlay;
+};
+
+// Presentation snapshot composed from independently owned feature state.
+struct ViewState
+{
+    AwakeViewState awake;
+    CloseViewState close;
+    WindowSelectionViewState selection;
+    bool visible = false;
+    bool stopped = false;
+    bool timer_needed = false;
 };
 
 enum class EventKind

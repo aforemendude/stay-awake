@@ -6,8 +6,10 @@ exposes its portable controller as a library that can be built and tested native
 ## Repository Map
 
 - `src/main.cpp` is the portable composition root: create the platform binding and run the controller.
-- `include/stay_awake/application.hpp`, `application_state.hpp`, and `src/application/` own duration choices,
-  independent deadlines, captured window identity, selection/highlight state, and user-visible results. All portable
+- `include/stay_awake/application.hpp` and `src/application/application.cpp` coordinate event delivery, lifecycle, the
+  shared timer, and presentation. `AwakeController`, `CloseController`, and `WindowSelection` each own their feature
+  state and behavior in matching headers and sources under `include/stay_awake/` and `src/application/`.
+  `application_state.hpp` defines portable value types and the grouped `ViewState` presentation snapshot. All portable
   text is UTF-8; native handles cross this boundary only as opaque integer values.
 - `include/stay_awake/platform_binding.hpp` defines native operations, injected clocks, presentation, and typed events;
   `platform_factory.hpp` declares the CMake-selected factory. The duration clock includes suspend/hibernate; the local
@@ -19,8 +21,9 @@ exposes its portable controller as a library that can be built and tested native
 - `stay_awake.rc` and `stay_awake.manifest` embed the preserved `assets/icon.ico`, version, common controls v6, and
   Per-Monitor V2 awareness. These resources attach directly to the GUI executable. Layout uses fixed logical units;
   target-window rectangles remain signed native screen pixels and must not be rescaled.
-- `tests/application/` verifies controller behavior and durations using a fake binding, fake clocks, and fake native
-  outcomes. The test executable links only `StayAwake::core` and GoogleTest.
+- `tests/application/` has matching feature test files, application coordination tests, and duration tests using the
+  shared `fake_platform_binding.hpp`, fake clocks, and fake native outcomes. The test executable links only
+  `StayAwake::core` and GoogleTest.
 - `CMakeLists.txt` defines the core, optional Windows adapter and GUI executable, pinned test dependency, warnings,
   install rule, and the maintained C++ formatting file list. Add new C++ files to that list.
 - `CMakePresets.json` provides native Linux tests and Linux/Windows MinGW Debug/Release builds under `build/<preset>`.

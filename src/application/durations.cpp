@@ -6,6 +6,12 @@
 
 namespace stay_awake
 {
+bool ValidDuration(const std::vector<DurationChoice>& choices, const std::optional<std::chrono::seconds> duration)
+{
+    return duration && std::any_of(choices.begin(), choices.end(),
+                                   [duration](const auto& choice) { return choice.duration == *duration; });
+}
+
 std::string FormatRemaining(const ElapsedTime remaining)
 {
     const auto seconds = std::chrono::ceil<std::chrono::seconds>(std::max(remaining, ElapsedTime::zero())).count();

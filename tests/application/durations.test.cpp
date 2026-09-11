@@ -31,10 +31,10 @@ TEST(DurationsTest, PreservesEveryChoiceAndDefaultInBothLists)
         EXPECT_EQ(choices.back().duration, 10s);
         EXPECT_EQ(choices.back().label, "00:00:10");
     }
-    EXPECT_EQ(state.awake_duration, 2h);
-    EXPECT_EQ(state.close_duration, 1h);
-    EXPECT_EQ(state.awake_durations.front().label, "00:30:00");
-    EXPECT_EQ(state.close_durations.front().label, "00:15:00");
+    EXPECT_EQ(state.awake.duration, 2h);
+    EXPECT_EQ(state.close.duration, 1h);
+    EXPECT_EQ(state.awake.durations.front().label, "00:30:00");
+    EXPECT_EQ(state.close.durations.front().label, "00:15:00");
 }
 
 TEST(DurationsTest, RoundsPositiveFractionsUpAndClampsExpiredCountdowns)

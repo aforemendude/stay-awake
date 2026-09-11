@@ -1,7 +1,10 @@
 add_executable(
     stay_awake_tests
     application/application.test.cpp
+    application/awake_controller.test.cpp
+    application/close_controller.test.cpp
     application/durations.test.cpp
+    application/window_selection.test.cpp
 )
 target_compile_features(stay_awake_tests PRIVATE cxx_std_17)
 target_link_libraries(stay_awake_tests PRIVATE StayAwake::core GTest::gtest_main)

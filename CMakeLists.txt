@@ -23,7 +23,10 @@ add_library(
     stay_awake_core
     STATIC
         src/application/application.cpp
+        src/application/awake_controller.cpp
+        src/application/close_controller.cpp
         src/application/durations.cpp
+        src/application/window_selection.cpp
 )
 add_library(StayAwake::core ALIAS stay_awake_core)
 
@@ -94,10 +97,16 @@ set(
     STAY_AWAKE_FORMAT_FILES
     "${PROJECT_SOURCE_DIR}/include/stay_awake/application.hpp"
     "${PROJECT_SOURCE_DIR}/include/stay_awake/application_state.hpp"
+    "${PROJECT_SOURCE_DIR}/include/stay_awake/awake_controller.hpp"
+    "${PROJECT_SOURCE_DIR}/include/stay_awake/close_controller.hpp"
     "${PROJECT_SOURCE_DIR}/include/stay_awake/platform_binding.hpp"
     "${PROJECT_SOURCE_DIR}/include/stay_awake/platform_factory.hpp"
+    "${PROJECT_SOURCE_DIR}/include/stay_awake/window_selection.hpp"
     "${PROJECT_SOURCE_DIR}/src/application/application.cpp"
+    "${PROJECT_SOURCE_DIR}/src/application/awake_controller.cpp"
+    "${PROJECT_SOURCE_DIR}/src/application/close_controller.cpp"
     "${PROJECT_SOURCE_DIR}/src/application/durations.cpp"
+    "${PROJECT_SOURCE_DIR}/src/application/window_selection.cpp"
     "${PROJECT_SOURCE_DIR}/src/main.cpp"
     "${PROJECT_SOURCE_DIR}/src/platform/windows/clock.cpp"
     "${PROJECT_SOURCE_DIR}/src/platform/windows/clock.hpp"
@@ -122,7 +131,11 @@ set(
     "${PROJECT_SOURCE_DIR}/src/platform/windows/windows_platform_binding.cpp"
     "${PROJECT_SOURCE_DIR}/src/platform/windows/windows_platform_binding.hpp"
     "${PROJECT_SOURCE_DIR}/tests/application/application.test.cpp"
+    "${PROJECT_SOURCE_DIR}/tests/application/awake_controller.test.cpp"
+    "${PROJECT_SOURCE_DIR}/tests/application/close_controller.test.cpp"
     "${PROJECT_SOURCE_DIR}/tests/application/durations.test.cpp"
+    "${PROJECT_SOURCE_DIR}/tests/application/fake_platform_binding.hpp"
+    "${PROJECT_SOURCE_DIR}/tests/application/window_selection.test.cpp"
 )
 include(cmake/ClangFormat.cmake)
 

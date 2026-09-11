@@ -275,8 +275,8 @@ void MainWindow::Present(const ViewState& state)
     rendering_ = true;
     if (!durations_loaded_)
     {
-        awake_durations_ = state.awake_durations;
-        close_durations_ = state.close_durations;
+        awake_durations_ = state.awake.durations;
+        close_durations_ = state.close.durations;
         for (const auto& [id, choices] :
              {std::pair{awake_duration, &awake_durations_}, std::pair{close_duration, &close_durations_}})
         {
@@ -290,44 +290,45 @@ void MainWindow::Present(const ViewState& state)
         }
         durations_loaded_ = true;
     }
-    SelectDuration(awake_duration, awake_durations_, state.awake_duration);
-    SelectDuration(close_duration, close_durations_, state.close_duration);
-    Text(display, state.display_caption);
-    Text(system, state.system_caption);
-    Text(close_button, state.close_caption);
-    Text(highlight, state.highlight_caption);
-    Text(awake_remaining, state.awake_remaining);
-    Text(close_remaining, state.close_remaining);
-    Text(awake_group, state.awake_caption);
-    Text(close_group, state.close_group_caption);
-    Text(awake_status, state.awake_status);
-    Text(close_status, state.close_status);
-    Text(catalog_status, state.catalog_status);
-    Text(process_name, state.process_name);
-    Text(window_handle, state.window_handle);
-    Text(window_position, state.window_position);
-    Enable(display, state.display_enabled);
-    Enable(system, state.system_enabled);
-    Enable(awake_duration, state.awake_duration_enabled);
+    SelectDuration(awake_duration, awake_durations_, state.awake.duration);
+    SelectDuration(close_duration, close_durations_, state.close.duration);
+    Text(display, state.awake.display_caption);
+    Text(system, state.awake.system_caption);
+    Text(close_button, state.close.caption);
+    Text(highlight, state.selection.highlight_caption);
+    Text(awake_remaining, state.awake.remaining);
+    Text(close_remaining, state.close.remaining);
+    Text(awake_group, state.awake.caption);
+    Text(close_group, state.close.group_caption);
+    Text(awake_status, state.awake.status);
+    Text(close_status, state.close.status);
+    Text(catalog_status, state.selection.catalog_status);
+    Text(process_name, state.selection.process_name);
+    Text(window_handle, state.selection.window_handle);
+    Text(window_position, state.selection.window_position);
+    Enable(display, state.awake.display_enabled);
+    Enable(system, state.awake.system_enabled);
+    Enable(awake_duration, state.awake.duration_enabled);
     for (const int id : {window_list, refresh, close_duration})
     {
-        Enable(id, state.close_inputs_enabled);
+        Enable(id, state.close.inputs_enabled);
     }
-    if (catalog_revision_ != state.catalog_revision)
+    if (catalog_revision_ != state.selection.catalog_revision)
     {
         titles_.clear();
         SendDlgItemMessageW(window_.Get(), window_list, LB_RESETCONTENT, 0, 0);
-        for (const auto& window : state.windows)
+        for (const auto& window : state.selection.windows)
         {
             titles_.push_back(ToWide(window.title));
             const auto result = SendDlgItemMessageW(window_.Get(), window_list, LB_ADDSTRING, 0,
                                                     reinterpret_cast<LPARAM>(titles_.back().c_str()));
             Require(result != LB_ERR && result != LB_ERRSPACE, "Populate window list");
         }
-        catalog_revision_ = state.catalog_revision;
+        catalog_revision_ = state.selection.catalog_revision;
         UpdateListExtent();
     }
-    const auto selection = state.selected_window ? static_cast<LRESULT>(*state.selected_window) : LB_ERR;
+    const auto selection =
+        state.selection.selected_window ? static_cast<LRESULT>(*state.selection.selected_window) : LB_ERR;
     if (SendDlgItemMessageW(window_.Get(), window_list, LB_GETCURSEL, 0, 0) != selection)
     {
         SendDlgItemMessageW(window_.Get(), window_list, LB_SETCURSEL, selection, 0);

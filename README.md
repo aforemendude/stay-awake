@@ -176,6 +176,12 @@ cmake --install build/windows-mingw-release --prefix ./build/install
 
 ## Contributor notes
 
+The portable `Application` coordinates event delivery, lifecycle, the shared countdown timer, and presentation.
+`AwakeController` owns sleep prevention and release retries; `CloseController` owns close scheduling and captured
+targets; `WindowSelection` owns the catalog, selection details, and highlighting. Each class owns its feature state, and
+`Application` composes their grouped `ViewState` snapshots for the Windows view. Matching test files exercise each
+feature through a shared fake platform binding; application tests cover coordination, reentrant events, and shutdown.
+
 See [AGENTS.md](AGENTS.md) for the architecture and application-only testing boundary, and [TODO.md](TODO.md) for the
 migration decisions, recorded validation, deferred alternatives, and Windows manual acceptance matrix. The
 `CODE_REVIEW_*.md` documents retain their original contents and source links as historical context for the prior
