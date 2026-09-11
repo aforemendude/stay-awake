@@ -1,8 +1,0 @@
-/build/
-/node_modules/
-/compile_commands.json
-CMakeUserPresets.json
-# Preserve historical review documents byte-for-byte.
-/CODE_REVIEW_CORE.md
-/CODE_REVIEW_INTERFACE_TIMERS.md
-/CODE_REVIEW_STARTUP_BUILD_DOCS.md

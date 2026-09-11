@@ -46,8 +46,8 @@ OperationResult OverlayWindow::Set(const std::optional<Rectangle> rectangle)
         {
             return {false, NativeError("Register highlight window")};
         }
-        // Layered + transparent bypasses hit testing even across process/thread boundaries; HTTRANSPARENT alone
-        // only forwards within the same thread. NOACTIVATE prevents focus theft, TOOLWINDOW excludes taskbar/Alt-Tab.
+        // Layered + transparent bypasses hit testing even across process/thread boundaries; HTTRANSPARENT alone only
+        // forwards within the same thread. NOACTIVATE prevents focus theft, TOOLWINDOW excludes taskbar/Alt-Tab.
         window_.Reset(
             CreateWindowExW(WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW | WS_EX_TOPMOST,
                             cls.lpszClassName, L"", WS_POPUP, 0, 0, 0, 0, nullptr, nullptr, cls.hInstance, nullptr));

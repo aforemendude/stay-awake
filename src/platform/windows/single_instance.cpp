@@ -4,7 +4,7 @@ namespace stay_awake::windows
 {
 namespace
 {
-// Unprefixed kernel object names are session-local, matching the previous implementation.
+// Unprefixed kernel object names are session-local.
 constexpr auto mutex_name = L"StayAwake-Mutex-1927b19d-4cad-4589-9ed1-17ae32b96c1b";
 constexpr auto event_name = L"StayAwake-Event-1927b19d-4cad-4589-9ed1-17ae32b96c1b";
 } // namespace

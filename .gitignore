@@ -1,24 +1,10 @@
-# CMake output and local configuration
+# CMake build output and local configuration
 /build/
 /compile_commands.json
 CMakeUserPresets.json
+
+# Node.js dependencies
 /node_modules/
+
+# Tool caches
 /.cache/
-.env
-.env.*
-!.env.example
-*.log
-*.user
-*.swp
-*.code-workspace
-.vs/
-.idea/
-.history/
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-.DS_Store
-Thumbs.db
-Desktop.ini
