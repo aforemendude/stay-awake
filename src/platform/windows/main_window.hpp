@@ -45,6 +45,8 @@ class MainWindow
     void Command(int id, int notification);
     void Text(int id, std::string_view text);
     void Enable(int id, bool enabled);
+    void SaveFocus(HWND window);
+    void RestoreFocus(HWND window);
     void SelectDuration(int id, const std::vector<DurationChoice>& choices,
                         std::optional<std::chrono::seconds> duration);
 

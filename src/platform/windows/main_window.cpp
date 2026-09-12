@@ -336,6 +336,21 @@ void MainWindow::Present(const ViewState& state)
     rendering_ = false;
 }
 
+void MainWindow::SaveFocus(HWND window)
+{
+    const auto focus = GetFocus();
+    if (IsChild(window, focus))
+    {
+        last_focus_ = focus;
+    }
+}
+
+void MainWindow::RestoreFocus(HWND window)
+{
+    SetFocus(IsChild(window, last_focus_) && IsWindowEnabled(last_focus_) ? last_focus_
+                                                                          : GetNextDlgTabItem(window, nullptr, FALSE));
+}
+
 void MainWindow::SetVisible(const bool visible)
 {
     if (visible)
@@ -343,22 +358,11 @@ void MainWindow::SetVisible(const bool visible)
         ShowWindow(window_.Get(), SW_RESTORE);
         KeepOnWorkArea(window_.Get());
         SetForegroundWindow(window_.Get());
-        if (last_focus_ && IsWindowEnabled(last_focus_))
-        {
-            SetFocus(last_focus_);
-        }
-        else
-        {
-            SetFocus(GetNextDlgTabItem(window_.Get(), nullptr, FALSE));
-        }
+        RestoreFocus(window_.Get());
     }
     else
     {
-        const auto focus = GetFocus();
-        if (IsChild(window_.Get(), focus))
-        {
-            last_focus_ = focus;
-        }
+        SaveFocus(window_.Get());
         ShowWindow(window_.Get(), SW_HIDE);
     }
 }
@@ -545,8 +549,15 @@ LRESULT MainWindow::Message(HWND window, UINT message, WPARAM wparam, LPARAM lpa
     case WM_SETTINGCHANGE:
         KeepOnWorkArea(window);
         break;
+    case WM_ACTIVATE:
+        if (LOWORD(wparam) == WA_INACTIVE)
+        {
+            SaveFocus(window);
+        }
+        // Keep default activation handling so WM_SETFOCUS restores the saved child.
+        break;
     case WM_SETFOCUS:
-        SetFocus(last_focus_ && IsWindowEnabled(last_focus_) ? last_focus_ : GetNextDlgTabItem(window, nullptr, FALSE));
+        RestoreFocus(window);
         return 0;
     case tray_message:
         if (tray_)
