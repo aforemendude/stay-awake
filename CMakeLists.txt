@@ -47,7 +47,9 @@ if(STAY_AWAKE_BUILD_APP)
             STAY_AWAKE_PLATFORM_SOURCES
             src/platform/windows/clock.cpp
             src/platform/windows/dpi.cpp
+            src/platform/windows/list_scrolling.cpp
             src/platform/windows/main_window.cpp
+            src/platform/windows/main_window_controls.cpp
             src/platform/windows/native.cpp
             src/platform/windows/overlay_window.cpp
             src/platform/windows/platform_factory.cpp
@@ -112,8 +114,12 @@ set(
     "${PROJECT_SOURCE_DIR}/src/platform/windows/clock.hpp"
     "${PROJECT_SOURCE_DIR}/src/platform/windows/dpi.cpp"
     "${PROJECT_SOURCE_DIR}/src/platform/windows/dpi.hpp"
+    "${PROJECT_SOURCE_DIR}/src/platform/windows/list_scrolling.cpp"
+    "${PROJECT_SOURCE_DIR}/src/platform/windows/list_scrolling.hpp"
     "${PROJECT_SOURCE_DIR}/src/platform/windows/main_window.cpp"
     "${PROJECT_SOURCE_DIR}/src/platform/windows/main_window.hpp"
+    "${PROJECT_SOURCE_DIR}/src/platform/windows/main_window_controls.cpp"
+    "${PROJECT_SOURCE_DIR}/src/platform/windows/main_window_controls.hpp"
     "${PROJECT_SOURCE_DIR}/src/platform/windows/native.cpp"
     "${PROJECT_SOURCE_DIR}/src/platform/windows/native.hpp"
     "${PROJECT_SOURCE_DIR}/src/platform/windows/overlay_window.cpp"
