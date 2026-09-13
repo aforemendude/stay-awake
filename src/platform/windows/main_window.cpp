@@ -492,27 +492,6 @@ LRESULT MainWindow::Message(HWND window, UINT message, WPARAM wparam, LPARAM lpa
     }
     switch (message)
     {
-    case WM_ERASEBKGND:
-    case WM_PRINTCLIENT: {
-        // Themed group boxes request the parent's background through WM_PRINTCLIENT, which DefWindowProc does not
-        // paint. Use the form background for both paths.
-        RECT client{};
-        GetClientRect(window, &client);
-        return FillRect(reinterpret_cast<HDC>(wparam), &client, GetSysColorBrush(COLOR_BTNFACE));
-    }
-    case WM_CTLCOLORBTN:
-    case WM_CTLCOLORSTATIC: {
-        const auto id = GetDlgCtrlID(reinterpret_cast<HWND>(lparam));
-        if (id == awake_group || id == close_group)
-        {
-            // Keep unthemed group boxes consistent with the form background too.
-            const auto dc = reinterpret_cast<HDC>(wparam);
-            SetBkMode(dc, TRANSPARENT);
-            SetBkColor(dc, GetSysColor(COLOR_BTNFACE));
-            return reinterpret_cast<LRESULT>(GetSysColorBrush(COLOR_BTNFACE));
-        }
-        break;
-    }
     case WM_COMMAND:
         Command(LOWORD(wparam), HIWORD(wparam));
         return 0;
