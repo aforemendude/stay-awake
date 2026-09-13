@@ -484,8 +484,8 @@ LRESULT MainWindow::Message(HWND window, UINT message, WPARAM wparam, LPARAM lpa
         {
             Emit({EventKind::show});
             MessageBoxW(window,
-                        L"The tray icon could not be restored. The window will remain available. Use Quit in "
-                        L"the window's system menu to exit.",
+                        L"The tray icon could not be restored. The window will remain available. "
+                        L"Use Quit in the window's system menu to exit.",
                         L"Stay Awake", MB_OK | MB_ICONERROR);
         }
         return 0;
