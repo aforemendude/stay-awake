@@ -15,9 +15,13 @@ std::wstring FormatUnixProcessCreationTime(const std::optional<std::uint64_t> cr
     }
     // FILETIME counts 100-nanosecond ticks since 1601; Unix time counts seconds since 1970.
     constexpr std::uint64_t ticks_per_second = 10'000'000;
-    constexpr std::int64_t epoch_offset_seconds = 11'644'473'600;
-    const auto unix_seconds = static_cast<std::int64_t>(*creation_time / ticks_per_second) - epoch_offset_seconds;
-    return std::to_wstring(unix_seconds);
+    constexpr std::uint64_t epoch_offset_ticks = 116'444'736'000'000'000;
+    const bool before_unix_epoch = *creation_time < epoch_offset_ticks;
+    const auto unix_ticks =
+        before_unix_epoch ? epoch_offset_ticks - *creation_time : *creation_time - epoch_offset_ticks;
+    const auto fraction = std::to_wstring(unix_ticks % ticks_per_second);
+    return (before_unix_epoch ? L"-" : L"") + std::to_wstring(unix_ticks / ticks_per_second) + L"." +
+           std::wstring(7 - fraction.size(), L'0') + fraction;
 }
 
 std::wstring FormatLocalProcessCreationTime(const std::optional<std::uint64_t> creation_time)
