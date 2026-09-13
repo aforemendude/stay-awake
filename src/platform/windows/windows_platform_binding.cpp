@@ -58,21 +58,8 @@ std::wstring FormatUnixProcessCreationTime(const std::optional<std::uint64_t> cr
            std::wstring(7 - fraction.size(), L'0') + fraction;
 }
 
-std::wstring FormatLocalProcessCreationTime(const std::optional<std::uint64_t> creation_time)
+std::wstring FormatLocalTimestamp(const SYSTEMTIME& local_time)
 {
-    if (!creation_time)
-    {
-        return L"Unavailable";
-    }
-    const FILETIME file_time{static_cast<DWORD>(*creation_time), static_cast<DWORD>(*creation_time >> 32)};
-    SYSTEMTIME utc_time{}, local_time{};
-    DYNAMIC_TIME_ZONE_INFORMATION time_zone{};
-    if (!FileTimeToSystemTime(&file_time, &utc_time) ||
-        GetDynamicTimeZoneInformation(&time_zone) == TIME_ZONE_ID_INVALID ||
-        !SystemTimeToTzSpecificLocalTimeEx(&time_zone, &utc_time, &local_time))
-    {
-        return L"Unavailable";
-    }
     const int date_size =
         GetDateFormatEx(LOCALE_NAME_USER_DEFAULT, DATE_LONGDATE, &local_time, nullptr, nullptr, 0, nullptr);
     const int time_size = GetTimeFormatEx(LOCALE_NAME_USER_DEFAULT, 0, &local_time, nullptr, nullptr, 0);
@@ -92,6 +79,24 @@ std::wstring FormatLocalProcessCreationTime(const std::optional<std::uint64_t> c
     date.resize(static_cast<std::size_t>(date_count - 1));
     time.resize(static_cast<std::size_t>(time_count - 1));
     return date + L" " + time;
+}
+
+std::wstring FormatLocalProcessCreationTime(const std::optional<std::uint64_t> creation_time)
+{
+    if (!creation_time)
+    {
+        return L"Unavailable";
+    }
+    const FILETIME file_time{static_cast<DWORD>(*creation_time), static_cast<DWORD>(*creation_time >> 32)};
+    SYSTEMTIME utc_time{}, local_time{};
+    DYNAMIC_TIME_ZONE_INFORMATION time_zone{};
+    if (!FileTimeToSystemTime(&file_time, &utc_time) ||
+        GetDynamicTimeZoneInformation(&time_zone) == TIME_ZONE_ID_INVALID ||
+        !SystemTimeToTzSpecificLocalTimeEx(&time_zone, &utc_time, &local_time))
+    {
+        return L"Unavailable";
+    }
+    return FormatLocalTimestamp(local_time);
 }
 } // namespace
 
@@ -195,9 +200,11 @@ ElapsedTime WindowsPlatformBinding::Now()
     return InterruptTime();
 }
 
-std::string WindowsPlatformBinding::LocalTimestamp(const bool with_seconds)
+std::string WindowsPlatformBinding::LocalTimestamp()
 {
-    return windows::LocalTimestamp(with_seconds);
+    SYSTEMTIME time{};
+    GetLocalTime(&time);
+    return ToUtf8(FormatLocalTimestamp(time));
 }
 
 OperationResult WindowsPlatformBinding::SetAwake(const std::optional<AwakeMode> mode)

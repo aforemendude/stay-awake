@@ -46,7 +46,7 @@ bool CloseController::Tick(const ElapsedTime now)
     Cancel(); // Consume before calling native code or delivering any reentrant events.
     const auto result = platform_.RequestClose(target.identity);
     const std::string outcome = result.success ? "Close requested" : "Close request failed";
-    state_.status = outcome + " " + FormatHandle(target.identity) + " At " + platform_.LocalTimestamp(false) + " (" +
+    state_.status = outcome + " " + FormatHandle(target.identity) + " At " + platform_.LocalTimestamp() + " (" +
                     (target.process_name.empty() ? "Unknown" : target.process_name) + ")";
     if (!result.success)
     {

@@ -23,9 +23,9 @@ class FakePlatformBinding final : public PlatformBinding
     {
         return now;
     }
-    std::string LocalTimestamp(bool with_seconds) override
+    std::string LocalTimestamp() override
     {
-        return with_seconds ? timestamp : timestamp.substr(0, 11);
+        return timestamp;
     }
     OperationResult SetAwake(std::optional<AwakeMode> mode) override
     {
@@ -111,7 +111,7 @@ class FakePlatformBinding final : public PlatformBinding
     }
 
     ElapsedTime now{0};
-    std::string timestamp = "09/11 12:34:56";
+    std::string timestamp = "Friday, September 11, 2026 12:34:56 PM";
     WindowListResult catalog{
         {},
         {{{0xABC, 12, 0x100000001ULL}, "Same title", "alpha"}, {{0xDEF, 34, 0x200000002ULL}, "Same title", "beta"}}};

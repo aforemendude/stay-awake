@@ -270,15 +270,15 @@ TEST_F(ApplicationTest, WallClockJumpsDoNotChangeDurationAndResumeConsumesOverdu
 {
     StartAwake();
     StartClose();
-    platform.timestamp = "03/01 01:02:03";
+    platform.timestamp = "Sonntag, 1. März 2026 01:02:03";
     TickAt(1s);
     EXPECT_EQ(State().awake.status, "Require Display - 00:00:09 remaining");
     EXPECT_EQ(State().close.status, "Close scheduled - 00:00:09 remaining");
     // Fake elapsed time includes suspend: no actual OS clocks or sleeps in application tests.
-    platform.timestamp = "03/01 09:02:03";
+    platform.timestamp = "Sonntag, 1. März 2026 09:02:03";
     TickAt(platform.now + 8h);
-    EXPECT_NE(State().awake.status.find("03/01 09:02:03"), std::string::npos);
-    EXPECT_NE(State().close.status.find("03/01 09:02"), std::string::npos);
+    EXPECT_NE(State().awake.status.find("Sonntag, 1. März 2026 09:02:03"), std::string::npos);
+    EXPECT_NE(State().close.status.find("Sonntag, 1. März 2026 09:02:03"), std::string::npos);
     EXPECT_EQ(platform.close_requests.size(), 1U);
     EXPECT_EQ(platform.power_calls.size(), 2U);
     EXPECT_FALSE(platform.timer_deadline);
@@ -302,7 +302,7 @@ TEST_F(ApplicationTest, ScheduleCapturesIdentityAndIgnoresStaleListAndDurationEv
     ASSERT_EQ(platform.close_requests.size(), 1U);
     EXPECT_EQ(platform.close_requests[0], (WindowIdentity{0xABC, 12, 0x100000001ULL}));
     EXPECT_EQ(platform.close_requests[0].process_creation_time, 0x100000001ULL);
-    EXPECT_EQ(State().close.status, "Close requested ABC At 09/11 12:34 (alpha)");
+    EXPECT_EQ(State().close.status, "Close requested ABC At Friday, September 11, 2026 12:34:56 PM (alpha)");
     EXPECT_EQ(State().close.status.find("Closed"), std::string::npos);
     EXPECT_FALSE(State().selection.selected_window);
     EXPECT_TRUE(State().close.inputs_enabled);
@@ -319,7 +319,9 @@ TEST_F(ApplicationTest, CloseFailurePreservesCapturedMetadataEvenWhenAutomaticRe
         platform.catalog.result = {false, "refresh failed"};
         platform.now += 10s;
         Send(EventKind::tick);
-        EXPECT_NE(State().close.status.find("Close request failed ABC At 09/11 12:34 (alpha)"), std::string::npos);
+        EXPECT_NE(
+            State().close.status.find("Close request failed ABC At Friday, September 11, 2026 12:34:56 PM (alpha)"),
+            std::string::npos);
         EXPECT_NE(State().close.status.find(failure), std::string::npos);
         EXPECT_NE(State().selection.catalog_status.find("refresh failed"), std::string::npos);
         EXPECT_TRUE(State().close.inputs_enabled);
@@ -335,7 +337,7 @@ TEST_F(ApplicationTest, SuccessfulCloseResultSurvivesFailedAutomaticRefresh)
     platform.catalog.result = {false, "refresh failed"};
     platform.now = 10s;
     Send(EventKind::tick);
-    EXPECT_EQ(State().close.status, "Close requested ABC At 09/11 12:34 (alpha)");
+    EXPECT_EQ(State().close.status, "Close requested ABC At Friday, September 11, 2026 12:34:56 PM (alpha)");
     EXPECT_TRUE(platform.errors.empty());
     EXPECT_FALSE(State().timer_needed);
 }
@@ -431,7 +433,7 @@ TEST_F(ApplicationTest, TimerFailureWithReleaseFailureKeepsManualRetryAvailable)
     EXPECT_EQ(platform.errors.size(), 1U);
     platform.release_result = {};
     Send(EventKind::toggle_display);
-    EXPECT_EQ(State().awake.status, "Require Display Ended At 09/11 12:34:56");
+    EXPECT_EQ(State().awake.status, "Require Display Ended At Friday, September 11, 2026 12:34:56 PM");
 }
 
 TEST_F(ApplicationTest, TimerRearmFailureCancelsBothCountdownsAndAllowsRestart)
@@ -481,7 +483,7 @@ TEST_F(ApplicationTest, TimerRearmFailurePreservesFailedPowerReleaseForManualRet
     Send(EventKind::toggle_display);
     EXPECT_EQ(platform.power_calls.size(), 3U);
     EXPECT_TRUE(State().awake.duration_enabled);
-    EXPECT_EQ(State().awake.status, "Require Display Ended At 09/11 12:34:56");
+    EXPECT_EQ(State().awake.status, "Require Display Ended At Friday, September 11, 2026 12:34:56 PM");
     EXPECT_FALSE(platform.timer_deadline);
 }
 
@@ -590,7 +592,7 @@ TEST_F(ApplicationTest, ModalWindowDetailsKeepsScheduledTargetAndQueuesExpiryUnt
     EXPECT_EQ(platform.power_calls.size(), 2U);
     EXPECT_FALSE(State().timer_needed);
     EXPECT_FALSE(platform.timer_deadline);
-    EXPECT_EQ(State().close.status, "Close requested ABC At 09/11 12:34 (alpha)");
+    EXPECT_EQ(State().close.status, "Close requested ABC At Friday, September 11, 2026 12:34:56 PM (alpha)");
 }
 
 TEST_F(ApplicationTest, QuitAndConfirmedSessionEndCleanUpImmediatelyDuringWindowDetails)
@@ -661,7 +663,7 @@ TEST_F(ApplicationTest, ReentrantTickDuringCloseCannotPostTwice)
     EXPECT_EQ(platform.close_requests.size(), 1U);
     EXPECT_EQ(platform.power_calls.size(), 2U);
     EXPECT_FALSE(State().timer_needed);
-    EXPECT_EQ(State().close.status, "Close requested ABC At 09/11 12:34 (alpha)");
+    EXPECT_EQ(State().close.status, "Close requested ABC At Friday, September 11, 2026 12:34:56 PM (alpha)");
 }
 
 TEST_F(ApplicationTest, ModalErrorSeesCompletedStateAndQuitImmediatelyDisablesLaterEvents)

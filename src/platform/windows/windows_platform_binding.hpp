@@ -15,7 +15,7 @@ class WindowsPlatformBinding final : public PlatformBinding
   public:
     OperationResult RunService(EventHandler handler) override;
     ElapsedTime Now() override;
-    std::string LocalTimestamp(bool with_seconds) override;
+    std::string LocalTimestamp() override;
     OperationResult SetAwake(std::optional<AwakeMode> mode) override;
     WindowListResult EnumerateWindows() override;
     std::optional<Rectangle> WindowRectangle(WindowIdentity target) override;

@@ -55,13 +55,13 @@ OperationResult AwakeController::Stop(const bool expired)
         session_.reset();
         if (expired || retry)
         {
-            state_.status = ModeName(mode) + " Ended At " + platform_.LocalTimestamp(true);
+            state_.status = ModeName(mode) + " Ended At " + platform_.LocalTimestamp();
         }
     }
     else
     {
-        state_.status = "Error Ending " + ModeName(mode) + " At " + platform_.LocalTimestamp(true) + ": " +
-                        result.error + ". Click the active mode to retry.";
+        state_.status = "Error Ending " + ModeName(mode) + " At " + platform_.LocalTimestamp() + ": " + result.error +
+                        ". Click the active mode to retry.";
         if (!expired)
         {
             return {false, "Failed to stop stay awake: " + result.error};

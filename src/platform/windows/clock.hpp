@@ -5,5 +5,4 @@
 namespace stay_awake::windows
 {
 ElapsedTime InterruptTime();
-std::string LocalTimestamp(bool with_seconds);
 } // namespace stay_awake::windows

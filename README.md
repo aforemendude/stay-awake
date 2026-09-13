@@ -61,7 +61,8 @@ replaced during the request can cause a different window to receive it, even aft
 
 The **Status** fields show **Ready** when idle with no previous result or issue, the remaining countdown while active,
 and the last completion or error until the next run. The status below the list reports list refresh errors and returns
-to **Ready** after a successful refresh.
+to **Ready** after a successful refresh. All status timestamps use the same Windows regional long-date and time format
+as **Process Creation Time (Local)** in **Show Details**.
 
 Both countdowns include time spent asleep or hibernating; overdue operations run after resume. Clock and time-zone
 changes affect result timestamps, not durations. The fixed-size window scales with display DPI and must fit the

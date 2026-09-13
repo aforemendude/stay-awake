@@ -89,7 +89,7 @@ TEST_F(CloseControllerTest, CapturesTargetAndConsumesScheduleOnceAtExactDeadline
     EXPECT_TRUE(close.Tick(platform.now));
     ASSERT_EQ(platform.close_requests.size(), 1U);
     EXPECT_EQ(platform.close_requests[0], (WindowIdentity{0xABC, 12, 0x100000001ULL}));
-    EXPECT_EQ(State().status, "Close requested ABC At 09/11 12:34 (alpha)");
+    EXPECT_EQ(State().status, "Close requested ABC At Friday, September 11, 2026 12:34:56 PM (alpha)");
     EXPECT_EQ(State().status.find("Closed"), std::string::npos);
     EXPECT_FALSE(close.Active());
     EXPECT_FALSE(close.Tick(platform.now));
@@ -121,7 +121,8 @@ TEST_F(CloseControllerTest, FailedRequestUsesCapturedMetadataAndDoesNotRetry)
         platform.close_result = {false, failure};
         platform.now += 10s;
         EXPECT_TRUE(close.Tick(platform.now));
-        EXPECT_NE(State().status.find("Close request failed ABC At 09/11 12:34 (alpha)"), std::string::npos);
+        EXPECT_NE(State().status.find("Close request failed ABC At Friday, September 11, 2026 12:34:56 PM (alpha)"),
+                  std::string::npos);
         EXPECT_NE(State().status.find(failure), std::string::npos);
         EXPECT_TRUE(State().inputs_enabled);
         EXPECT_FALSE(close.Active());
@@ -137,7 +138,7 @@ TEST_F(CloseControllerTest, MissingProcessNameUsesFallback)
     Start();
     platform.now = 10s;
     EXPECT_TRUE(close.Tick(platform.now));
-    EXPECT_EQ(State().status, "Close requested ABC At 09/11 12:34 (Unknown)");
+    EXPECT_EQ(State().status, "Close requested ABC At Friday, September 11, 2026 12:34:56 PM (Unknown)");
 }
 } // namespace
 } // namespace stay_awake

@@ -22,8 +22,9 @@ class PlatformBinding
     virtual OperationResult RunService(EventHandler handler) = 0;
     // Monotonic time since an arbitrary origin, INCLUDING suspend/hibernate; unaffected by wall-clock adjustments.
     virtual ElapsedTime Now() = 0;
-    // Local time formatted MM/dd HH:mm:ss (true) or MM/dd HH:mm (false), independent of Now().
-    virtual std::string LocalTimestamp(bool with_seconds) = 0;
+    // Current local time in the user's regional long-date and time format, matching window details.
+    // Independent of Now(); returned as UTF-8.
+    virtual std::string LocalTimestamp() = 0;
     virtual OperationResult SetAwake(std::optional<AwakeMode> mode) = 0;
     // The adapter filters visible/nonblank/non-shell/non-Program-Manager/non-own-PID windows and sorts by locale.
     virtual WindowListResult EnumerateWindows() = 0;

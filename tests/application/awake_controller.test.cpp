@@ -101,7 +101,7 @@ TEST_F(AwakeControllerTest, ExpiryRecordsModeAndTimeOnceAtExactDeadline)
     platform.now = 10s;
     awake.Tick(platform.now);
     EXPECT_EQ(platform.power_calls.size(), 2U);
-    EXPECT_EQ(State().status, "Require System Ended At 09/11 12:34:56");
+    EXPECT_EQ(State().status, "Require System Ended At Friday, September 11, 2026 12:34:56 PM");
     EXPECT_FALSE(awake.NeedsTimer());
     platform.now += 1h;
     awake.Tick(platform.now);
@@ -122,7 +122,7 @@ TEST_F(AwakeControllerTest, FailedAutomaticReleaseIsVisibleWithoutTimerRetriesAn
     EXPECT_FALSE(State().duration_enabled);
     EXPECT_TRUE(State().display_enabled);
     EXPECT_FALSE(State().system_enabled);
-    EXPECT_NE(State().status.find("Require Display At 09/11 12:34:56"), std::string::npos);
+    EXPECT_NE(State().status.find("Require Display At Friday, September 11, 2026 12:34:56 PM"), std::string::npos);
     EXPECT_NE(State().status.find("release denied"), std::string::npos);
     EXPECT_TRUE(platform.errors.empty());
     awake.Tick(platform.now);
