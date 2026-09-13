@@ -21,7 +21,7 @@ class WindowsPlatformBinding final : public PlatformBinding
     std::optional<Rectangle> WindowRectangle(WindowIdentity target) override;
     OperationResult RequestClose(WindowIdentity target) override;
     OperationResult SetOverlay(std::optional<Rectangle> rectangle) override;
-    OperationResult SetTimerEnabled(bool enabled) override;
+    OperationResult ScheduleTick(std::optional<ElapsedTime> deadline) override;
     void Present(const ViewState& state) override;
     void SetWindowVisible(bool visible) override;
     void ShowError(std::string_view message) override;

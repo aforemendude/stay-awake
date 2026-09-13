@@ -60,6 +60,11 @@ bool CloseController::Active() const
     return session_.has_value();
 }
 
+std::optional<ElapsedTime> CloseController::NextUpdate(const ElapsedTime now) const
+{
+    return session_ ? std::optional(NextCountdownUpdate(session_->deadline, now)) : std::nullopt;
+}
+
 void CloseController::Cancel()
 {
     session_.reset();

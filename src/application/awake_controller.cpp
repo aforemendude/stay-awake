@@ -83,6 +83,11 @@ bool AwakeController::NeedsTimer() const
     return session_ && session_->deadline;
 }
 
+std::optional<ElapsedTime> AwakeController::NextUpdate(const ElapsedTime now) const
+{
+    return NeedsTimer() ? std::optional(NextCountdownUpdate(*session_->deadline, now)) : std::nullopt;
+}
+
 void AwakeController::CancelForTimerFailure(const std::string& error)
 {
     if (NeedsTimer())

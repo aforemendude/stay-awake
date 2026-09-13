@@ -24,6 +24,11 @@ class ApplicationTest : public testing::Test
     {
         application.Handle({kind});
     }
+    void TickAt(ElapsedTime now)
+    {
+        platform.now = now;
+        ASSERT_TRUE(platform.DeliverTick([this](const ApplicationEvent& event) { application.Handle(event); }));
+    }
     void Select(std::optional<std::size_t> index)
     {
         application.Handle({EventKind::select_window, index});
@@ -72,18 +77,19 @@ TEST_F(ApplicationTest, InitializesHiddenIdleWithoutUnnecessaryTimer)
     EXPECT_EQ(State().close.duration, 1h);
     EXPECT_TRUE(platform.visibility.empty());
     EXPECT_TRUE(platform.power_calls.empty());
-    EXPECT_FALSE(platform.timer_enabled);
+    EXPECT_FALSE(platform.timer_deadline);
 }
 
 TEST_F(ApplicationTest, CancelingAwakeLeavesCloseTimerActive)
 {
     StartAwake();
+    platform.now = 350ms;
     StartClose();
     Send(EventKind::toggle_display);
     EXPECT_TRUE(State().timer_needed);
+    EXPECT_EQ(platform.timer_deadline, 1350ms);
     EXPECT_FALSE(State().close.inputs_enabled);
-    platform.now = 10s;
-    Send(EventKind::tick);
+    TickAt(10350ms);
     EXPECT_EQ(platform.close_requests.size(), 1U);
     EXPECT_FALSE(State().timer_needed);
 }
@@ -91,52 +97,157 @@ TEST_F(ApplicationTest, CancelingAwakeLeavesCloseTimerActive)
 TEST_F(ApplicationTest, CancelingCloseLeavesAwakeActive)
 {
     StartAwake();
+    platform.now = 350ms;
     StartClose();
     Send(EventKind::toggle_close);
     EXPECT_TRUE(State().timer_needed);
+    EXPECT_EQ(platform.timer_deadline, 1s);
     EXPECT_TRUE(State().close.inputs_enabled);
     EXPECT_EQ(State().close.caption, "Schedule Close Window");
     EXPECT_EQ(State().close.status, "Ready");
     EXPECT_TRUE(platform.close_requests.empty());
-    platform.now = 10s;
-    Send(EventKind::tick);
+    TickAt(10s);
     EXPECT_EQ(platform.power_calls.size(), 2U);
     EXPECT_TRUE(platform.close_requests.empty());
+}
+
+TEST_F(ApplicationTest, SlightlyLateCallbacksPreserveEverySecondWithoutAccumulatingDrift)
+{
+    StartAwake(EventKind::toggle_system, 30min);
+    StartClose(30min);
+    for (int second = 1; second <= 150; ++second)
+    {
+        SCOPED_TRACE(second);
+        ASSERT_EQ(platform.timer_deadline, second * 1s);
+        // A repeating one-second timer with this delay skips a number after about two minutes.
+        TickAt(*platform.timer_deadline + 8ms);
+        const auto remaining = FormatRemaining(30min - second * 1s);
+        EXPECT_EQ(State().awake.status, "Require System - " + remaining + " remaining");
+        EXPECT_EQ(State().close.status, "Close scheduled - " + remaining + " remaining");
+        EXPECT_EQ(platform.timer_deadline, (second + 1) * 1s);
+    }
+    EXPECT_EQ(platform.timer_requests.size(), 151U); // Both countdowns share each scheduled tick.
+    EXPECT_EQ(platform.power_calls.size(), 1U);
+    EXPECT_TRUE(platform.close_requests.empty());
+}
+
+TEST_F(ApplicationTest, StaggeredCountdownsShareOneTimerAndKeepIndependentBoundaries)
+{
+    StartAwake();
+    platform.now = 350ms;
+    StartClose();
+    ASSERT_EQ(platform.timer_deadline, 1s);
+    for (int second = 1; second < 10; ++second)
+    {
+        SCOPED_TRACE(second);
+        TickAt(second * 1s);
+        EXPECT_EQ(State().awake.status, "Require Display - " + FormatRemaining((10 - second) * 1s) + " remaining");
+        EXPECT_EQ(State().close.status, "Close scheduled - " + FormatRemaining((11 - second) * 1s) + " remaining");
+        ASSERT_EQ(platform.timer_deadline, second * 1s + 350ms);
+        TickAt(*platform.timer_deadline);
+        EXPECT_EQ(State().close.status, "Close scheduled - " + FormatRemaining((10 - second) * 1s) + " remaining");
+        ASSERT_EQ(platform.timer_deadline, (second + 1) * 1s);
+        EXPECT_EQ(platform.power_calls.size(), 1U);
+        EXPECT_TRUE(platform.close_requests.empty());
+    }
+    TickAt(10s);
+    EXPECT_EQ(platform.power_calls.size(), 2U);
+    EXPECT_TRUE(platform.close_requests.empty());
+    ASSERT_EQ(platform.timer_deadline, 10350ms);
+    TickAt(*platform.timer_deadline);
+    EXPECT_EQ(platform.close_requests.size(), 1U);
+    EXPECT_FALSE(platform.timer_deadline);
+    EXPECT_FALSE(State().timer_needed);
+    Send(EventKind::tick);
+    EXPECT_EQ(platform.power_calls.size(), 2U);
+    EXPECT_EQ(platform.close_requests.size(), 1U);
+}
+
+TEST_F(ApplicationTest, EarlyAndDelayedTicksRearmFromTheOriginalDeadline)
+{
+    StartAwake();
+    StartClose();
+    TickAt(999ms);
+    EXPECT_EQ(State().awake.status, "Require Display - 00:00:10 remaining");
+    EXPECT_EQ(State().close.status, "Close scheduled - 00:00:10 remaining");
+    EXPECT_EQ(platform.timer_deadline, 1s);
+    TickAt(1s);
+    EXPECT_EQ(State().awake.status, "Require Display - 00:00:09 remaining");
+    EXPECT_EQ(State().close.status, "Close scheduled - 00:00:09 remaining");
+    EXPECT_EQ(platform.timer_deadline, 2s);
+    TickAt(5500ms);
+    EXPECT_EQ(State().awake.status, "Require Display - 00:00:05 remaining");
+    EXPECT_EQ(State().close.status, "Close scheduled - 00:00:05 remaining");
+    EXPECT_EQ(platform.timer_deadline, 6s);
+    TickAt(9999ms);
+    EXPECT_EQ(platform.power_calls.size(), 1U);
+    EXPECT_TRUE(platform.close_requests.empty());
+    ASSERT_EQ(platform.timer_deadline, 10s);
+    TickAt(*platform.timer_deadline);
+    EXPECT_EQ(platform.power_calls.size(), 2U);
+    EXPECT_EQ(platform.close_requests.size(), 1U);
+    EXPECT_FALSE(platform.timer_deadline);
+}
+
+TEST_F(ApplicationTest, UnrelatedEventsDoNotPostponePendingTicksAndOverdueWorkRequestsAnImmediateTick)
+{
+    StartAwake();
+    StartClose();
+    platform.now = 999ms;
+    for (const auto event : {EventKind::hide, EventKind::show, EventKind::refresh, EventKind::toggle_highlight,
+                             EventKind::session_end_canceled})
+    {
+        Send(event);
+        EXPECT_EQ(platform.timer_deadline, 1s);
+    }
+    EXPECT_EQ(platform.timer_requests.size(), 1U);
+    platform.now = 5500ms;
+    Send(EventKind::show);
+    EXPECT_EQ(State().awake.status, "Require Display - 00:00:05 remaining");
+    EXPECT_EQ(State().close.status, "Close scheduled - 00:00:05 remaining");
+    EXPECT_EQ(platform.timer_deadline, 6s);
+    platform.now = 10500ms;
+    Send(EventKind::show);
+    EXPECT_EQ(platform.timer_deadline, platform.now);
+    TickAt(platform.now);
+    EXPECT_EQ(platform.power_calls.size(), 2U);
+    EXPECT_EQ(platform.close_requests.size(), 1U);
+    EXPECT_FALSE(platform.timer_deadline);
 }
 
 TEST_F(ApplicationTest, EarlierCloseExpiryLeavesAwakeDeadlineUnaffected)
 {
     StartAwake(EventKind::toggle_system, 30min);
     StartClose();
-    platform.now = 11s;
-    Send(EventKind::tick);
+    TickAt(11s);
     EXPECT_EQ(platform.close_requests.size(), 1U);
     EXPECT_EQ(platform.power_calls.size(), 1U);
     EXPECT_EQ(State().awake.status, "Require System - 00:29:49 remaining");
     EXPECT_TRUE(State().timer_needed);
+    EXPECT_EQ(platform.timer_deadline, 12s);
 }
 
 TEST_F(ApplicationTest, EarlierAwakeExpiryLeavesCloseDeadlineUnaffected)
 {
     StartAwake();
     StartClose(15min);
-    platform.now = 11s;
-    Send(EventKind::tick);
+    TickAt(11s);
     EXPECT_EQ(platform.power_calls.size(), 2U);
     EXPECT_TRUE(platform.close_requests.empty());
     EXPECT_EQ(State().close.status, "Close scheduled - 00:14:49 remaining");
     EXPECT_TRUE(State().timer_needed);
+    EXPECT_EQ(platform.timer_deadline, 12s);
 }
 
 TEST_F(ApplicationTest, BothDeadlinesExpireOnceOnSameDelayedCallback)
 {
     StartAwake();
     StartClose();
-    platform.now = 100s;
-    Send(EventKind::tick);
+    TickAt(100s);
     EXPECT_EQ(platform.power_calls.size(), 2U);
     EXPECT_EQ(platform.close_requests.size(), 1U);
     EXPECT_FALSE(State().timer_needed);
+    EXPECT_FALSE(platform.timer_deadline);
     Send(EventKind::tick);
     EXPECT_EQ(platform.power_calls.size(), 2U);
     EXPECT_EQ(platform.close_requests.size(), 1U);
@@ -160,18 +271,17 @@ TEST_F(ApplicationTest, WallClockJumpsDoNotChangeDurationAndResumeConsumesOverdu
     StartAwake();
     StartClose();
     platform.timestamp = "03/01 01:02:03";
-    platform.now = 1s;
-    Send(EventKind::tick);
+    TickAt(1s);
     EXPECT_EQ(State().awake.status, "Require Display - 00:00:09 remaining");
     EXPECT_EQ(State().close.status, "Close scheduled - 00:00:09 remaining");
     // Fake elapsed time includes suspend: no actual OS clocks or sleeps in application tests.
-    platform.now += 8h;
     platform.timestamp = "03/01 09:02:03";
-    Send(EventKind::tick);
+    TickAt(platform.now + 8h);
     EXPECT_NE(State().awake.status.find("03/01 09:02:03"), std::string::npos);
     EXPECT_NE(State().close.status.find("03/01 09:02"), std::string::npos);
     EXPECT_EQ(platform.close_requests.size(), 1U);
     EXPECT_EQ(platform.power_calls.size(), 2U);
+    EXPECT_FALSE(platform.timer_deadline);
 }
 
 TEST_F(ApplicationTest, ScheduleCapturesIdentityAndIgnoresStaleListAndDurationEvents)
@@ -324,6 +434,73 @@ TEST_F(ApplicationTest, TimerFailureWithReleaseFailureKeepsManualRetryAvailable)
     EXPECT_EQ(State().awake.status, "Require Display Ended At 09/11 12:34:56");
 }
 
+TEST_F(ApplicationTest, TimerRearmFailureCancelsBothCountdownsAndAllowsRestart)
+{
+    StartAwake();
+    StartClose();
+    platform.timer_result = {false, "rearm failed"};
+    TickAt(1008ms);
+    EXPECT_EQ(platform.timer_requests.back(), 2s);
+    EXPECT_FALSE(platform.timer_deadline);
+    EXPECT_FALSE(State().timer_needed);
+    EXPECT_TRUE(State().awake.duration_enabled);
+    EXPECT_TRUE(State().close.inputs_enabled);
+    EXPECT_EQ(State().awake.status, "Canceled: rearm failed");
+    EXPECT_EQ(State().close.status, "Schedule canceled: rearm failed");
+    EXPECT_EQ(platform.power_calls.size(), 2U);
+    EXPECT_EQ(platform.errors, (std::vector<std::string>{"Unable to schedule countdown timer: rearm failed"}));
+    platform.now = 10s;
+    Send(EventKind::tick);
+    EXPECT_EQ(platform.power_calls.size(), 2U);
+    EXPECT_TRUE(platform.close_requests.empty());
+    platform.timer_result = {};
+    StartAwake();
+    StartClose();
+    EXPECT_EQ(platform.timer_deadline, 11s);
+}
+
+TEST_F(ApplicationTest, TimerRearmFailurePreservesFailedPowerReleaseForManualRetry)
+{
+    StartAwake();
+    StartClose();
+    platform.timer_result = {false, "rearm failed"};
+    platform.release_result = {false, "release failed"};
+    TickAt(1008ms);
+    EXPECT_FALSE(platform.timer_deadline);
+    EXPECT_FALSE(State().timer_needed);
+    EXPECT_FALSE(State().awake.duration_enabled);
+    EXPECT_TRUE(State().awake.display_enabled);
+    EXPECT_NE(State().awake.status.find("release failed"), std::string::npos);
+    EXPECT_NE(State().awake.status.find("Click the active mode to retry."), std::string::npos);
+    EXPECT_TRUE(State().close.inputs_enabled);
+    platform.now = 10s;
+    Send(EventKind::tick);
+    EXPECT_EQ(platform.power_calls.size(), 2U);
+    EXPECT_TRUE(platform.close_requests.empty());
+    platform.release_result = {};
+    Send(EventKind::toggle_display);
+    EXPECT_EQ(platform.power_calls.size(), 3U);
+    EXPECT_TRUE(State().awake.duration_enabled);
+    EXPECT_EQ(State().awake.status, "Require Display Ended At 09/11 12:34:56");
+    EXPECT_FALSE(platform.timer_deadline);
+}
+
+TEST_F(ApplicationTest, FailedPowerReleaseSchedulesOnlyTheRemainingCloseCountdown)
+{
+    StartAwake();
+    platform.now = 350ms;
+    StartClose();
+    platform.release_result = {false, "release failed"};
+    TickAt(10s);
+    EXPECT_EQ(platform.timer_deadline, 10350ms);
+    EXPECT_NE(State().awake.status.find("release failed"), std::string::npos);
+    EXPECT_EQ(platform.power_calls.size(), 2U);
+    TickAt(10350ms);
+    EXPECT_EQ(platform.power_calls.size(), 2U);
+    EXPECT_EQ(platform.close_requests.size(), 1U);
+    EXPECT_FALSE(platform.timer_deadline);
+}
+
 TEST_F(ApplicationTest, PresentsFeatureErrorsAndKeepsAutomaticCatalogFailuresSilent)
 {
     Send(EventKind::toggle_close);
@@ -359,7 +536,7 @@ TEST_F(ApplicationTest, HighlightAloneNeedsNoTimerAndTicksKeepTheSelectionSnapsh
     Send(EventKind::tick);
     EXPECT_EQ(State().selection.overlay->x, -900);
     EXPECT_EQ(platform.geometry_targets.size(), queries);
-    EXPECT_FALSE(platform.timer_enabled);
+    EXPECT_FALSE(platform.timer_deadline);
 }
 
 TEST_F(ApplicationTest, WindowDetailsUsesSelectedSnapshotAndIgnoresAbsentSelection)
@@ -399,8 +576,8 @@ TEST_F(ApplicationTest, ModalWindowDetailsKeepsScheduledTargetAndQueuesExpiryUnt
         EXPECT_EQ(platform.view.close.status, "Close scheduled - 00:00:10 remaining");
         Select(1);
         Send(EventKind::refresh);
-        platform.now = 10s;
-        Send(EventKind::tick);
+        TickAt(10s);
+        EXPECT_FALSE(platform.timer_deadline); // No recurring callbacks build up while the dialog stays open.
         Send(EventKind::tick);
         EXPECT_TRUE(platform.close_requests.empty());
         EXPECT_EQ(platform.power_calls.size(), 1U);
@@ -412,6 +589,7 @@ TEST_F(ApplicationTest, ModalWindowDetailsKeepsScheduledTargetAndQueuesExpiryUnt
     EXPECT_EQ(platform.close_requests.back(), platform.window_details.back().identity);
     EXPECT_EQ(platform.power_calls.size(), 2U);
     EXPECT_FALSE(State().timer_needed);
+    EXPECT_FALSE(platform.timer_deadline);
     EXPECT_EQ(State().close.status, "Close requested ABC At 09/11 12:34 (alpha)");
 }
 
@@ -428,10 +606,13 @@ TEST_F(ApplicationTest, QuitAndConfirmedSessionEndCleanUpImmediatelyDuringWindow
         app.Handle({EventKind::toggle_close});
         app.Handle({EventKind::toggle_highlight});
         binding.on_details = [&] {
+            binding.now = 1s;
+            ASSERT_TRUE(binding.DeliverTick([&](const ApplicationEvent& tick) { app.Handle(tick); }));
+            EXPECT_FALSE(binding.timer_deadline);
             app.Handle({event});
             EXPECT_TRUE(app.State().stopped);
             EXPECT_EQ(binding.exits, 1);
-            EXPECT_FALSE(binding.timer_enabled);
+            EXPECT_FALSE(binding.timer_deadline);
             EXPECT_FALSE(binding.overlay);
             EXPECT_EQ(binding.power_calls.back(), std::nullopt);
             app.Handle({EventKind::tick});
@@ -440,6 +621,7 @@ TEST_F(ApplicationTest, QuitAndConfirmedSessionEndCleanUpImmediatelyDuringWindow
         app.Handle({EventKind::show_details});
         EXPECT_EQ(binding.window_details.size(), 1U);
         EXPECT_TRUE(binding.close_requests.empty());
+        EXPECT_FALSE(binding.timer_deadline);
     }
 }
 
@@ -510,7 +692,7 @@ TEST_F(ApplicationTest, ConfirmedSessionEndDuringModalErrorCleansUpBeforeReturni
         Send(EventKind::session_end_confirmed);
         EXPECT_TRUE(State().stopped);
         EXPECT_EQ(platform.exits, 1);
-        EXPECT_FALSE(platform.timer_enabled);
+        EXPECT_FALSE(platform.timer_deadline);
         EXPECT_FALSE(platform.overlay);
         EXPECT_TRUE(platform.close_requests.empty());
     };

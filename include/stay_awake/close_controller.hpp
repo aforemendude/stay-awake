@@ -13,6 +13,7 @@ class CloseController
     // Returns true when a schedule is consumed, so Application can refresh the window catalog.
     bool Tick(ElapsedTime now);
     bool Active() const;
+    std::optional<ElapsedTime> NextUpdate(ElapsedTime now) const;
     void Cancel();
     void CancelForTimerFailure(const std::string& error);
     CloseViewState State(ElapsedTime now) const;

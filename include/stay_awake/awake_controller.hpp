@@ -12,6 +12,7 @@ class AwakeController
     OperationResult Toggle(AwakeMode mode);
     void Tick(ElapsedTime now);
     bool NeedsTimer() const;
+    std::optional<ElapsedTime> NextUpdate(ElapsedTime now) const;
     void CancelForTimerFailure(const std::string& error);
     void Shutdown();
     AwakeViewState State(ElapsedTime now) const;

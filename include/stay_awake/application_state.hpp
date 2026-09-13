@@ -66,6 +66,8 @@ struct DurationChoice
 std::vector<DurationChoice> MakeDurations(std::chrono::minutes first);
 bool ValidDuration(const std::vector<DurationChoice>& choices, std::optional<std::chrono::seconds> duration);
 std::string FormatRemaining(ElapsedTime remaining);
+// Absolute time when the rounded-up countdown next changes; overdue work requests a tick now.
+ElapsedTime NextCountdownUpdate(ElapsedTime deadline, ElapsedTime now);
 std::string FormatHandle(WindowIdentity identity);
 
 struct AwakeViewState

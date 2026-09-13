@@ -181,7 +181,7 @@ void WindowsPlatformBinding::Cleanup() noexcept
     {
         window_->ClearHandler();
         window_->SetTray(nullptr);
-        (void)window_->SetTimerEnabled(false);
+        (void)window_->ScheduleTick(std::nullopt);
     }
     power_.Reset();
     (void)overlay_.Set(std::nullopt);
@@ -225,9 +225,9 @@ OperationResult WindowsPlatformBinding::SetOverlay(const std::optional<Rectangle
     return overlay_.Set(rectangle);
 }
 
-OperationResult WindowsPlatformBinding::SetTimerEnabled(const bool enabled)
+OperationResult WindowsPlatformBinding::ScheduleTick(const std::optional<ElapsedTime> deadline)
 {
-    return window_ ? window_->SetTimerEnabled(enabled) : OperationResult{};
+    return window_ ? window_->ScheduleTick(deadline) : OperationResult{};
 }
 
 void WindowsPlatformBinding::Present(const ViewState& state)
@@ -300,7 +300,7 @@ void WindowsPlatformBinding::RequestExit()
     // returning from that callback, even inside a modal loop. The main HWND survives until RunService unwinds.
     if (window_)
     {
-        (void)window_->SetTimerEnabled(false);
+        (void)window_->ScheduleTick(std::nullopt);
         window_->SetTray(nullptr);
     }
     power_.Reset();

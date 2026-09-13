@@ -56,10 +56,25 @@ class FakePlatformBinding final : public PlatformBinding
         overlay = value;
         return value ? overlay_result : OperationResult{};
     }
-    OperationResult SetTimerEnabled(bool enabled) override
+    OperationResult ScheduleTick(std::optional<ElapsedTime> deadline) override
     {
-        timer_enabled = enabled && timer_result.success;
-        return enabled ? timer_result : OperationResult{};
+        if (deadline == timer_deadline)
+        {
+            return {};
+        }
+        timer_requests.push_back(deadline);
+        timer_deadline = timer_result.success ? deadline : std::nullopt;
+        return deadline ? timer_result : OperationResult{};
+    }
+    bool DeliverTick(const EventHandler& handler)
+    {
+        if (!timer_deadline)
+        {
+            return false;
+        }
+        timer_deadline.reset();
+        handler({EventKind::tick});
+        return true;
     }
     void Present(const ViewState& state) override
     {
@@ -108,8 +123,10 @@ class FakePlatformBinding final : public PlatformBinding
     OperationResult close_result;
     OperationResult overlay_result;
     OperationResult timer_result;
+    std::optional<ElapsedTime> timer_deadline;
     std::vector<ApplicationEvent> service_events;
     std::vector<std::optional<AwakeMode>> power_calls;
+    std::vector<std::optional<ElapsedTime>> timer_requests;
     std::vector<WindowIdentity> close_requests;
     std::vector<WindowIdentity> geometry_targets;
     std::vector<bool> visibility;
@@ -120,7 +137,6 @@ class FakePlatformBinding final : public PlatformBinding
     std::function<void()> on_present;
     std::function<void()> on_details;
     ViewState view;
-    bool timer_enabled = false;
     int refreshes = 0;
     int exits = 0;
     int presentations = 0;

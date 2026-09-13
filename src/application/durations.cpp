@@ -21,6 +21,16 @@ std::string FormatRemaining(const ElapsedTime remaining)
     return text.str();
 }
 
+ElapsedTime NextCountdownUpdate(const ElapsedTime deadline, const ElapsedTime now)
+{
+    if (deadline <= now)
+    {
+        return now;
+    }
+    const auto seconds = std::chrono::ceil<std::chrono::seconds>(deadline - now);
+    return deadline - (seconds - std::chrono::seconds(1));
+}
+
 std::vector<DurationChoice> MakeDurations(const std::chrono::minutes first)
 {
     std::vector<DurationChoice> choices;

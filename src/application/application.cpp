@@ -151,18 +151,23 @@ void Application::Tick()
 
 void Application::Publish()
 {
-    bool needs_timer = awake_.NeedsTimer() || close_.Active();
-    const auto timer = platform_.SetTimerEnabled(needs_timer);
-    if (!timer.success && needs_timer)
+    const auto now = platform_.Now();
+    auto next_update = awake_.NextUpdate(now);
+    const auto close_update = close_.NextUpdate(now);
+    if (close_update && (!next_update || *close_update < *next_update))
+    {
+        next_update = close_update;
+    }
+    const auto timer = platform_.ScheduleTick(next_update);
+    if (!timer.success && next_update)
     {
         // Never leave a scheduled operation without expiry callbacks. Retain a failed power release for manual retry.
         awake_.CancelForTimerFailure(timer.error);
         close_.CancelForTimerFailure(timer.error);
-        needs_timer = false;
-        pending_error_ = "Unable to start countdown timer: " + timer.error;
+        next_update.reset();
+        pending_error_ = "Unable to schedule countdown timer: " + timer.error;
     }
-    state_.timer_needed = needs_timer;
-    const auto now = platform_.Now();
+    state_.timer_needed = next_update.has_value();
     state_.awake = awake_.State(now);
     state_.close = close_.State(now);
     state_.selection = selection_.State();
@@ -180,7 +185,7 @@ void Application::Shutdown()
     awake_.Shutdown();
     (void)selection_.ClearHighlight();
     state_.visible = false;
-    (void)platform_.SetTimerEnabled(false);
+    (void)platform_.ScheduleTick(std::nullopt);
     platform_.RequestExit();
 }
 

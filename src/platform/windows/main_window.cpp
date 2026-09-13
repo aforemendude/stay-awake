@@ -1,8 +1,10 @@
 #include "platform/windows/main_window.hpp"
 
+#include "platform/windows/clock.hpp"
 #include "platform/windows/dpi.hpp"
 #include "platform/windows/resource.h"
 
+#include <algorithm>
 #include <commctrl.h>
 #include <utility>
 
@@ -47,6 +49,7 @@ MainWindow::~MainWindow()
     {
         KillTimer(window_.Get(), countdown_timer);
     }
+    timer_deadline_.reset();
     window_.Reset();
 }
 
@@ -151,24 +154,29 @@ void MainWindow::SetVisible(const bool visible)
     }
 }
 
-OperationResult MainWindow::SetTimerEnabled(const bool enabled)
+OperationResult MainWindow::ScheduleTick(const std::optional<ElapsedTime> deadline)
 {
-    if (enabled == timer_enabled_)
+    if (deadline == timer_deadline_)
     {
         return {};
     }
-    if (enabled)
+    if (deadline)
     {
-        if (!SetTimer(window_.Get(), countdown_timer, 1000, nullptr))
+        const auto delay =
+            std::clamp(*deadline - InterruptTime(), ElapsedTime(USER_TIMER_MINIMUM), ElapsedTime(USER_TIMER_MAXIMUM));
+        if (!SetTimer(window_.Get(), countdown_timer, static_cast<UINT>(delay.count()), nullptr))
         {
-            return {false, NativeError("SetTimer")};
+            const auto error = GetLastError();
+            KillTimer(window_.Get(), countdown_timer);
+            timer_deadline_.reset();
+            return {false, NativeError("SetTimer", error)};
         }
     }
     else
     {
         KillTimer(window_.Get(), countdown_timer);
     }
-    timer_enabled_ = enabled;
+    timer_deadline_ = deadline;
     return {};
 }
 
@@ -239,8 +247,11 @@ LRESULT MainWindow::Message(HWND window, UINT message, WPARAM wparam, LPARAM lpa
         controls_.Command(LOWORD(wparam), HIWORD(wparam));
         return 0;
     case WM_TIMER:
-        if (wparam == countdown_timer && timer_enabled_)
+        if (wparam == countdown_timer && timer_deadline_)
         {
+            // SetTimer repeats natively. Consume it before callbacks, including ticks queued by a modal dialog.
+            KillTimer(window_.Get(), countdown_timer);
+            timer_deadline_.reset();
             Emit({EventKind::tick});
         }
         return 0;

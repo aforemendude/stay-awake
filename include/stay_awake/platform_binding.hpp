@@ -31,7 +31,10 @@ class PlatformBinding
     // Revalidate existence and owning PID immediately before posting ONE asynchronous close request.
     virtual OperationResult RequestClose(WindowIdentity target) = 0;
     virtual OperationResult SetOverlay(std::optional<Rectangle> rectangle) = 0;
-    virtual OperationResult SetTimerEnabled(bool enabled) = 0;
+    // Schedule one UI-thread tick at an absolute Now() timestamp; nullopt cancels. Do not deliver inline or postpone
+    // an identical pending request. Consume the timer before delivery and clear it on setup failure. Callbacks may
+    // arrive early or late; the application checks Now() and schedules the next tick after processing the event.
+    virtual OperationResult ScheduleTick(std::optional<ElapsedTime> deadline) = 0;
     virtual void Present(const ViewState& state) = 0;
     virtual void SetWindowVisible(bool visible) = 0;
     virtual void ShowError(std::string_view message) = 0;

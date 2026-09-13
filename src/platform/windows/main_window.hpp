@@ -20,7 +20,7 @@ class MainWindow
     void ClearHandler();
     void Present(const ViewState& state);
     void SetVisible(bool visible);
-    OperationResult SetTimerEnabled(bool enabled);
+    OperationResult ScheduleTick(std::optional<ElapsedTime> deadline);
     std::exception_ptr Failure() const;
     bool PreTranslate(MSG& message);
 
@@ -34,7 +34,7 @@ class MainWindow
 
     EventHandler handler_;
     TrayIcon* tray_ = nullptr; // Borrowed; detached before the tray is destroyed.
-    bool timer_enabled_ = false;
+    std::optional<ElapsedTime> timer_deadline_;
     bool layout_active_ = false;
     HWND last_focus_ = nullptr; // Borrowed child HWND.
     std::exception_ptr failure_;

@@ -54,5 +54,24 @@ TEST(DurationsTest, FormatsOpaqueHandlesAsUppercaseHex)
     EXPECT_EQ(FormatHandle({0xABCDEF, 1}), "ABCDEF");
     EXPECT_EQ(FormatHandle({0, 1}), "0");
 }
+
+TEST(DurationsTest, CountdownUpdatesFollowRoundedSecondBoundariesAndRequestOverdueWorkNow)
+{
+    struct Example
+    {
+        ElapsedTime deadline;
+        ElapsedTime now;
+        ElapsedTime next;
+    };
+    for (const auto& example :
+         {Example{10s, 0ms, 1s}, Example{10s, 999ms, 1s}, Example{10s, 1s, 2s}, Example{10s, 1001ms, 2s},
+          Example{10s, 9s, 10s}, Example{10s, 9999ms, 10s}, Example{10s, 10s, 10s}, Example{10s, 11s, 11s},
+          Example{10350ms, 350ms, 1350ms}, Example{10350ms, 1349ms, 1350ms}, Example{10350ms, 1350ms, 2350ms},
+          Example{10350ms, 1351ms, 2350ms}, Example{10350ms, 10349ms, 10350ms}})
+    {
+        SCOPED_TRACE(example.now.count());
+        EXPECT_EQ(NextCountdownUpdate(example.deadline, example.now), example.next);
+    }
+}
 } // namespace
 } // namespace stay_awake
