@@ -31,6 +31,53 @@ enum ControlId
     window_list,
 };
 constexpr UINT_PTR countdown_timer = 1;
+
+bool CanScrollList(const UINT message, const WPARAM wparam) noexcept
+{
+    switch (message)
+    {
+    case WM_MOUSEWHEEL:
+    case WM_MOUSEHWHEEL:
+    case WM_CHAR: // Native type-to-select can bring an off-screen item into view.
+        return true;
+    case WM_KEYDOWN:
+        return wparam == VK_UP || wparam == VK_DOWN || wparam == VK_LEFT || wparam == VK_RIGHT || wparam == VK_PRIOR ||
+               wparam == VK_NEXT || wparam == VK_HOME || wparam == VK_END;
+    case WM_VSCROLL:
+    case WM_HSCROLL:
+        // Thumb dragging already follows the pointer directly; only suppress incremental scrolling.
+        return LOWORD(wparam) == SB_LINEUP || LOWORD(wparam) == SB_LINEDOWN || LOWORD(wparam) == SB_PAGEUP ||
+               LOWORD(wparam) == SB_PAGEDOWN || LOWORD(wparam) == SB_TOP || LOWORD(wparam) == SB_BOTTOM;
+    default:
+        return false;
+    }
+}
+
+class ListRedrawScope
+{
+  public:
+    ListRedrawScope(HWND window, bool& active) noexcept : window_(window), active_(active)
+    {
+        active_ = true;
+        SendMessageW(window_, WM_SETREDRAW, FALSE, 0);
+    }
+    ~ListRedrawScope() noexcept
+    {
+        if (IsWindow(window_))
+        {
+            SendMessageW(window_, WM_SETREDRAW, TRUE, 0);
+            RedrawWindow(window_, nullptr, nullptr,
+                         RDW_INVALIDATE | RDW_ERASE | RDW_FRAME | RDW_ALLCHILDREN | RDW_UPDATENOW);
+        }
+        active_ = false;
+    }
+    ListRedrawScope(const ListRedrawScope&) = delete;
+    ListRedrawScope& operator=(const ListRedrawScope&) = delete;
+
+  private:
+    HWND window_;
+    bool& active_;
+};
 } // namespace
 
 MainWindow::MainWindow(EventHandler handler) : handler_(std::move(handler))
@@ -136,8 +183,11 @@ void MainWindow::CreateControls()
     Add(window_position, L"STATIC", L"", static_text, 356, 250, 410, 24);
     Add(-1, L"STATIC", L"Status:", 0, 20, 286, 62, 24);
     Add(close_status, L"STATIC", L"", static_text, 84, 286, 682, 24);
-    Add(window_list, L"LISTBOX", L"", LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 18, 315,
-        748, 240, WS_EX_CLIENTEDGE);
+    const auto list =
+        Add(window_list, L"LISTBOX", L"", LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 18,
+            315, 748, 240, WS_EX_CLIENTEDGE);
+    Require(SetWindowSubclass(list, ListBoxProc, 0, reinterpret_cast<DWORD_PTR>(this)) != FALSE,
+            "Configure immediate list scrolling");
     Add(-1, L"STATIC", L"Status:", 0, 20, 565, 62, 24);
     Add(catalog_status, L"STATIC", L"", static_text, 84, 565, 682, 24);
 }
@@ -442,8 +492,50 @@ void MainWindow::Command(const int id, const int notification)
     }
     if (id == window_list && notification == LBN_SELCHANGE)
     {
+        if (list_scroll_active_)
+        {
+            // Restore drawing before selection handling can enter a modal error dialog or reenter presentation.
+            list_selection_pending_ = true;
+            return;
+        }
         const auto index = SendDlgItemMessageW(window_.Get(), id, LB_GETCURSEL, 0, 0);
         Emit({EventKind::select_window, index == LB_ERR ? std::nullopt : std::optional<std::size_t>(index)});
+    }
+}
+
+LRESULT CALLBACK MainWindow::ListBoxProc(HWND window, UINT message, WPARAM wparam, LPARAM lparam, UINT_PTR subclass_id,
+                                         DWORD_PTR reference) noexcept
+{
+    auto* self = reinterpret_cast<MainWindow*>(reference);
+    if (message == WM_NCDESTROY)
+    {
+        RemoveWindowSubclass(window, ListBoxProc, subclass_id);
+    }
+    try
+    {
+        if (!CanScrollList(message, wparam) || self->list_scroll_active_ || !IsWindowVisible(window) ||
+            !IsWindowEnabled(window))
+        {
+            return DefSubclassProc(window, message, wparam, lparam);
+        }
+        LRESULT result;
+        {
+            // Let the native control handle wheel deltas, selection and navigation, but paint only the final
+            // position. This bypasses its smooth-scroll effect without changing the user's system preference.
+            ListRedrawScope redraw(window, self->list_scroll_active_);
+            result = DefSubclassProc(window, message, wparam, lparam);
+        }
+        if (std::exchange(self->list_selection_pending_, false))
+        {
+            self->Command(window_list, LBN_SELCHANGE);
+        }
+        return result;
+    }
+    catch (...)
+    {
+        self->failure_ = std::current_exception();
+        PostQuitMessage(1);
+        return 0;
     }
 }
 

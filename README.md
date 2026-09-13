@@ -37,6 +37,7 @@ the user.
 
 Select a window, choose a duration, and click **Schedule Close Window**. **Stop** cancels the schedule. **Refresh List**
 clears selection and highlighting; showing the main window refreshes the list automatically unless a close is scheduled.
+The window list scrolls immediately, including when Windows' **Smooth-scroll list boxes** visual effect is enabled.
 
 **Show Details** displays the selected window's title, process name, process ID, process creation time (UTC), and window
 handle. These details come from the last list refresh; unreadable process creation times are shown as unavailable.
