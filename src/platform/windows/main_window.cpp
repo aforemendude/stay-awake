@@ -111,34 +111,34 @@ void MainWindow::CreateControls()
     constexpr DWORD static_text = SS_LEFT | SS_NOPREFIX | SS_ENDELLIPSIS;
     constexpr DWORD combo = CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP;
     // Coordinates are logical 96-DPI units.
-    Add(-1, L"STATIC", L"", SS_ETCHEDHORZ, 18, 22, 20, 2);
-    Add(awake_heading, L"STATIC", L"Stay Awake", SS_CENTER | SS_CENTERIMAGE, 42, 11, 92, 20);
-    Add(-1, L"STATIC", L"", SS_ETCHEDHORZ, 138, 22, 628, 2);
+    Add(-1, L"STATIC", L"", SS_ETCHEDHORZ, 18, 22, 24, 2);
+    Add(awake_heading, L"STATIC", L"Stay Awake", SS_CENTER | SS_CENTERIMAGE, 42, 11, 124, 20);
+    Add(-1, L"STATIC", L"", SS_ETCHEDHORZ, 166, 22, 600, 2);
     Add(display, L"BUTTON", L"Require Display", button | WS_GROUP, 18, 37, 196, 30);
     Add(system, L"BUTTON", L"Require System", button, 18, 74, 196, 30);
-    Add(-1, L"STATIC", L"Duration:", 0, 220, 42, 74, 24);
+    Add(-1, L"STATIC", L"Duration:", 0, 222, 42, 72, 24);
     Add(awake_duration, L"COMBOBOX", L"", combo, 300, 37, 264, 300);
-    Add(-1, L"STATIC", L"Status:", 0, 18, 111, 64, 24);
+    Add(-1, L"STATIC", L"Status:", 0, 20, 111, 62, 24);
     Add(awake_status, L"STATIC", L"", static_text, 84, 111, 682, 24);
 
-    Add(-1, L"STATIC", L"", SS_ETCHEDHORZ, 18, 156, 20, 2);
-    Add(close_heading, L"STATIC", L"Window Closer", SS_CENTER | SS_CENTERIMAGE, 42, 145, 116, 20);
-    Add(-1, L"STATIC", L"", SS_ETCHEDHORZ, 162, 156, 604, 2);
+    Add(-1, L"STATIC", L"", SS_ETCHEDHORZ, 18, 156, 24, 2);
+    Add(close_heading, L"STATIC", L"Window Closer", SS_CENTER | SS_CENTERIMAGE, 42, 145, 124, 20);
+    Add(-1, L"STATIC", L"", SS_ETCHEDHORZ, 166, 156, 600, 2);
     Add(close_button, L"BUTTON", L"Schedule Close Window", button | WS_GROUP, 18, 171, 196, 30);
-    Add(-1, L"STATIC", L"After:", 0, 220, 176, 74, 24);
+    Add(-1, L"STATIC", L"After:", 0, 222, 176, 72, 24);
     Add(close_duration, L"COMBOBOX", L"", combo, 300, 171, 264, 300);
     Add(show_details, L"BUTTON", L"Show Details", button, 570, 171, 196, 30);
     Add(refresh, L"BUTTON", L"Refresh List", button, 18, 208, 196, 30);
-    Add(-1, L"STATIC", L"Process Name:", 0, 220, 213, 132, 24);
+    Add(-1, L"STATIC", L"Process Name:", 0, 222, 213, 130, 24);
     Add(process_name, L"STATIC", L"", static_text, 356, 213, 410, 24);
     Add(highlight, L"BUTTON", L"Highlight Window", button, 18, 245, 196, 30);
-    Add(-1, L"STATIC", L"Window Position:", 0, 220, 250, 132, 24);
+    Add(-1, L"STATIC", L"Window Position:", 0, 222, 250, 130, 24);
     Add(window_position, L"STATIC", L"", static_text, 356, 250, 410, 24);
-    Add(-1, L"STATIC", L"Status:", 0, 18, 286, 64, 24);
+    Add(-1, L"STATIC", L"Status:", 0, 20, 286, 62, 24);
     Add(close_status, L"STATIC", L"", static_text, 84, 286, 682, 24);
     Add(window_list, L"LISTBOX", L"", LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 18, 315,
         748, 240, WS_EX_CLIENTEDGE);
-    Add(-1, L"STATIC", L"Status:", 0, 18, 565, 64, 24);
+    Add(-1, L"STATIC", L"Status:", 0, 20, 565, 62, 24);
     Add(catalog_status, L"STATIC", L"", static_text, 84, 565, 682, 24);
 }
 
