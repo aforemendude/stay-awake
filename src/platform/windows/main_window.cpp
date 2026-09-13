@@ -53,10 +53,52 @@ bool CanScrollList(const UINT message, const WPARAM wparam) noexcept
     }
 }
 
+struct ListPaintState
+{
+    explicit ListPaintState(HWND window) noexcept
+        : top(SendMessageW(window, LB_GETTOPINDEX, 0, 0)), horizontal(GetScrollPos(window, SB_HORZ)),
+          selection(SendMessageW(window, LB_GETCURSEL, 0, 0)), caret(SendMessageW(window, LB_GETCARETINDEX, 0, 0)),
+          focused(GetFocus() == window), ui_state(SendMessageW(window, WM_QUERYUISTATE, 0, 0))
+    {
+    }
+
+    LRESULT top;
+    int horizontal;
+    LRESULT selection;
+    LRESULT caret;
+    bool focused;
+    LRESULT ui_state;
+};
+
+void InvalidateListItem(HWND window, const LRESULT index) noexcept
+{
+    if (index == LB_ERR)
+    {
+        return;
+    }
+    RECT item{};
+    RECT client{};
+    if (SendMessageW(window, LB_GETITEMRECT, static_cast<WPARAM>(index), reinterpret_cast<LPARAM>(&item)) == LB_ERR ||
+        !GetClientRect(window, &client))
+    {
+        InvalidateRect(window, nullptr, TRUE);
+        return;
+    }
+    // Selection and focus decoration can span the whole row, including past the text's horizontal extent.
+    item.left = client.left;
+    item.right = client.right;
+    RECT visible{};
+    if (IntersectRect(&visible, &item, &client))
+    {
+        InvalidateRect(window, &visible, TRUE);
+    }
+}
+
 class ListRedrawScope
 {
   public:
-    ListRedrawScope(HWND window, HWND combo, bool& active) noexcept : window_(window), combo_(combo), active_(active)
+    ListRedrawScope(HWND window, HWND combo, bool& active) noexcept
+        : window_(window), combo_(combo), active_(active), before_(window)
     {
         active_ = true;
         SendMessageW(window_, WM_SETREDRAW, FALSE, 0);
@@ -70,8 +112,29 @@ class ListRedrawScope
             SendMessageW(window_, WM_SETREDRAW, TRUE, 0);
             if (keep_visible)
             {
-                RedrawWindow(window_, nullptr, nullptr,
-                             RDW_INVALIDATE | RDW_ERASE | RDW_FRAME | RDW_ALLCHILDREN | RDW_UPDATENOW);
+                const ListPaintState after(window_);
+                if (before_.top != after.top || before_.horizontal != after.horizontal)
+                {
+                    // Scrolling changes the viewport and scrollbar thumbs. Queue one repaint so successive
+                    // inputs can coalesce; keep erasure for empty space and partially visible rows.
+                    RedrawWindow(window_, nullptr, nullptr, RDW_INVALIDATE | RDW_ERASE | RDW_FRAME | RDW_NOCHILDREN);
+                }
+                else
+                {
+                    // Navigation within the viewport only changes selection/focus rows. Input at a scroll
+                    // boundary (or a partial wheel delta) need not invalidate the whole control again.
+                    if (before_.selection != after.selection)
+                    {
+                        InvalidateListItem(window_, before_.selection);
+                        InvalidateListItem(window_, after.selection);
+                    }
+                    if (before_.caret != after.caret || before_.focused != after.focused ||
+                        before_.ui_state != after.ui_state)
+                    {
+                        InvalidateListItem(window_, before_.caret);
+                        InvalidateListItem(window_, after.caret);
+                    }
+                }
             }
             else
             {
@@ -88,6 +151,7 @@ class ListRedrawScope
     HWND window_;
     HWND combo_;
     bool& active_;
+    ListPaintState before_;
 };
 } // namespace
 
