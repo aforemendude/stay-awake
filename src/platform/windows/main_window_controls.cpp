@@ -84,8 +84,8 @@ void MainWindowControls::Create(HWND window)
     Add(window_position, L"STATIC", L"", static_text, 356, 250, 410, 24);
     Add(-1, L"STATIC", L"Status:", 0, 20, 286, 62, 24);
     Add(close_status, L"STATIC", L"", static_text, 84, 286, 682, 24);
-    Add(window_list, L"LISTBOX", L"", LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 18, 315,
-        748, 240, WS_EX_CLIENTEDGE);
+    Add(window_list, L"LISTBOX", L"", LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 18, 323,
+        748, 232, WS_EX_CLIENTEDGE);
     Add(-1, L"STATIC", L"Status:", 0, 20, 565, 62, 24);
     Add(catalog_status, L"STATIC", L"", static_text, 84, 565, 682, 24);
     for (const int id : {window_list, awake_duration, close_duration})
