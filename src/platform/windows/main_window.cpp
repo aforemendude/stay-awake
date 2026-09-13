@@ -13,12 +13,12 @@ namespace
 {
 enum ControlId
 {
-    awake_group = 1000,
+    awake_heading = 1000,
     display,
     system,
     awake_duration,
     awake_status,
-    close_group,
+    close_heading,
     close_button,
     close_duration,
     refresh,
@@ -115,7 +115,8 @@ void MainWindow::CreateControls()
     constexpr DWORD edit = ES_READONLY | ES_AUTOHSCROLL | WS_TABSTOP;
     constexpr DWORD combo = CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP;
     // Coordinates are logical 96-DPI units. Added detail rows keep long completion/error text copyable.
-    Add(awake_group, L"BUTTON", L"Stay Awake", BS_GROUPBOX, 12, 11, 760, 130);
+    Add(awake_heading, L"STATIC", L"Stay Awake", SS_LEFT | SS_CENTERIMAGE, 18, 11, 100, 20);
+    Add(-1, L"STATIC", L"", SS_ETCHEDHORZ, 126, 20, 640, 2);
     Add(display, L"BUTTON", L"Require Display", button | WS_GROUP, 18, 37, 196, 30);
     Add(system, L"BUTTON", L"Require System", button, 18, 74, 196, 30);
     Add(-1, L"STATIC", L"Duration:", 0, 220, 42, 74, 24);
@@ -123,7 +124,8 @@ void MainWindow::CreateControls()
     Add(-1, L"STATIC", L"Status:", 0, 18, 111, 64, 24);
     Add(awake_status, L"EDIT", L"", edit, 84, 106, 682, 28, WS_EX_CLIENTEDGE);
 
-    Add(close_group, L"BUTTON", L"Window Closer", BS_GROUPBOX, 12, 145, 760, 450);
+    Add(close_heading, L"STATIC", L"Window Closer", SS_LEFT | SS_CENTERIMAGE, 18, 145, 124, 20);
+    Add(-1, L"STATIC", L"", SS_ETCHEDHORZ, 150, 154, 616, 2);
     Add(close_button, L"BUTTON", L"Schedule Close Window", button | WS_GROUP, 18, 171, 196, 30);
     Add(-1, L"STATIC", L"After:", 0, 220, 176, 74, 24);
     Add(close_duration, L"COMBOBOX", L"", combo, 300, 171, 264, 300);
