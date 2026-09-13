@@ -3,10 +3,44 @@
 #include "platform/windows/clock.hpp"
 #include "platform/windows/window_catalog.hpp"
 
+#include <commctrl.h>
+#include <cstring>
+
 namespace stay_awake::windows
 {
 namespace
 {
+OperationResult CopyTextToClipboard(HWND owner, const std::wstring& text)
+{
+    const auto bytes = (text.size() + 1) * sizeof(wchar_t);
+    UniqueResource<HGLOBAL, GlobalFree> memory(GlobalAlloc(GMEM_MOVEABLE, bytes));
+    if (!memory.Get())
+    {
+        return {false, NativeError("Allocate clipboard text")};
+    }
+    auto* destination = GlobalLock(memory.Get());
+    if (!destination)
+    {
+        return {false, NativeError("Lock clipboard text")};
+    }
+    std::memcpy(destination, text.c_str(), bytes);
+    GlobalUnlock(memory.Get());
+
+    if (!OpenClipboard(owner))
+    {
+        return {false, NativeError("Open clipboard")};
+    }
+    const bool copied = EmptyClipboard() && SetClipboardData(CF_UNICODETEXT, memory.Get()) != nullptr;
+    const auto error = GetLastError();
+    if (copied)
+    {
+        // Windows owns the allocation only after SetClipboardData succeeds.
+        (void)memory.Release();
+    }
+    CloseClipboard();
+    return copied ? OperationResult{} : OperationResult{false, NativeError("Copy window details to clipboard", error)};
+}
+
 std::wstring FormatUnixProcessCreationTime(const std::optional<std::uint64_t> creation_time)
 {
     if (!creation_time)
@@ -227,7 +261,36 @@ void WindowsPlatformBinding::ShowWindowDetails(const WindowInfo& window)
                       L"\r\nProcess Creation Time (Local): " +
                       FormatLocalProcessCreationTime(window.identity.process_creation_time) + L"\r\nWindow Handle: 0x" +
                       ToWide(FormatHandle(window.identity));
-    MessageBoxW(window_ ? window_->Get() : nullptr, text.c_str(), L"Window Details", MB_OK | MB_ICONINFORMATION);
+    constexpr int copy_button = 100;
+    const TASKDIALOG_BUTTON buttons[] = {{copy_button, L"&Copy"}, {IDOK, L"OK"}};
+    TASKDIALOGCONFIG dialog{};
+    dialog.cbSize = sizeof(dialog);
+    dialog.hwndParent = window_ ? window_->Get() : nullptr;
+    dialog.dwFlags = TDF_ALLOW_DIALOG_CANCELLATION | TDF_POSITION_RELATIVE_TO_WINDOW | TDF_SIZE_TO_CONTENT;
+    dialog.pszWindowTitle = L"Window Details";
+    dialog.pszMainIcon = TD_INFORMATION_ICON;
+    dialog.pszContent = text.c_str();
+    dialog.cButtons = static_cast<UINT>(std::size(buttons));
+    dialog.pButtons = buttons;
+    dialog.nDefaultButton = IDOK;
+    int pressed_button = 0;
+    const auto result = TaskDialogIndirect(&dialog, &pressed_button, nullptr, nullptr);
+    if (exiting_)
+    {
+        return;
+    }
+    if (FAILED(result))
+    {
+        ShowError(NativeError("Show window details", static_cast<DWORD>(result)));
+    }
+    else if (pressed_button == copy_button)
+    {
+        const auto copied = CopyTextToClipboard(dialog.hwndParent, text);
+        if (!copied.success)
+        {
+            ShowError(copied.error);
+        }
+    }
 }
 
 void WindowsPlatformBinding::RequestExit()
