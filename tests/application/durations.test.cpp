@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include <cstdio>
+#include <limits>
 
 namespace stay_awake
 {
@@ -45,6 +46,9 @@ TEST(DurationsTest, RoundsPositiveFractionsUpAndClampsExpiredCountdowns)
     EXPECT_EQ(FormatRemaining(1001ms), "00:00:02");
     EXPECT_EQ(FormatRemaining(3600001ms), "01:00:01");
     EXPECT_EQ(FormatRemaining(8h), "08:00:00");
+    EXPECT_EQ(FormatRemaining(1min - 1ms), "00:01:00");
+    EXPECT_EQ(FormatRemaining(100h - 1ms), "100:00:00");
+    EXPECT_EQ(FormatRemaining(100h + 59min + 59s), "100:59:59");
     EXPECT_EQ(FormatRemaining(0ms), "00:00:00");
     EXPECT_EQ(FormatRemaining(-10ms), "00:00:00");
 }
@@ -52,7 +56,10 @@ TEST(DurationsTest, RoundsPositiveFractionsUpAndClampsExpiredCountdowns)
 TEST(DurationsTest, FormatsOpaqueHandlesAsUppercaseHex)
 {
     EXPECT_EQ(FormatHandle({0xABCDEF, 1}), "ABCDEF");
+    EXPECT_EQ(FormatHandle({0x10A0, 1}), "10A0");
     EXPECT_EQ(FormatHandle({0, 1}), "0");
+    EXPECT_EQ(FormatHandle({std::numeric_limits<std::uintptr_t>::max(), 1}),
+              std::string(sizeof(std::uintptr_t) * 2, 'F'));
 }
 
 TEST(DurationsTest, CountdownUpdatesFollowRoundedSecondBoundariesAndRequestOverdueWorkNow)

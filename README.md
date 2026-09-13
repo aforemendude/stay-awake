@@ -135,6 +135,36 @@ After building a native test preset, run `ctest --preset linux-native-debug` on 
 Executables are written to `build/<preset>/StayAwake.exe`. Copy the Release executable to a Windows 11 x64 machine and
 launch it; icons and the MinGW runtime are embedded, so no adjacent assets or separately installed runtime are needed.
 
+### Release size and runtime dependencies
+
+Both MinGW Release presets optimize the core, Windows adapter, and executable for size with
+[`-Os`](https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html), function/data sections, and link-time optimization
+(LTO). CMake checks LTO support and warns if it must build without it. The linker
+[removes unused sections and strips symbols](https://sourceware.org/binutils/docs/ld/Options.html), including debug data
+from static runtime libraries. These settings also apply to direct `MinSizeRel` builds; `Debug` and `RelWithDebInfo`
+retain their debugging information.
+
+Static linking remains enabled with `-static -static-libgcc -static-libstdc++`. C++ exceptions and RTTI remain enabled,
+and the icon, manifest, and version resources stay embedded. Countdown and handle formatting use integer conversions
+instead of streams to avoid pulling stream and locale machinery into the executable.
+
+A Linux x64 cross-build with MinGW-w64 GCC 13-win32 measured the following executable sizes. These are reference
+measurements, not size limits; results vary with the compiler and its runtime libraries.
+
+| Build                                       |     Bytes |
+| ------------------------------------------- | --------: |
+| Previous Release                            | 2,593,484 |
+| Previous Release with symbols stripped      | 1,132,544 |
+| Size flags, LTO, unused-code removal, strip |   997,376 |
+| Above plus stream-free integer formatting   |   275,968 |
+
+The final executable was 89.4% smaller. Its imports contained only Windows system DLLs, with no `libgcc`, `libstdc++`,
+or `libwinpthread` DLL dependency. Inspect a Linux cross-build with
+`x86_64-w64-mingw32-objdump -p build/linux-mingw-release/StayAwake.exe`; on Windows, use the toolchain's `objdump` and
+the `windows-mingw-release` path. Windows system DLL imports, including `msvcrt.dll` or UCRT API sets supplied by the
+OS, are expected. Runtime validation on Windows 11 is still required; inspecting or cross-compiling the binary does not
+exercise tray/activation, DPI, overlay click-through, power, suspend/resume, or shutdown behavior.
+
 See [AGENTS.md](AGENTS.md) for development constraints and Windows validation guidance.
 
 Licensed under the [MIT License](LICENSE).

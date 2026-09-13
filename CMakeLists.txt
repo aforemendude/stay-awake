@@ -94,6 +94,34 @@ if(STAY_AWAKE_BUILD_APP)
 
     if(MINGW)
         target_link_options(stay_awake PRIVATE -static -static-libgcc -static-libstdc++)
+
+        include(CheckIPOSupported)
+        check_ipo_supported(RESULT STAY_AWAKE_IPO_SUPPORTED OUTPUT STAY_AWAKE_IPO_ERROR LANGUAGES CXX)
+        if(NOT STAY_AWAKE_IPO_SUPPORTED)
+            message(WARNING "Release link-time optimization is unavailable: ${STAY_AWAKE_IPO_ERROR}")
+        endif()
+
+        # Optimize every application layer for size; keep debugging configurations intact.
+        foreach(target IN ITEMS stay_awake_core stay_awake_platform stay_awake)
+            target_compile_options(
+                ${target}
+                PRIVATE
+                    "$<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Release,MinSizeRel>>:-Os;-ffunction-sections;-fdata-sections>"
+            )
+            set_target_properties(
+                ${target}
+                PROPERTIES
+                    INTERPROCEDURAL_OPTIMIZATION_RELEASE ${STAY_AWAKE_IPO_SUPPORTED}
+                    INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL ${STAY_AWAKE_IPO_SUPPORTED}
+            )
+        endforeach()
+
+        # LTO needs the same optimization level at link time. Strip only shipping builds,
+        # including debug information carried in by the static runtime libraries.
+        target_link_options(
+            stay_awake
+            PRIVATE "$<$<CONFIG:Release,MinSizeRel>:-Os;LINKER:--gc-sections;LINKER:--strip-all>"
+        )
     endif()
 
     install(TARGETS stay_awake RUNTIME DESTINATION bin)
