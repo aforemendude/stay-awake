@@ -2,87 +2,40 @@
 
 ![Stay Awake Icon](assets/icon.svg)
 
-A Windows 11 x64 tray utility that keeps the system awake for a chosen duration and requests a selected window to close
-after an independent countdown.
+A Windows 11 x64 tray utility that keeps the system awake and requests a selected window to close, each on its own
+countdown.
 
-Published builds are available on the [Releases](https://github.com/aforemendude/stay-awake/releases) page and may
-differ from the current source described below. To build this version, see
-[Build, test, and format](#build-test-and-format).
+Download `StayAwake.exe` from [Releases](https://github.com/aforemendude/stay-awake/releases). The app needs no
+installer, adjacent assets, or separately installed runtime.
 
 ## Using Stay Awake
 
-Launch `StayAwake.exe`; it starts in the tray with both features inactive. Left-click the tray icon or choose **Show**
-from its right-click menu to open the window. Launching again at the same elevation requests the existing window to
-show.
+Launch the app, then left-click the tray icon or choose **Show** from its menu. Both features start inactive.
 
-**X** and **Alt-F4** hide the window and stop highlighting; both countdowns continue. To exit, choose tray **Quit** or
-**Quit Stay Awake** in the window's system menu. The latter also works if the tray icon cannot be created.
+- **Stay Awake:** choose a duration and click **Require Display** to keep the system and display awake, or **Require
+  System** to allow the display to turn off. Click **Stop** to end it early. If release fails, the error stays visible
+  and **Stop** lets you retry. This prevents idle sleep; screen locking, screensavers, and manually requested sleep may
+  still occur.
+- **Window Closer:** select a window, choose a duration, and click **Schedule Close Window**. **Stop** cancels the
+  schedule. **Show Details** identifies the selection; **Highlight Window** marks its position with a click-through
+  overlay. **Close requested** means a message was queued: the target may prompt to save, ignore it, or remain
+  unresponsive. Stay Awake does not force termination or verify closure.
 
-### Sleep prevention
+**X** and **Alt-F4** hide the window; countdowns continue. Exit with tray **Quit** or **Quit Stay Awake** in the
+window's system menu. Countdowns include sleep and hibernation; overdue operations run after resume.
 
-Choose a duration, then start one mode:
+See [usage details](docs/usage.md) for window targeting, highlighting, and status behavior.
 
-- **Require Display** keeps the system and display awake.
-- **Require System** keeps the system awake while allowing the display to turn off.
+## Run at startup
 
-Click the active mode's **Stop** button to end it early. If releasing sleep prevention fails, **Status** shows the error
-and the button remains available to retry.
+Keep `StayAwake.exe` in a permanent location. Press **Win+R**, enter `shell:startup`, and place a shortcut to the
+executable in the folder that opens (`%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup`).
 
-These
-[Windows power requests](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-setthreadexecutionstate)
-prevent idle sleep; they do not guarantee prevention of screen locking, screensavers, or sleep explicitly requested by
-the user.
-
-### Window Closer
-
-Select a window, choose a duration, and click **Schedule Close Window**. **Stop** cancels the schedule. **Refresh List**
-clears selection and highlighting; showing the main window refreshes the list automatically unless a close is scheduled.
-The window list and both duration dropdown lists scroll immediately, including when Windows' **Smooth-scroll list
-boxes** visual effect is enabled.
-
-**Show Details** displays the selected window's title, process name, process ID, process creation time, and window
-handle. Click **Copy** to copy the details to the clipboard and close the dialog, or **OK** to close it. **Process
-Creation Time (Unix)** shows seconds since January 1, 1970 UTC with seven fractional digits, preserving the captured
-timestamp's 100-nanosecond precision. **Process Creation Time (Local)** shows a readable date and time using your
-Windows regional and time-zone settings. These details come from the last list refresh; unreadable process creation
-times or failed local-time conversions are shown as unavailable.
-
-**Highlight Window** marks the selected window with a red overlay that lets clicks pass through. It captures the
-window's current position and size without following later movement, resizing, or disappearance; toggle it to update the
-overlay.
-
-**Close requested** means a close message was queued. The target may show a save prompt, ignore the request, or remain
-unresponsive; Stay Awake does not force termination or verify closure. If the target's identity cannot be verified or
-Windows denies access, the request fails. Windows whose process identity cannot be read cannot be highlighted either.
-
-Targeting is best effort:
-[reused window handles](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-iswindow) or a window
-replaced during the request can cause a different window to receive it, even after checking process identity.
-
-The **Status** fields show **Ready** when idle with no previous result or issue, the remaining countdown while active,
-and the last completion or error until the next run. The status below the list reports list refresh errors and returns
-to **Ready** after a successful refresh. All status timestamps use the same Windows regional long-date and time format
-as **Process Creation Time (Local)** in **Show Details**.
-
-Both countdowns include time spent asleep or hibernating; overdue operations run after resume. Clock and time-zone
-changes affect result timestamps, not durations. The fixed-size window scales with display DPI and must fit the
-monitor's work area.
+The app will start in the tray when you sign in; start countdowns manually. Remove the shortcut to disable autostart.
 
 ## Build, test, and format
 
-Run commands from the repository root. Build hosts are Linux or Windows; the GUI runs only on Windows.
-
-- **Build tools:** CMake 3.28+, Ninja, and a C++17 compiler. Windows app builds need an x64 MinGW-w64 toolchain with
-  Windows 10 APIs and `mincore` support. Linux tests use the host compiler.
-- **Windows setup:** use an MSYS2 UCRT64 environment with matching `gcc`, `g++`, `windres`, `cmake`, and `ninja` on
-  PATH.
-- **Optional tools:** Node.js and npm for shortcuts (see the [Node version requirement](package.json)); clang-format for
-  C++ formatting. Prettier is installed by `npm ci`.
-
-Debug/test configurations download pinned GoogleTest sources from GitHub on first configuration. Release presets disable
-tests and do not fetch GoogleTest.
-
-### npm shortcuts
+Install the [prerequisites](docs/development.md#prerequisites), then run from the repository root:
 
 ```sh
 npm ci
@@ -92,79 +45,11 @@ npm run format
 npm run format:check
 ```
 
-`build` produces Debug and Release Windows executables, cross-compiling on Linux. `test` builds and runs the portable
-tests on the current host. `format` and `format:check` run Prettier for documentation/configuration and clang-format for
-C++; generated build output and dependencies are ignored.
+`build` creates Debug and Release Windows executables at `build/<preset>/StayAwake.exe`, cross-compiling on Linux.
+`test` runs portable tests on the current host. Formatting uses Prettier and clang-format.
 
-### Icon
-
-The original icon is drawn in [assets/icon.svg](assets/icon.svg). After editing it, regenerate the Windows icon:
-
-```sh
-npm run icon:convert
-```
-
-This runs [scripts/convert-icon.mjs](scripts/convert-icon.mjs) using
-[svg-to-ico](https://github.com/jtrauntvein/svg-to-ico), installed by `npm ci`. It creates `assets/icon.ico` with a
-single transparent, PNG-compressed 256 × 256 px image. Commit both the SVG source and generated ICO, then rebuild the
-app to embed the updated icon. Direct CMake builds use the checked-in ICO and do not require Node.js.
-
-### Direct CMake
-
-Choose a preset from [CMakePresets.json](CMakePresets.json):
-
-| Host    | Preset                  | Builds                         |
-| ------- | ----------------------- | ------------------------------ |
-| Linux   | `linux-native-debug`    | Portable core and native tests |
-| Linux   | `linux-mingw-debug`     | Windows app and tests          |
-| Linux   | `linux-mingw-release`   | Windows app                    |
-| Windows | `windows-mingw-debug`   | Windows app and native tests   |
-| Windows | `windows-mingw-release` | Windows app                    |
-
-Use that preset for both configuration and build. For example, to cross-compile the Release app on Linux:
-
-```sh
-cmake --preset linux-mingw-release
-cmake --build --preset linux-mingw-release
-```
-
-After building a native test preset, run `ctest --preset linux-native-debug` on Linux or
-`ctest --preset windows-mingw-debug` on Windows. Run cross-built Windows tests on Windows. For C++ formatting, append
-`--target format` or `--target format-check` to the build command; clang-format must be installed before configuration.
-
-Executables are written to `build/<preset>/StayAwake.exe`. Copy the Release executable to a Windows 11 x64 machine and
-launch it; icons and the MinGW runtime are embedded, so no adjacent assets or separately installed runtime are needed.
-
-### Release size and runtime dependencies
-
-Both MinGW Release presets optimize the core, Windows adapter, and executable for size with
-[`-Os`](https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html), function/data sections, and link-time optimization
-(LTO). CMake checks LTO support and warns if it must build without it. The linker
-[removes unused sections and strips symbols](https://sourceware.org/binutils/docs/ld/Options.html), including debug data
-from static runtime libraries. These settings also apply to direct `MinSizeRel` builds; `Debug` and `RelWithDebInfo`
-retain their debugging information.
-
-Static linking remains enabled with `-static -static-libgcc -static-libstdc++`. C++ exceptions and RTTI remain enabled,
-and the icon, manifest, and version resources stay embedded. Countdown and handle formatting use integer conversions
-instead of streams to avoid pulling stream and locale machinery into the executable.
-
-A Linux x64 cross-build with MinGW-w64 GCC 13-win32 measured the following executable sizes. These are reference
-measurements, not size limits; results vary with the compiler and its runtime libraries.
-
-| Build                                       |     Bytes |
-| ------------------------------------------- | --------: |
-| Previous Release                            | 2,593,484 |
-| Previous Release with symbols stripped      | 1,132,544 |
-| Size flags, LTO, unused-code removal, strip |   997,376 |
-| Above plus stream-free integer formatting   |   275,968 |
-
-The final executable was 89.4% smaller. Its imports contained only Windows system DLLs, with no `libgcc`, `libstdc++`,
-or `libwinpthread` DLL dependency. Inspect a Linux cross-build with
-`x86_64-w64-mingw32-objdump -p build/linux-mingw-release/StayAwake.exe`; on Windows, use the toolchain's `objdump` and
-the `windows-mingw-release` path. Windows system DLL imports, including `msvcrt.dll` or UCRT API sets supplied by the
-OS, are expected. Runtime validation on Windows 11 is still required; inspecting or cross-compiling the binary does not
-exercise tray/activation, DPI, overlay click-through, power, suspend/resume, or shutdown behavior.
-
-See [AGENTS.md](AGENTS.md) for development constraints and Windows validation guidance.
+See [development](docs/development.md) for direct CMake commands and icon updates,
+[release size and validation](docs/release.md) for binary checks, and [AGENTS.md](AGENTS.md) for contribution
+constraints.
 
 Licensed under the [MIT License](LICENSE).
