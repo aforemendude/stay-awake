@@ -35,7 +35,7 @@ class PlatformBinding
     virtual void Present(const ViewState& state) = 0;
     virtual void SetWindowVisible(bool visible) = 0;
     virtual void ShowError(std::string_view message) = 0;
-    // Present captured window metadata; process creation time is formatted by the adapter.
+    // Present captured window metadata; the adapter formats process creation time as Unix seconds and local date/time.
     virtual void ShowWindowDetails(const WindowInfo& window) = 0;
     virtual void RequestExit() = 0;
 };

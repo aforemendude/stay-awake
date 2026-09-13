@@ -3,28 +3,57 @@
 #include "platform/windows/clock.hpp"
 #include "platform/windows/window_catalog.hpp"
 
-#include <cwchar>
-
 namespace stay_awake::windows
 {
 namespace
 {
-std::wstring FormatProcessCreationTime(const std::optional<std::uint64_t> creation_time)
+std::wstring FormatUnixProcessCreationTime(const std::optional<std::uint64_t> creation_time)
+{
+    if (!creation_time)
+    {
+        return L"Unavailable";
+    }
+    // FILETIME counts 100-nanosecond ticks since 1601; Unix time counts seconds since 1970.
+    constexpr std::uint64_t ticks_per_second = 10'000'000;
+    constexpr std::int64_t epoch_offset_seconds = 11'644'473'600;
+    const auto unix_seconds = static_cast<std::int64_t>(*creation_time / ticks_per_second) - epoch_offset_seconds;
+    return std::to_wstring(unix_seconds);
+}
+
+std::wstring FormatLocalProcessCreationTime(const std::optional<std::uint64_t> creation_time)
 {
     if (!creation_time)
     {
         return L"Unavailable";
     }
     const FILETIME file_time{static_cast<DWORD>(*creation_time), static_cast<DWORD>(*creation_time >> 32)};
-    SYSTEMTIME time{};
-    if (!FileTimeToSystemTime(&file_time, &time))
+    SYSTEMTIME utc_time{}, local_time{};
+    DYNAMIC_TIME_ZONE_INFORMATION time_zone{};
+    if (!FileTimeToSystemTime(&file_time, &utc_time) ||
+        GetDynamicTimeZoneInformation(&time_zone) == TIME_ZONE_ID_INVALID ||
+        !SystemTimeToTzSpecificLocalTimeEx(&time_zone, &utc_time, &local_time))
     {
         return L"Unavailable";
     }
-    wchar_t text[64]{};
-    std::swprintf(text, std::size(text), L"%04u-%02u-%02u %02u:%02u:%02u.%03u UTC", time.wYear, time.wMonth, time.wDay,
-                  time.wHour, time.wMinute, time.wSecond, time.wMilliseconds);
-    return text;
+    const int date_size =
+        GetDateFormatEx(LOCALE_NAME_USER_DEFAULT, DATE_LONGDATE, &local_time, nullptr, nullptr, 0, nullptr);
+    const int time_size = GetTimeFormatEx(LOCALE_NAME_USER_DEFAULT, 0, &local_time, nullptr, nullptr, 0);
+    if (!date_size || !time_size)
+    {
+        return L"Unavailable";
+    }
+    std::wstring date(static_cast<std::size_t>(date_size), L'\0');
+    std::wstring time(static_cast<std::size_t>(time_size), L'\0');
+    const int date_count =
+        GetDateFormatEx(LOCALE_NAME_USER_DEFAULT, DATE_LONGDATE, &local_time, nullptr, date.data(), date_size, nullptr);
+    const int time_count = GetTimeFormatEx(LOCALE_NAME_USER_DEFAULT, 0, &local_time, nullptr, time.data(), time_size);
+    if (!date_count || !time_count)
+    {
+        return L"Unavailable";
+    }
+    date.resize(static_cast<std::size_t>(date_count - 1));
+    time.resize(static_cast<std::size_t>(time_count - 1));
+    return date + L" " + time;
 }
 } // namespace
 
@@ -189,8 +218,10 @@ void WindowsPlatformBinding::ShowWindowDetails(const WindowInfo& window)
 {
     const auto text = L"Window Title: " + ToWide(window.title) + L"\r\nProcess Name: " +
                       ToWide(window.process_name.empty() ? "Unknown" : window.process_name) + L"\r\nProcess ID: " +
-                      std::to_wstring(window.identity.process_id) + L"\r\nProcess Creation Time: " +
-                      FormatProcessCreationTime(window.identity.process_creation_time) + L"\r\nWindow Handle: 0x" +
+                      std::to_wstring(window.identity.process_id) + L"\r\nProcess Creation Time (Unix): " +
+                      FormatUnixProcessCreationTime(window.identity.process_creation_time) +
+                      L"\r\nProcess Creation Time (Local): " +
+                      FormatLocalProcessCreationTime(window.identity.process_creation_time) + L"\r\nWindow Handle: 0x" +
                       ToWide(FormatHandle(window.identity));
     MessageBoxW(window_ ? window_->Get() : nullptr, text.c_str(), L"Window Details", MB_OK | MB_ICONINFORMATION);
 }

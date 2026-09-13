@@ -40,8 +40,10 @@ clears selection and highlighting; showing the main window refreshes the list au
 The window list and both duration dropdown lists scroll immediately, including when Windows' **Smooth-scroll list
 boxes** visual effect is enabled.
 
-**Show Details** displays the selected window's title, process name, process ID, process creation time (UTC), and window
-handle. These details come from the last list refresh; unreadable process creation times are shown as unavailable.
+**Show Details** displays the selected window's title, process name, process ID, process creation time, and window
+handle. **Process Creation Time (Unix)** shows whole seconds since January 1, 1970 UTC. **Process Creation Time
+(Local)** shows a readable date and time using your Windows regional and time-zone settings. These details come from the
+last list refresh; unreadable process creation times or failed local-time conversions are shown as unavailable.
 
 **Highlight Window** marks the selected window with a red overlay that lets clicks pass through. It captures the
 window's current position and size without following later movement, resizing, or disappearance; toggle it to update the
