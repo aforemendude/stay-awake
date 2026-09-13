@@ -105,10 +105,9 @@ npm run icon:convert
 ```
 
 This runs [scripts/convert-icon.mjs](scripts/convert-icon.mjs) using
-[svg-to-ico](https://github.com/jtrauntvein/svg-to-ico), installed by `npm ci`. It creates `assets/icon.ico` with
-transparent 16, 20, 24, 32, 40, 48, 64, 96, 128, and 256 px images for the tray, window, and Explorer at different
-display scales. Commit both the SVG source and generated ICO, then rebuild the app to embed the updated icon. Direct
-CMake builds use the checked-in ICO and do not require Node.js.
+[svg-to-ico](https://github.com/jtrauntvein/svg-to-ico), installed by `npm ci`. It creates `assets/icon.ico` with a
+single transparent, PNG-compressed 256 × 256 px image. Commit both the SVG source and generated ICO, then rebuild the
+app to embed the updated icon. Direct CMake builds use the checked-in ICO and do not require Node.js.
 
 ### Direct CMake
 
