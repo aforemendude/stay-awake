@@ -23,15 +23,16 @@ OperationResult CloseController::Toggle(const std::optional<WindowInfo>& target)
     }
     if (!target)
     {
-        return {false, "No window selected."};
+        state_.status = "No window selected.";
+        return {false, state_.status};
     }
     if (!ValidDuration(state_.durations, state_.duration))
     {
-        return {false, "Select a valid close duration."};
+        state_.status = "Select a valid close duration.";
+        return {false, state_.status};
     }
     session_ = Session{*target, platform_.Now() + *state_.duration};
-    state_.group_caption = "Window Closer";
-    state_.status.clear();
+    state_.status = "Ready";
     return {};
 }
 
@@ -45,7 +46,6 @@ bool CloseController::Tick(const ElapsedTime now)
     Cancel(); // Consume before calling native code or delivering any reentrant events.
     const auto result = platform_.RequestClose(target.identity);
     const std::string outcome = result.success ? "Close requested" : "Close request failed";
-    state_.group_caption = "Window Closer - " + outcome;
     state_.status = outcome + " " + FormatHandle(target.identity) + " At " + platform_.LocalTimestamp(false) + " (" +
                     (target.process_name.empty() ? "Unknown" : target.process_name) + ")";
     if (!result.success)
@@ -69,7 +69,6 @@ void CloseController::CancelForTimerFailure(const std::string& error)
 {
     if (session_)
     {
-        state_.group_caption = "Window Closer - Timer failed";
         state_.status = "Schedule canceled: " + error;
         Cancel();
     }
@@ -78,7 +77,10 @@ void CloseController::CancelForTimerFailure(const std::string& error)
 CloseViewState CloseController::State(const ElapsedTime now) const
 {
     auto state = state_;
-    state.remaining = session_ ? FormatRemaining(session_->deadline - now) : "Not Enabled";
+    if (session_)
+    {
+        state.status = "Close scheduled - " + FormatRemaining(session_->deadline - now) + " remaining";
+    }
     state.inputs_enabled = !session_;
     state.caption = session_ ? "Stop" : "Schedule Close Window";
     return state;

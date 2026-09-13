@@ -19,7 +19,8 @@ OperationResult WindowSelection::Refresh(const bool user_initiated)
         result = selection;
     }
     auto catalog = platform_.EnumerateWindows();
-    state_.catalog_status = catalog.result.success ? "" : "Failed to refresh windows list: " + catalog.result.error;
+    state_.catalog_status =
+        catalog.result.success ? "Ready" : "Failed to refresh windows list: " + catalog.result.error;
     if (catalog.result.success)
     {
         state_.windows = std::move(catalog.windows);
@@ -63,14 +64,12 @@ const WindowSelectionViewState& WindowSelection::State() const
 OperationResult WindowSelection::UpdateSelection()
 {
     state_.process_name.clear();
-    state_.window_handle.clear();
     state_.window_position.clear();
     state_.overlay.reset();
     if (state_.selected_window)
     {
         const auto& window = state_.windows[*state_.selected_window];
         state_.process_name = window.process_name.empty() ? "Unknown" : window.process_name;
-        state_.window_handle = FormatHandle(window.identity);
         const auto rect = platform_.WindowRectangle(window.identity);
         if (rect)
         {

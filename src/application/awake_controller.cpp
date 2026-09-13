@@ -30,18 +30,17 @@ OperationResult AwakeController::Toggle(const AwakeMode mode)
     }
     if (!ValidDuration(state_.durations, state_.duration))
     {
-        return {false, "Select a valid stay awake duration."};
+        state_.status = "Select a valid stay awake duration.";
+        return {false, state_.status};
     }
     const auto result = platform_.SetAwake(mode);
     if (!result.success)
     {
-        state_.caption = "Stay Awake - Start failed";
-        state_.status = ModeName(mode) + ": " + result.error;
+        state_.status = "Failed to start " + ModeName(mode) + ": " + result.error;
         return {false, "Failed to start stay awake: " + result.error};
     }
     session_ = Session{mode, platform_.Now() + *state_.duration};
-    state_.caption = "Stay Awake";
-    state_.status.clear();
+    state_.status = "Ready";
     return {};
 }
 
@@ -56,13 +55,11 @@ OperationResult AwakeController::Stop(const bool expired)
         session_.reset();
         if (expired || retry)
         {
-            state_.caption = "Stay Awake - Ended";
             state_.status = ModeName(mode) + " Ended At " + platform_.LocalTimestamp(true);
         }
     }
     else
     {
-        state_.caption = "Stay Awake - Release failed";
         state_.status = "Error Ending " + ModeName(mode) + " At " + platform_.LocalTimestamp(true) + ": " +
                         result.error + ". Click the active mode to retry.";
         if (!expired)
@@ -93,7 +90,6 @@ void AwakeController::CancelForTimerFailure(const std::string& error)
         (void)Stop(false);
         if (!session_)
         {
-            state_.caption = "Stay Awake - Timer failed";
             state_.status = "Canceled: " + error;
         }
     }
@@ -112,8 +108,10 @@ void AwakeController::Shutdown()
 AwakeViewState AwakeController::State(const ElapsedTime now) const
 {
     auto state = state_;
-    state.remaining =
-        session_ ? (session_->deadline ? FormatRemaining(*session_->deadline - now) : "Release failed") : "Not Enabled";
+    if (NeedsTimer())
+    {
+        state.status = ModeName(session_->mode) + " - " + FormatRemaining(*session_->deadline - now) + " remaining";
+    }
     state.duration_enabled = !session_;
     state.display_enabled = !session_ || session_->mode == AwakeMode::display;
     state.system_enabled = !session_ || session_->mode == AwakeMode::system;

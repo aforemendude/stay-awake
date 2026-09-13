@@ -17,16 +17,14 @@ enum ControlId
     display,
     system,
     awake_duration,
-    awake_remaining,
     awake_status,
     close_group,
     close_button,
     close_duration,
     refresh,
-    close_remaining,
+    show_details,
     highlight,
     process_name,
-    window_handle,
     window_position,
     close_status,
     catalog_status,
@@ -121,32 +119,27 @@ void MainWindow::CreateControls()
     Add(display, L"BUTTON", L"Require Display", button | WS_GROUP, 18, 37, 196, 30);
     Add(system, L"BUTTON", L"Require System", button, 18, 74, 196, 30);
     Add(-1, L"STATIC", L"Duration:", 0, 220, 42, 74, 24);
-    Add(awake_duration, L"COMBOBOX", L"", combo, 300, 37, 151, 300);
-    Add(-1, L"STATIC", L"Remaining Time:", 0, 220, 79, 132, 24);
-    Add(awake_remaining, L"STATIC", L"Not Enabled", 0, 356, 79, 210, 24);
-    Add(-1, L"STATIC", L"Result:", 0, 18, 111, 64, 24);
+    Add(awake_duration, L"COMBOBOX", L"", combo, 300, 37, 264, 300);
+    Add(-1, L"STATIC", L"Status:", 0, 18, 111, 64, 24);
     Add(awake_status, L"EDIT", L"", edit, 84, 106, 682, 28, WS_EX_CLIENTEDGE);
 
     Add(close_group, L"BUTTON", L"Window Closer", BS_GROUPBOX, 12, 145, 760, 450);
     Add(close_button, L"BUTTON", L"Schedule Close Window", button | WS_GROUP, 18, 171, 196, 30);
     Add(-1, L"STATIC", L"After:", 0, 220, 176, 74, 24);
-    Add(close_duration, L"COMBOBOX", L"", combo, 300, 171, 151, 300);
-    Add(-1, L"STATIC", L"Process:", 0, 457, 176, 68, 24);
-    Add(process_name, L"EDIT", L"", edit, 529, 171, 237, 29, WS_EX_CLIENTEDGE);
+    Add(close_duration, L"COMBOBOX", L"", combo, 300, 171, 264, 300);
+    Add(show_details, L"BUTTON", L"Show Details", button, 570, 171, 196, 30);
     Add(refresh, L"BUTTON", L"Refresh List", button, 18, 208, 196, 30);
-    Add(-1, L"STATIC", L"Remaining Time:", 0, 220, 213, 132, 24);
-    Add(close_remaining, L"STATIC", L"Not Enabled", 0, 356, 213, 99, 24);
-    Add(-1, L"STATIC", L"Handle:", 0, 457, 213, 68, 24);
-    Add(window_handle, L"EDIT", L"", edit, 529, 208, 237, 29, WS_EX_CLIENTEDGE);
+    Add(-1, L"STATIC", L"Process Name:", 0, 220, 213, 132, 24);
+    Add(process_name, L"EDIT", L"", edit, 356, 208, 410, 29, WS_EX_CLIENTEDGE);
     Add(highlight, L"BUTTON", L"Highlight Window", button, 18, 245, 196, 30);
     Add(-1, L"STATIC", L"Window Position:", 0, 220, 250, 132, 24);
     Add(window_position, L"EDIT", L"", edit, 356, 245, 410, 29, WS_EX_CLIENTEDGE);
-    Add(-1, L"STATIC", L"Result:", 0, 18, 286, 64, 24);
+    Add(-1, L"STATIC", L"Status:", 0, 18, 286, 64, 24);
     Add(close_status, L"EDIT", L"", edit, 84, 281, 682, 29, WS_EX_CLIENTEDGE);
     Add(window_list, L"LISTBOX", L"", LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 18, 315,
         748, 240, WS_EX_CLIENTEDGE);
-    Add(-1, L"STATIC", L"List status:", 0, 18, 565, 86, 24);
-    Add(catalog_status, L"EDIT", L"", edit, 108, 560, 658, 29, WS_EX_CLIENTEDGE);
+    Add(-1, L"STATIC", L"Status:", 0, 18, 565, 64, 24);
+    Add(catalog_status, L"EDIT", L"", edit, 84, 560, 682, 29, WS_EX_CLIENTEDGE);
 }
 
 void MainWindow::Layout(const UINT dpi)
@@ -296,19 +289,15 @@ void MainWindow::Present(const ViewState& state)
     Text(system, state.awake.system_caption);
     Text(close_button, state.close.caption);
     Text(highlight, state.selection.highlight_caption);
-    Text(awake_remaining, state.awake.remaining);
-    Text(close_remaining, state.close.remaining);
-    Text(awake_group, state.awake.caption);
-    Text(close_group, state.close.group_caption);
     Text(awake_status, state.awake.status);
     Text(close_status, state.close.status);
     Text(catalog_status, state.selection.catalog_status);
     Text(process_name, state.selection.process_name);
-    Text(window_handle, state.selection.window_handle);
     Text(window_position, state.selection.window_position);
     Enable(display, state.awake.display_enabled);
     Enable(system, state.awake.system_enabled);
     Enable(awake_duration, state.awake.duration_enabled);
+    Enable(show_details, state.selection.selected_window.has_value());
     for (const int id : {window_list, refresh, close_duration})
     {
         Enable(id, state.close.inputs_enabled);
@@ -441,6 +430,9 @@ void MainWindow::Command(const int id, const int notification)
         case highlight:
             Emit({EventKind::toggle_highlight});
             break;
+        case show_details:
+            Emit({EventKind::show_details});
+            break;
         }
     }
     if ((id == awake_duration || id == close_duration) && notification == CBN_SELCHANGE)
@@ -505,7 +497,7 @@ LRESULT MainWindow::Message(HWND window, UINT message, WPARAM wparam, LPARAM lpa
         const auto id = GetDlgCtrlID(reinterpret_cast<HWND>(lparam));
         if (id == awake_group || id == close_group)
         {
-            // Match the parent background while still clearing old group captions on repaint.
+            // Match the group boxes to the parent background.
             const auto dc = reinterpret_cast<HDC>(wparam);
             SetBkMode(dc, TRANSPARENT);
             SetBkColor(dc, GetSysColor(COLOR_BTNFACE));

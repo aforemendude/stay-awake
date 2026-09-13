@@ -86,6 +86,14 @@ class FakePlatformBinding final : public PlatformBinding
     {
         ++exits;
     }
+    void ShowWindowDetails(const WindowInfo& window) override
+    {
+        window_details.push_back(window);
+        if (on_details)
+        {
+            on_details();
+        }
+    }
 
     ElapsedTime now{0};
     std::string timestamp = "09/11 12:34:56";
@@ -106,9 +114,11 @@ class FakePlatformBinding final : public PlatformBinding
     std::vector<WindowIdentity> geometry_targets;
     std::vector<bool> visibility;
     std::vector<std::string> errors;
+    std::vector<WindowInfo> window_details;
     std::function<void()> on_close;
     std::function<void()> on_error;
     std::function<void()> on_present;
+    std::function<void()> on_details;
     ViewState view;
     bool timer_enabled = false;
     int refreshes = 0;

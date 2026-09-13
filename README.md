@@ -25,7 +25,7 @@ Choose a duration, then start one mode:
 - **Require Display** keeps the system and display awake.
 - **Require System** keeps the system awake while allowing the display to turn off.
 
-Click the active mode's **Stop** button to end it early. If releasing sleep prevention fails, the result shows the error
+Click the active mode's **Stop** button to end it early. If releasing sleep prevention fails, **Status** shows the error
 and the button remains available to retry.
 
 These
@@ -38,6 +38,9 @@ the user.
 Select a window, choose a duration, and click **Schedule Close Window**. **Stop** cancels the schedule. **Refresh List**
 clears selection and highlighting; showing the main window refreshes the list automatically unless a close is scheduled.
 
+**Show Details** displays the selected window's title, process name, process ID, process creation time (UTC), and window
+handle. These details come from the last list refresh; unreadable process creation times are shown as unavailable.
+
 **Highlight Window** marks the selected window with a red overlay that lets clicks pass through. It captures the
 window's current position and size without following later movement, resizing, or disappearance; toggle it to update the
 overlay.
@@ -49,6 +52,10 @@ Windows denies access, the request fails. Windows whose process identity cannot 
 Targeting is best effort:
 [reused window handles](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-iswindow) or a window
 replaced during the request can cause a different window to receive it, even after checking process identity.
+
+The **Status** fields show **Ready** when idle with no previous result or issue, the remaining countdown while active,
+and the last completion or error until the next run. The status below the list reports list refresh errors and returns
+to **Ready** after a successful refresh.
 
 Both countdowns include time spent asleep or hibernating; overdue operations run after resume. Clock and time-zone
 changes affect result timestamps, not durations. The fixed-size window scales with display DPI and must fit the

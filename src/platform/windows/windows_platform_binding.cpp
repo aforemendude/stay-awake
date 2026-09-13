@@ -3,8 +3,31 @@
 #include "platform/windows/clock.hpp"
 #include "platform/windows/window_catalog.hpp"
 
+#include <cwchar>
+
 namespace stay_awake::windows
 {
+namespace
+{
+std::wstring FormatProcessCreationTime(const std::optional<std::uint64_t> creation_time)
+{
+    if (!creation_time)
+    {
+        return L"Unavailable";
+    }
+    const FILETIME file_time{static_cast<DWORD>(*creation_time), static_cast<DWORD>(*creation_time >> 32)};
+    SYSTEMTIME time{};
+    if (!FileTimeToSystemTime(&file_time, &time))
+    {
+        return L"Unavailable";
+    }
+    wchar_t text[64]{};
+    std::swprintf(text, std::size(text), L"%04u-%02u-%02u %02u:%02u:%02u.%03u UTC", time.wYear, time.wMonth, time.wDay,
+                  time.wHour, time.wMinute, time.wSecond, time.wMilliseconds);
+    return text;
+}
+} // namespace
+
 OperationResult WindowsPlatformBinding::RunService(EventHandler handler)
 {
     OperationResult result;
@@ -160,6 +183,16 @@ void WindowsPlatformBinding::ShowError(const std::string_view message)
 {
     const auto text = ToWide(message);
     MessageBoxW(window_ ? window_->Get() : nullptr, text.c_str(), L"Stay Awake - Error", MB_OK | MB_ICONERROR);
+}
+
+void WindowsPlatformBinding::ShowWindowDetails(const WindowInfo& window)
+{
+    const auto text = L"Window Title: " + ToWide(window.title) + L"\r\nProcess Name: " +
+                      ToWide(window.process_name.empty() ? "Unknown" : window.process_name) + L"\r\nProcess ID: " +
+                      std::to_wstring(window.identity.process_id) + L"\r\nProcess Creation Time: " +
+                      FormatProcessCreationTime(window.identity.process_creation_time) + L"\r\nWindow Handle: 0x" +
+                      ToWide(FormatHandle(window.identity));
+    MessageBoxW(window_ ? window_->Get() : nullptr, text.c_str(), L"Window Details", MB_OK | MB_ICONINFORMATION);
 }
 
 void WindowsPlatformBinding::RequestExit()

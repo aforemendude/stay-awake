@@ -33,6 +33,7 @@ TEST_F(CloseControllerTest, NoSelectionReportsExactErrorAndDoesNotSchedule)
     const auto result = close.Toggle(std::nullopt);
     EXPECT_FALSE(result.success);
     EXPECT_EQ(result.error, "No window selected.");
+    EXPECT_EQ(State().status, result.error);
     EXPECT_TRUE(State().inputs_enabled);
     EXPECT_FALSE(close.Active());
 }
@@ -46,6 +47,7 @@ TEST_F(CloseControllerTest, RejectsMissingOrInvalidDurationsWithoutStarting)
         const auto result = close.Toggle(target);
         EXPECT_FALSE(result.success);
         EXPECT_EQ(result.error, "Select a valid close duration.");
+        EXPECT_EQ(State().status, result.error);
         EXPECT_FALSE(close.Active());
         EXPECT_TRUE(State().inputs_enabled);
     }
@@ -60,12 +62,12 @@ TEST_F(CloseControllerTest, RestartAfterCancellationUsesNewDeadline)
     EXPECT_FALSE(close.Active());
     EXPECT_TRUE(State().inputs_enabled);
     EXPECT_EQ(State().caption, "Schedule Close Window");
-    EXPECT_EQ(State().remaining, "Not Enabled");
+    EXPECT_EQ(State().status, "Ready");
     EXPECT_TRUE(close.Toggle(target).success);
     platform.now = 10s;
     EXPECT_FALSE(close.Tick(platform.now));
     EXPECT_TRUE(platform.close_requests.empty());
-    EXPECT_EQ(State().remaining, "00:00:09");
+    EXPECT_EQ(State().status, "Close scheduled - 00:00:09 remaining");
     platform.now = 19s;
     EXPECT_TRUE(close.Tick(platform.now));
     EXPECT_EQ(platform.close_requests.size(), 1U);
@@ -81,7 +83,7 @@ TEST_F(CloseControllerTest, CapturesTargetAndConsumesScheduleOnceAtExactDeadline
     EXPECT_EQ(State().duration, 10s);
     platform.now = 9999ms;
     EXPECT_FALSE(close.Tick(platform.now));
-    EXPECT_EQ(State().remaining, "00:00:01");
+    EXPECT_EQ(State().status, "Close scheduled - 00:00:01 remaining");
     EXPECT_TRUE(platform.close_requests.empty());
     platform.now = 10s;
     EXPECT_TRUE(close.Tick(platform.now));
@@ -93,8 +95,7 @@ TEST_F(CloseControllerTest, CapturesTargetAndConsumesScheduleOnceAtExactDeadline
     EXPECT_FALSE(close.Tick(platform.now));
     EXPECT_EQ(platform.close_requests.size(), 1U);
     Start();
-    EXPECT_TRUE(State().status.empty());
-    EXPECT_EQ(State().group_caption, "Window Closer");
+    EXPECT_EQ(State().status, "Close scheduled - 00:00:10 remaining");
 }
 
 TEST_F(CloseControllerTest, CapturesProcessLifetimeWhenHandleAndPidAreReused)

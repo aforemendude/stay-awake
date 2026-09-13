@@ -25,6 +25,7 @@ class WindowsPlatformBinding final : public PlatformBinding
     void Present(const ViewState& state) override;
     void SetWindowVisible(bool visible) override;
     void ShowError(std::string_view message) override;
+    void ShowWindowDetails(const WindowInfo& window) override;
     void RequestExit() override;
 
   private:

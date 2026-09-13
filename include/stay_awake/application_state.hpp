@@ -77,9 +77,7 @@ struct AwakeViewState
     bool system_enabled = true;
     std::string display_caption = "Require Display";
     std::string system_caption = "Require System";
-    std::string remaining = "Not Enabled";
-    std::string caption = "Stay Awake";
-    std::string status;
+    std::string status = "Ready";
 };
 
 struct CloseViewState
@@ -88,21 +86,18 @@ struct CloseViewState
     std::optional<std::chrono::seconds> duration = std::chrono::hours(1);
     bool inputs_enabled = true;
     std::string caption = "Schedule Close Window";
-    std::string remaining = "Not Enabled";
-    std::string group_caption = "Window Closer";
-    std::string status;
+    std::string status = "Ready";
 };
 
 struct WindowSelectionViewState
 {
     bool highlight_active = false;
     std::string highlight_caption = "Highlight Window";
-    std::string catalog_status;
+    std::string catalog_status = "Ready";
     std::vector<WindowInfo> windows;
     std::uint64_t catalog_revision = 0;
     std::optional<std::size_t> selected_window;
     std::string process_name;
-    std::string window_handle;
     std::string window_position;
     std::optional<Rectangle> overlay;
 };
@@ -135,6 +130,7 @@ enum class EventKind
     refresh,
     toggle_close,
     toggle_highlight,
+    show_details,
 };
 
 struct ApplicationEvent

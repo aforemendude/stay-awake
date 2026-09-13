@@ -32,5 +32,6 @@ class Application
     bool dispatching_ = false;
     bool initialized_ = false;
     std::string pending_error_;
+    std::optional<WindowInfo> pending_details_;
 };
 } // namespace stay_awake

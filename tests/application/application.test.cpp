@@ -65,8 +65,9 @@ TEST_F(ApplicationTest, InitializesHiddenIdleWithoutUnnecessaryTimer)
     EXPECT_EQ(State().awake.display_caption, "Require Display");
     EXPECT_EQ(State().awake.system_caption, "Require System");
     EXPECT_EQ(State().close.caption, "Schedule Close Window");
-    EXPECT_EQ(State().awake.remaining, "Not Enabled");
-    EXPECT_EQ(State().close.remaining, "Not Enabled");
+    EXPECT_EQ(State().awake.status, "Ready");
+    EXPECT_EQ(State().close.status, "Ready");
+    EXPECT_EQ(State().selection.catalog_status, "Ready");
     EXPECT_EQ(State().awake.duration, 2h);
     EXPECT_EQ(State().close.duration, 1h);
     EXPECT_TRUE(platform.visibility.empty());
@@ -95,7 +96,7 @@ TEST_F(ApplicationTest, CancelingCloseLeavesAwakeActive)
     EXPECT_TRUE(State().timer_needed);
     EXPECT_TRUE(State().close.inputs_enabled);
     EXPECT_EQ(State().close.caption, "Schedule Close Window");
-    EXPECT_EQ(State().close.remaining, "Not Enabled");
+    EXPECT_EQ(State().close.status, "Ready");
     EXPECT_TRUE(platform.close_requests.empty());
     platform.now = 10s;
     Send(EventKind::tick);
@@ -111,7 +112,7 @@ TEST_F(ApplicationTest, EarlierCloseExpiryLeavesAwakeDeadlineUnaffected)
     Send(EventKind::tick);
     EXPECT_EQ(platform.close_requests.size(), 1U);
     EXPECT_EQ(platform.power_calls.size(), 1U);
-    EXPECT_EQ(State().awake.remaining, "00:29:49");
+    EXPECT_EQ(State().awake.status, "Require System - 00:29:49 remaining");
     EXPECT_TRUE(State().timer_needed);
 }
 
@@ -123,7 +124,7 @@ TEST_F(ApplicationTest, EarlierAwakeExpiryLeavesCloseDeadlineUnaffected)
     Send(EventKind::tick);
     EXPECT_EQ(platform.power_calls.size(), 2U);
     EXPECT_TRUE(platform.close_requests.empty());
-    EXPECT_EQ(State().close.remaining, "00:14:49");
+    EXPECT_EQ(State().close.status, "Close scheduled - 00:14:49 remaining");
     EXPECT_TRUE(State().timer_needed);
 }
 
@@ -148,7 +149,7 @@ TEST_F(ApplicationTest, FailedReleaseDoesNotPreventSimultaneousCloseCompletion)
     platform.release_result = {false, "release failed"};
     platform.now = 10s;
     Send(EventKind::tick);
-    EXPECT_EQ(State().awake.remaining, "Release failed");
+    EXPECT_NE(State().awake.status.find("release failed"), std::string::npos);
     EXPECT_EQ(platform.close_requests.size(), 1U);
     EXPECT_FALSE(State().timer_needed);
     EXPECT_TRUE(platform.errors.empty());
@@ -161,8 +162,8 @@ TEST_F(ApplicationTest, WallClockJumpsDoNotChangeDurationAndResumeConsumesOverdu
     platform.timestamp = "03/01 01:02:03";
     platform.now = 1s;
     Send(EventKind::tick);
-    EXPECT_EQ(State().awake.remaining, "00:00:09");
-    EXPECT_EQ(State().close.remaining, "00:00:09");
+    EXPECT_EQ(State().awake.status, "Require Display - 00:00:09 remaining");
+    EXPECT_EQ(State().close.status, "Close scheduled - 00:00:09 remaining");
     // Fake elapsed time includes suspend: no actual OS clocks or sleeps in application tests.
     platform.now += 8h;
     platform.timestamp = "03/01 09:02:03";
@@ -297,7 +298,6 @@ TEST_F(ApplicationTest, TimerSetupFailureCancelsCloseAndReleasesAwake)
     platform.timer_result = {false, "timer unavailable"};
     StartAwake();
     EXPECT_EQ(platform.power_calls.size(), 2U);
-    EXPECT_EQ(State().awake.remaining, "Not Enabled");
     EXPECT_FALSE(State().timer_needed);
     EXPECT_NE(State().awake.status.find("timer unavailable"), std::string::npos);
     StartClose();
@@ -314,14 +314,14 @@ TEST_F(ApplicationTest, TimerFailureWithReleaseFailureKeepsManualRetryAvailable)
     platform.timer_result = {false, "timer unavailable"};
     platform.release_result = {false, "release failed"};
     StartAwake();
-    EXPECT_EQ(State().awake.remaining, "Release failed");
+    EXPECT_NE(State().awake.status.find("release failed"), std::string::npos);
     EXPECT_FALSE(State().timer_needed);
     EXPECT_TRUE(State().awake.display_enabled);
     EXPECT_FALSE(State().awake.system_enabled);
     EXPECT_EQ(platform.errors.size(), 1U);
     platform.release_result = {};
     Send(EventKind::toggle_display);
-    EXPECT_EQ(State().awake.remaining, "Not Enabled");
+    EXPECT_EQ(State().awake.status, "Require Display Ended At 09/11 12:34:56");
 }
 
 TEST_F(ApplicationTest, PresentsFeatureErrorsAndKeepsAutomaticCatalogFailuresSilent)
@@ -362,6 +362,87 @@ TEST_F(ApplicationTest, HighlightAloneNeedsNoTimerAndTicksKeepTheSelectionSnapsh
     EXPECT_FALSE(platform.timer_enabled);
 }
 
+TEST_F(ApplicationTest, WindowDetailsUsesSelectedSnapshotAndIgnoresAbsentSelection)
+{
+    Send(EventKind::show_details);
+    EXPECT_TRUE(platform.window_details.empty());
+    Send(EventKind::show);
+    platform.catalog.windows[0].title = "Changed after refresh";
+    Select(0);
+    Send(EventKind::show_details);
+    ASSERT_EQ(platform.window_details.size(), 1U);
+    EXPECT_EQ(platform.window_details.back().identity, (WindowIdentity{0xABC, 12, 0x100000001ULL}));
+    EXPECT_EQ(platform.window_details.back().title, "Same title");
+    EXPECT_EQ(platform.window_details.back().process_name, "alpha");
+    platform.catalog.windows[1].process_name.clear();
+    platform.catalog.windows[1].identity.process_creation_time.reset();
+    Send(EventKind::refresh);
+    Select(1);
+    Send(EventKind::show_details);
+    ASSERT_EQ(platform.window_details.size(), 2U);
+    EXPECT_EQ(platform.window_details.back().identity.handle, 0xDEFU);
+    EXPECT_FALSE(platform.window_details.back().identity.process_creation_time);
+    EXPECT_TRUE(platform.window_details.back().process_name.empty());
+    Select(std::nullopt);
+    Send(EventKind::show_details);
+    Send(EventKind::refresh);
+    Send(EventKind::show_details);
+    EXPECT_EQ(platform.window_details.size(), 2U);
+}
+
+TEST_F(ApplicationTest, ModalWindowDetailsKeepsScheduledTargetAndQueuesExpiryUntilItReturns)
+{
+    StartAwake();
+    StartClose();
+    platform.on_details = [this] {
+        EXPECT_EQ(platform.view.selection.selected_window, 0U);
+        EXPECT_EQ(platform.view.close.status, "Close scheduled - 00:00:10 remaining");
+        Select(1);
+        Send(EventKind::refresh);
+        platform.now = 10s;
+        Send(EventKind::tick);
+        Send(EventKind::tick);
+        EXPECT_TRUE(platform.close_requests.empty());
+        EXPECT_EQ(platform.power_calls.size(), 1U);
+    };
+    Send(EventKind::show_details);
+    ASSERT_EQ(platform.window_details.size(), 1U);
+    EXPECT_EQ(platform.window_details.back().identity, (WindowIdentity{0xABC, 12, 0x100000001ULL}));
+    ASSERT_EQ(platform.close_requests.size(), 1U);
+    EXPECT_EQ(platform.close_requests.back(), platform.window_details.back().identity);
+    EXPECT_EQ(platform.power_calls.size(), 2U);
+    EXPECT_FALSE(State().timer_needed);
+    EXPECT_EQ(State().close.status, "Close requested ABC At 09/11 12:34 (alpha)");
+}
+
+TEST_F(ApplicationTest, QuitAndConfirmedSessionEndCleanUpImmediatelyDuringWindowDetails)
+{
+    for (const auto event : {EventKind::quit, EventKind::session_end_confirmed})
+    {
+        FakePlatformBinding binding;
+        Application app(binding);
+        app.Handle({EventKind::initialized});
+        app.Handle({EventKind::show});
+        app.Handle({EventKind::select_window, 0});
+        app.Handle({EventKind::toggle_display});
+        app.Handle({EventKind::toggle_close});
+        app.Handle({EventKind::toggle_highlight});
+        binding.on_details = [&] {
+            app.Handle({event});
+            EXPECT_TRUE(app.State().stopped);
+            EXPECT_EQ(binding.exits, 1);
+            EXPECT_FALSE(binding.timer_enabled);
+            EXPECT_FALSE(binding.overlay);
+            EXPECT_EQ(binding.power_calls.back(), std::nullopt);
+            app.Handle({EventKind::tick});
+            app.Handle({EventKind::show_details});
+        };
+        app.Handle({EventKind::show_details});
+        EXPECT_EQ(binding.window_details.size(), 1U);
+        EXPECT_TRUE(binding.close_requests.empty());
+    }
+}
+
 TEST_F(ApplicationTest, ReentrantFeatureEventsWaitUntilPresentationCompletes)
 {
     Duration(EventKind::awake_duration_changed, 10s);
@@ -376,13 +457,13 @@ TEST_F(ApplicationTest, ReentrantFeatureEventsWaitUntilPresentationCompletes)
         Duration(EventKind::awake_duration_changed, 1h);
         Send(EventKind::toggle_display);
         EXPECT_EQ(platform.power_calls.size(), 1U);
-        EXPECT_EQ(State().awake.remaining, "00:00:10");
+        EXPECT_EQ(State().awake.status, "Require Display - 00:00:10 remaining");
         EXPECT_FALSE(platform.view.awake.duration_enabled);
     };
     Send(EventKind::toggle_display);
     EXPECT_TRUE(delivered);
     EXPECT_EQ(State().awake.duration, 10s);
-    EXPECT_EQ(State().awake.remaining, "Not Enabled");
+    EXPECT_EQ(State().awake.status, "Ready");
     EXPECT_TRUE(State().awake.duration_enabled);
     EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display, std::nullopt}));
     EXPECT_FALSE(State().timer_needed);
@@ -406,7 +487,7 @@ TEST_F(ApplicationTest, ModalErrorSeesCompletedStateAndQuitImmediatelyDisablesLa
     StartAwake();
     platform.release_result = {false, "release failed"};
     platform.on_error = [this] {
-        EXPECT_EQ(platform.view.awake.remaining, "Release failed");
+        EXPECT_NE(platform.view.awake.status.find("release failed"), std::string::npos);
         EXPECT_FALSE(platform.view.timer_needed);
         Send(EventKind::quit);
         Send(EventKind::show);
@@ -450,7 +531,7 @@ TEST_F(ApplicationTest, CanceledSessionEndDuringModalErrorRetainsCloseSchedule)
     platform.now = 10s;
     Send(EventKind::tick);
     EXPECT_EQ(platform.close_requests.size(), 1U);
-    EXPECT_EQ(State().awake.remaining, "Release failed");
+    EXPECT_NE(State().awake.status.find("release failed"), std::string::npos);
 }
 
 TEST(ApplicationRunTest, ServiceActivationAndFailureUsePortableBoundary)

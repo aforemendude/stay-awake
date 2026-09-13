@@ -55,9 +55,14 @@ void Application::Handle(const ApplicationEvent& event)
             // Complete transitions and render BEFORE a modal dialog can deliver another event. Reentrant events are
             // queued until presentation returns, preventing duplicate expiry and stale UI writes.
             auto error = std::exchange(pending_error_, {});
+            auto details = std::exchange(pending_details_, std::nullopt);
             if (!error.empty() && !state_.stopped)
             {
                 platform_.ShowError(error);
+            }
+            if (details && !state_.stopped)
+            {
+                platform_.ShowWindowDetails(*details);
             }
         }
         dispatching_ = false;
@@ -127,6 +132,9 @@ void Application::Process(const ApplicationEvent& event)
         break;
     case EventKind::toggle_highlight:
         ReportError(selection_.ToggleHighlight());
+        break;
+    case EventKind::show_details:
+        pending_details_ = selection_.SelectedWindow();
         break;
     }
 }

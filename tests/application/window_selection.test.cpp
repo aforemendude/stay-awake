@@ -30,7 +30,6 @@ TEST_F(WindowSelectionTest, PreservesSuppliedOrderingDuplicateTitlesAndUnicodeMe
     EXPECT_EQ(State().windows[1].identity, (WindowIdentity{0xDEF, 34, 0x200000002ULL}));
     EXPECT_TRUE(selection.Select(0).success);
     EXPECT_EQ(State().process_name, u8"编辑器");
-    EXPECT_EQ(State().window_handle, "ABC");
     EXPECT_EQ(State().window_position, "X: -900, Y: -200, Width: 800, Height: 600");
     const auto revision = State().catalog_revision;
     platform.catalog.windows[0].title = "Same title";
@@ -57,7 +56,6 @@ TEST_F(WindowSelectionTest, MissingMetadataUsesFallbackAndDeselectClearsDetails)
     EXPECT_FALSE(State().selected_window);
     EXPECT_FALSE(selection.SelectedWindow());
     EXPECT_TRUE(State().process_name.empty());
-    EXPECT_TRUE(State().window_handle.empty());
     EXPECT_TRUE(State().window_position.empty());
 }
 
@@ -76,10 +74,12 @@ TEST_F(WindowSelectionTest, RefreshFailureClearsSelectionAndOverlayWithUserOnlyE
     EXPECT_FALSE(platform.overlay);
     EXPECT_FALSE(State().highlight_active);
     EXPECT_TRUE(State().windows.empty());
-    EXPECT_TRUE(State().window_handle.empty());
     EXPECT_EQ(State().catalog_status, result.error);
     EXPECT_TRUE(selection.Refresh(false).success);
     EXPECT_EQ(State().catalog_status, result.error);
+    platform.catalog.result = {};
+    EXPECT_TRUE(selection.Refresh(true).success);
+    EXPECT_EQ(State().catalog_status, "Ready");
 }
 
 TEST_F(WindowSelectionTest, HighlightIntentWorksWithoutSelectionAndFollowsSelectionSnapshots)
