@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">Stay Awake</title>
+  <desc id="desc">An amber sun with a power-symbol center on a rounded midnight-blue tile.</desc>
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="#172638" />
+  <g fill="none" stroke="#ffc45c" stroke-linecap="round">
+    <path d="M23 23a13 13 0 1 0 18 0M32 14v16" stroke-width="5" />
+    <path d="M10 32h3m38 0h3M32 51v3M16 16l2 2m28 28 2 2M16 48l2-2m28-28 2-2" stroke-width="4" />
+  </g>
+</svg>

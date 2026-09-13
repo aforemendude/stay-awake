@@ -1,7 +1,8 @@
 {
   "description": "Keep Windows awake and automatically close selected windows after a scheduled duration.",
   "devDependencies": {
-    "prettier": "3.9.6"
+    "prettier": "3.9.6",
+    "svg-to-ico": "2.0.0"
   },
   "engines": {
     "node": ">=24.19.0"
@@ -17,6 +18,7 @@
     "build": "node scripts/cmake.mjs build",
     "build:debug": "node scripts/cmake.mjs build:debug",
     "build:release": "node scripts/cmake.mjs build:release",
+    "icon:convert": "node scripts/convert-icon.mjs",
     "test": "node scripts/cmake.mjs test",
     "format": "prettier --write . && node scripts/cmake.mjs format",
     "format:check": "prettier --check . && node scripts/cmake.mjs format-check"

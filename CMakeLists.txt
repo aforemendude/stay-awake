@@ -81,6 +81,10 @@ if(STAY_AWAKE_BUILD_APP)
     stay_awake_enable_warnings(stay_awake_platform)
 
     add_executable(stay_awake WIN32 src/main.cpp src/platform/windows/stay_awake.rc)
+    set_property(
+        SOURCE src/platform/windows/stay_awake.rc
+        APPEND PROPERTY OBJECT_DEPENDS "${PROJECT_SOURCE_DIR}/assets/icon.ico"
+    )
     target_include_directories(stay_awake PRIVATE "${PROJECT_SOURCE_DIR}/src/platform/windows")
     target_compile_definitions(stay_awake PRIVATE UNICODE _UNICODE)
     target_compile_features(stay_awake PRIVATE cxx_std_17)

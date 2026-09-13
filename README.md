@@ -1,6 +1,6 @@
 # Stay Awake
 
-![Stay Awake Icon](assets/icon.png)
+![Stay Awake Icon](assets/icon.svg)
 
 A Windows 11 x64 tray utility that keeps the system awake for a chosen duration and requests a selected window to close
 after an independent countdown.
@@ -90,6 +90,20 @@ npm run format:check
 `build` produces Debug and Release Windows executables, cross-compiling on Linux. `test` builds and runs the portable
 tests on the current host. `format` and `format:check` run Prettier for documentation/configuration and clang-format for
 C++; generated build output and dependencies are ignored.
+
+### Icon
+
+The original icon is drawn in [assets/icon.svg](assets/icon.svg). After editing it, regenerate the Windows icon:
+
+```sh
+npm run icon:convert
+```
+
+This runs [scripts/convert-icon.mjs](scripts/convert-icon.mjs) using
+[svg-to-ico](https://github.com/jtrauntvein/svg-to-ico), installed by `npm ci`. It creates `assets/icon.ico` with
+transparent 16, 20, 24, 32, 40, 48, 64, 96, 128, and 256 px images for the tray, window, and Explorer at different
+display scales. Commit both the SVG source and generated ICO, then rebuild the app to embed the updated icon. Direct
+CMake builds use the checked-in ICO and do not require Node.js.
 
 ### Direct CMake
 
