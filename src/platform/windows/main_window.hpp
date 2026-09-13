@@ -34,12 +34,20 @@ class MainWindow
         int height;
     };
 
+    struct ListScrollState
+    {
+        bool active = false;
+        bool selection_pending = false;
+    };
+
     static LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wparam, LPARAM lparam) noexcept;
-    static LRESULT CALLBACK ListBoxProc(HWND window, UINT message, WPARAM wparam, LPARAM lparam, UINT_PTR subclass_id,
-                                        DWORD_PTR reference) noexcept;
+    static LRESULT CALLBACK ListScrollProc(HWND window, UINT message, WPARAM wparam, LPARAM lparam,
+                                           UINT_PTR subclass_id, DWORD_PTR reference) noexcept;
     LRESULT Message(HWND window, UINT message, WPARAM wparam, LPARAM lparam);
     void Emit(ApplicationEvent event);
     void CreateControls();
+    void ConfigureListScrolling(int id);
+    ListScrollState& ScrollState(int id) noexcept;
     HWND Add(int id, const wchar_t* cls, const wchar_t* text, DWORD style, int x, int y, int width, int height,
              DWORD ex_style = 0);
     void Layout(UINT dpi);
@@ -63,8 +71,9 @@ class MainWindow
     bool rendering_ = false;
     bool timer_enabled_ = false;
     bool layout_active_ = false;
-    bool list_scroll_active_ = false;
-    bool list_selection_pending_ = false;
+    ListScrollState window_list_scroll_;
+    ListScrollState awake_duration_scroll_;
+    ListScrollState close_duration_scroll_;
     UINT dpi_ = 96;
     HWND last_focus_ = nullptr; // Borrowed child HWND.
     std::exception_ptr failure_;

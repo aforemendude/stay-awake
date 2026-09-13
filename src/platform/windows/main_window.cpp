@@ -56,7 +56,7 @@ bool CanScrollList(const UINT message, const WPARAM wparam) noexcept
 class ListRedrawScope
 {
   public:
-    ListRedrawScope(HWND window, bool& active) noexcept : window_(window), active_(active)
+    ListRedrawScope(HWND window, HWND combo, bool& active) noexcept : window_(window), combo_(combo), active_(active)
     {
         active_ = true;
         SendMessageW(window_, WM_SETREDRAW, FALSE, 0);
@@ -65,9 +65,19 @@ class ListRedrawScope
     {
         if (IsWindow(window_))
         {
+            const bool keep_visible =
+                !combo_ || (IsWindowVisible(combo_) && SendMessageW(combo_, CB_GETDROPPEDSTATE, 0, 0) != FALSE);
             SendMessageW(window_, WM_SETREDRAW, TRUE, 0);
-            RedrawWindow(window_, nullptr, nullptr,
-                         RDW_INVALIDATE | RDW_ERASE | RDW_FRAME | RDW_ALLCHILDREN | RDW_UPDATENOW);
+            if (keep_visible)
+            {
+                RedrawWindow(window_, nullptr, nullptr,
+                             RDW_INVALIDATE | RDW_ERASE | RDW_FRAME | RDW_ALLCHILDREN | RDW_UPDATENOW);
+            }
+            else
+            {
+                // WM_SETREDRAW(TRUE) can restore WS_VISIBLE after native input closed the dropdown.
+                ShowWindow(window_, SW_HIDE);
+            }
         }
         active_ = false;
     }
@@ -76,6 +86,7 @@ class ListRedrawScope
 
   private:
     HWND window_;
+    HWND combo_;
     bool& active_;
 };
 } // namespace
@@ -183,13 +194,37 @@ void MainWindow::CreateControls()
     Add(window_position, L"STATIC", L"", static_text, 356, 250, 410, 24);
     Add(-1, L"STATIC", L"Status:", 0, 20, 286, 62, 24);
     Add(close_status, L"STATIC", L"", static_text, 84, 286, 682, 24);
-    const auto list =
-        Add(window_list, L"LISTBOX", L"", LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 18,
-            315, 748, 240, WS_EX_CLIENTEDGE);
-    Require(SetWindowSubclass(list, ListBoxProc, 0, reinterpret_cast<DWORD_PTR>(this)) != FALSE,
-            "Configure immediate list scrolling");
+    Add(window_list, L"LISTBOX", L"", LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 18, 315,
+        748, 240, WS_EX_CLIENTEDGE);
     Add(-1, L"STATIC", L"Status:", 0, 20, 565, 62, 24);
     Add(catalog_status, L"STATIC", L"", static_text, 84, 565, 682, 24);
+    for (const int id : {window_list, awake_duration, close_duration})
+    {
+        ConfigureListScrolling(id);
+    }
+}
+
+void MainWindow::ConfigureListScrolling(const int id)
+{
+    const auto control = GetDlgItem(window_.Get(), id);
+    Require(SetWindowSubclass(control, ListScrollProc, id, reinterpret_cast<DWORD_PTR>(this)) != FALSE,
+            "Configure immediate list scrolling");
+    if (id != window_list)
+    {
+        COMBOBOXINFO info{};
+        info.cbSize = sizeof(info);
+        Require(GetComboBoxInfo(control, &info) != FALSE, "Get duration dropdown list");
+        // Mouse input reaches the popup directly; keyboard input can arrive through the combo box.
+        // Both callbacks share one redraw scope for this dropdown when native processing forwards input.
+        Require(SetWindowSubclass(info.hwndList, ListScrollProc, id, reinterpret_cast<DWORD_PTR>(this)) != FALSE,
+                "Configure immediate dropdown scrolling");
+    }
+}
+
+MainWindow::ListScrollState& MainWindow::ScrollState(const int id) noexcept
+{
+    return id == awake_duration ? awake_duration_scroll_
+                                : (id == close_duration ? close_duration_scroll_ : window_list_scroll_);
 }
 
 void MainWindow::Layout(const UINT dpi)
@@ -456,6 +491,14 @@ void MainWindow::Command(const int id, const int notification)
     {
         return;
     }
+    const bool selection_changed = (id == window_list && notification == LBN_SELCHANGE) ||
+                                   ((id == awake_duration || id == close_duration) && notification == CBN_SELCHANGE);
+    if (selection_changed && ScrollState(id).active)
+    {
+        // Restore drawing before selection handling can enter a modal error dialog or reenter presentation.
+        ScrollState(id).selection_pending = true;
+        return;
+    }
     if (notification == BN_CLICKED)
     {
         switch (id)
@@ -492,42 +535,52 @@ void MainWindow::Command(const int id, const int notification)
     }
     if (id == window_list && notification == LBN_SELCHANGE)
     {
-        if (list_scroll_active_)
-        {
-            // Restore drawing before selection handling can enter a modal error dialog or reenter presentation.
-            list_selection_pending_ = true;
-            return;
-        }
         const auto index = SendDlgItemMessageW(window_.Get(), id, LB_GETCURSEL, 0, 0);
         Emit({EventKind::select_window, index == LB_ERR ? std::nullopt : std::optional<std::size_t>(index)});
     }
 }
 
-LRESULT CALLBACK MainWindow::ListBoxProc(HWND window, UINT message, WPARAM wparam, LPARAM lparam, UINT_PTR subclass_id,
-                                         DWORD_PTR reference) noexcept
+LRESULT CALLBACK MainWindow::ListScrollProc(HWND window, UINT message, WPARAM wparam, LPARAM lparam,
+                                            UINT_PTR subclass_id, DWORD_PTR reference) noexcept
 {
     auto* self = reinterpret_cast<MainWindow*>(reference);
     if (message == WM_NCDESTROY)
     {
-        RemoveWindowSubclass(window, ListBoxProc, subclass_id);
+        RemoveWindowSubclass(window, ListScrollProc, subclass_id);
     }
     try
     {
-        if (!CanScrollList(message, wparam) || self->list_scroll_active_ || !IsWindowVisible(window) ||
-            !IsWindowEnabled(window))
+        const auto id = static_cast<int>(subclass_id);
+        auto& scroll = self->ScrollState(id);
+        if (!CanScrollList(message, wparam) || scroll.active || !IsWindowVisible(window) || !IsWindowEnabled(window))
         {
             return DefSubclassProc(window, message, wparam, lparam);
+        }
+        HWND list = window;
+        HWND combo = nullptr;
+        if (id != window_list)
+        {
+            combo = GetDlgItem(self->window_.Get(), id);
+            COMBOBOXINFO info{};
+            info.cbSize = sizeof(info);
+            Require(GetComboBoxInfo(combo, &info) != FALSE, "Get duration dropdown list");
+            list = info.hwndList;
+            // A collapsed combo still handles selection normally; never enable drawing on its hidden popup.
+            if (!IsWindowVisible(list))
+            {
+                return DefSubclassProc(window, message, wparam, lparam);
+            }
         }
         LRESULT result;
         {
             // Let the native control handle wheel deltas, selection and navigation, but paint only the final
             // position. This bypasses its smooth-scroll effect without changing the user's system preference.
-            ListRedrawScope redraw(window, self->list_scroll_active_);
+            ListRedrawScope redraw(list, combo, scroll.active);
             result = DefSubclassProc(window, message, wparam, lparam);
         }
-        if (std::exchange(self->list_selection_pending_, false))
+        if (std::exchange(scroll.selection_pending, false))
         {
-            self->Command(window_list, LBN_SELCHANGE);
+            self->Command(id, id == window_list ? LBN_SELCHANGE : CBN_SELCHANGE);
         }
         return result;
     }
