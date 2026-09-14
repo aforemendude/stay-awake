@@ -174,6 +174,7 @@ set(
     "${PROJECT_SOURCE_DIR}/tests/application/durations.test.cpp"
     "${PROJECT_SOURCE_DIR}/tests/application/fake_platform_binding.hpp"
     "${PROJECT_SOURCE_DIR}/tests/application/window_selection.test.cpp"
+    "${PROJECT_SOURCE_DIR}/tests/main.test.cpp"
 )
 include(cmake/ClangFormat.cmake)
 

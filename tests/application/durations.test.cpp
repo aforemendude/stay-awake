@@ -11,9 +11,8 @@ namespace
 {
 using namespace std::chrono_literals;
 
-TEST(DurationsTest, PreservesEveryChoiceAndDefaultInBothLists)
+TEST(DurationsTest, PreservesEveryChoiceInBothLists)
 {
-    const ViewState state;
     for (const auto first : {15min, 30min})
     {
         const auto choices = MakeDurations(first);
@@ -32,10 +31,33 @@ TEST(DurationsTest, PreservesEveryChoiceAndDefaultInBothLists)
         EXPECT_EQ(choices.back().duration, 10s);
         EXPECT_EQ(choices.back().label, "00:00:10");
     }
-    EXPECT_EQ(state.awake.duration, 2h);
-    EXPECT_EQ(state.close.duration, 1h);
-    EXPECT_EQ(state.awake.durations.front().label, "00:30:00");
-    EXPECT_EQ(state.close.durations.front().label, "00:15:00");
+}
+
+TEST(DurationsTest, IncludesTheEightHourLimitAndAlwaysAppendsTheShortChoice)
+{
+    const auto at_limit = MakeDurations(8h);
+    ASSERT_EQ(at_limit.size(), 2U);
+    EXPECT_EQ(at_limit[0].duration, 8h);
+    EXPECT_EQ(at_limit[0].label, "08:00:00");
+    EXPECT_EQ(at_limit[1].duration, 10s);
+    EXPECT_EQ(at_limit[1].label, "00:00:10");
+    const auto past_limit = MakeDurations(8h + 15min);
+    ASSERT_EQ(past_limit.size(), 1U);
+    EXPECT_EQ(past_limit[0].duration, 10s);
+    EXPECT_EQ(past_limit[0].label, "00:00:10");
+}
+
+TEST(DurationsTest, ValidatesMembershipInTheSuppliedChoices)
+{
+    const std::vector<DurationChoice> choices{{11s, "custom"}, {2h, "default"}};
+    EXPECT_TRUE(ValidDuration(choices, 11s));
+    EXPECT_TRUE(ValidDuration(choices, 2h));
+    EXPECT_FALSE(ValidDuration(choices, std::nullopt));
+    EXPECT_FALSE(ValidDuration(choices, 10s));
+    EXPECT_FALSE(ValidDuration(choices, 0s));
+    EXPECT_FALSE(ValidDuration(choices, -1s));
+    EXPECT_FALSE(ValidDuration({}, 11s));
+    EXPECT_FALSE(ValidDuration({}, std::nullopt));
 }
 
 TEST(DurationsTest, RoundsPositiveFractionsUpAndClampsExpiredCountdowns)

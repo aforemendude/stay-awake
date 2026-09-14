@@ -47,6 +47,11 @@ ctest --preset linux-native-debug
 Use `windows-mingw-debug` for native Windows tests. Run CTest only with native-host presets; cross-built Windows tests
 must run on Windows.
 
+Portable unit tests mirror `src/` under `tests/` using `<source>.test.cpp` names. Entrypoint tests compile
+`src/main.cpp` with a test-only function name and supply a fake platform factory; they link only the core and
+GoogleTest. Register new test sources in `tests/CMakeLists.txt` and `STAY_AWAKE_FORMAT_FILES` in the root
+`CMakeLists.txt`.
+
 For C++ formatting, append `--target format` or `--target format-check` to the build command. Install clang-format
 before configuration. Direct CMake builds do not require Node.js.
 

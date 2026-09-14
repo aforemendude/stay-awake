@@ -28,6 +28,20 @@ class CloseControllerTest : public testing::Test
     }
 };
 
+TEST_F(CloseControllerTest, DefaultsToAnIdleOneHourScheduleWithFifteenMinuteChoices)
+{
+    EXPECT_EQ(State().duration, 1h);
+    ASSERT_EQ(State().durations.size(), 33U);
+    EXPECT_EQ(State().durations.front().duration, 15min);
+    EXPECT_EQ(State().durations.front().label, "00:15:00");
+    EXPECT_EQ(State().status, "Ready");
+    EXPECT_EQ(State().caption, "Schedule Close Window");
+    EXPECT_TRUE(State().inputs_enabled);
+    EXPECT_FALSE(close.Active());
+    EXPECT_EQ(close.NextUpdate(platform.now), std::nullopt);
+    EXPECT_TRUE(platform.close_requests.empty());
+}
+
 TEST_F(CloseControllerTest, NoSelectionReportsExactErrorAndDoesNotSchedule)
 {
     const auto result = close.Toggle(std::nullopt);
@@ -70,7 +84,7 @@ TEST_F(CloseControllerTest, RestartAfterCancellationUsesNewDeadline)
     EXPECT_EQ(State().status, "Close scheduled - 00:00:09 remaining");
     platform.now = 19s;
     EXPECT_TRUE(close.Tick(platform.now));
-    EXPECT_EQ(platform.close_requests.size(), 1U);
+    EXPECT_EQ(platform.close_requests, (std::vector<WindowIdentity>{target.identity}));
 }
 
 TEST_F(CloseControllerTest, CapturesTargetAndConsumesScheduleOnceAtExactDeadline)
@@ -90,7 +104,6 @@ TEST_F(CloseControllerTest, CapturesTargetAndConsumesScheduleOnceAtExactDeadline
     ASSERT_EQ(platform.close_requests.size(), 1U);
     EXPECT_EQ(platform.close_requests[0], (WindowIdentity{0xABC, 12, 0x100000001ULL}));
     EXPECT_EQ(State().status, "Close requested ABC At Friday, September 11, 2026 12:34:56 PM (alpha)");
-    EXPECT_EQ(State().status.find("Closed"), std::string::npos);
     EXPECT_FALSE(close.Active());
     EXPECT_FALSE(close.Tick(platform.now));
     EXPECT_EQ(platform.close_requests.size(), 1U);
@@ -105,10 +118,19 @@ TEST_F(CloseControllerTest, CapturesProcessLifetimeWhenHandleAndPidAreReused)
     platform.now = 10s;
     EXPECT_TRUE(close.Tick(platform.now));
     ASSERT_EQ(platform.close_requests.size(), 1U);
-    EXPECT_EQ(platform.close_requests[0].process_creation_time, 0x100000001ULL);
+    EXPECT_EQ(platform.close_requests[0], (WindowIdentity{0xABC, 12, 0x100000001ULL}));
     EXPECT_FALSE(platform.close_requests[0] == target.identity);
     target.identity.process_creation_time.reset();
     EXPECT_FALSE(platform.close_requests[0] == target.identity);
+}
+
+TEST_F(CloseControllerTest, PreservesAnUnavailableProcessLifetimeInTheCapturedTarget)
+{
+    target.identity.process_creation_time.reset();
+    Start();
+    target.identity.process_creation_time = 0x200000002ULL;
+    EXPECT_TRUE(close.Tick(10s));
+    EXPECT_EQ(platform.close_requests, (std::vector<WindowIdentity>{{0xABC, 12, std::nullopt}}));
 }
 
 TEST_F(CloseControllerTest, FailedRequestUsesCapturedMetadataAndDoesNotRetry)
@@ -117,19 +139,21 @@ TEST_F(CloseControllerTest, FailedRequestUsesCapturedMetadataAndDoesNotRetry)
          {"Target window no longer exists", "Target window owner changed", "Target window process changed",
           "Target window process creation time unavailable", "access denied"})
     {
+        SCOPED_TRACE(failure);
+        platform.close_requests.clear();
         Start();
         platform.close_result = {false, failure};
         platform.now += 10s;
         EXPECT_TRUE(close.Tick(platform.now));
-        EXPECT_NE(State().status.find("Close request failed ABC At Friday, September 11, 2026 12:34:56 PM (alpha)"),
-                  std::string::npos);
-        EXPECT_NE(State().status.find(failure), std::string::npos);
+        EXPECT_EQ(State().status,
+                  std::string("Close request failed ABC At Friday, September 11, 2026 12:34:56 PM (alpha): ") +
+                      failure);
         EXPECT_TRUE(State().inputs_enabled);
         EXPECT_FALSE(close.Active());
         EXPECT_FALSE(close.Tick(platform.now));
+        EXPECT_EQ(platform.close_requests, (std::vector<WindowIdentity>{target.identity}));
         EXPECT_TRUE(platform.errors.empty());
     }
-    EXPECT_EQ(platform.close_requests.size(), 5U);
 }
 
 TEST_F(CloseControllerTest, MissingProcessNameUsesFallback)
@@ -139,6 +163,80 @@ TEST_F(CloseControllerTest, MissingProcessNameUsesFallback)
     platform.now = 10s;
     EXPECT_TRUE(close.Tick(platform.now));
     EXPECT_EQ(State().status, "Close requested ABC At Friday, September 11, 2026 12:34:56 PM (Unknown)");
+    EXPECT_EQ(platform.close_requests, (std::vector<WindowIdentity>{target.identity}));
+}
+
+TEST_F(CloseControllerTest, NextUpdateUsesTheCapturedDeadlineAndDisappearsAfterExpiry)
+{
+    platform.now = 350ms;
+    Start();
+    EXPECT_EQ(close.NextUpdate(350ms), 1350ms);
+    EXPECT_EQ(close.NextUpdate(1350ms), 2350ms);
+    EXPECT_EQ(close.NextUpdate(10349ms), 10350ms);
+    EXPECT_EQ(close.NextUpdate(10350ms), 10350ms);
+    EXPECT_EQ(close.NextUpdate(11s), 11s);
+    EXPECT_TRUE(close.Tick(11s));
+    EXPECT_EQ(close.NextUpdate(11s), std::nullopt);
+    EXPECT_EQ(platform.close_requests, (std::vector<WindowIdentity>{target.identity}));
+}
+
+TEST_F(CloseControllerTest, CancelDropsTheScheduleWithoutRequestingClose)
+{
+    Start();
+    close.Cancel();
+    close.Cancel();
+    EXPECT_FALSE(close.Active());
+    EXPECT_EQ(close.NextUpdate(platform.now), std::nullopt);
+    EXPECT_TRUE(State().inputs_enabled);
+    EXPECT_EQ(State().caption, "Schedule Close Window");
+    EXPECT_EQ(State().status, "Ready");
+    EXPECT_FALSE(close.Tick(1h));
+    EXPECT_TRUE(platform.close_requests.empty());
+}
+
+TEST_F(CloseControllerTest, TimerFailureCancelsOnlyAnActiveScheduleAndAllowsRestart)
+{
+    close.CancelForTimerFailure("unused");
+    EXPECT_EQ(State().status, "Ready");
+    Start();
+    close.CancelForTimerFailure("timer unavailable");
+    EXPECT_EQ(State().status, "Schedule canceled: timer unavailable");
+    EXPECT_TRUE(State().inputs_enabled);
+    EXPECT_EQ(State().caption, "Schedule Close Window");
+    EXPECT_FALSE(close.Active());
+    EXPECT_EQ(close.NextUpdate(platform.now), std::nullopt);
+    close.CancelForTimerFailure("another failure");
+    EXPECT_FALSE(close.Tick(1h));
+    EXPECT_EQ(State().status, "Schedule canceled: timer unavailable");
+    EXPECT_TRUE(platform.close_requests.empty());
+    platform.now = 20s;
+    Start();
+    EXPECT_EQ(State().status, "Close scheduled - 00:00:10 remaining");
+    EXPECT_EQ(close.NextUpdate(platform.now), 21s);
+    EXPECT_FALSE(close.Tick(29999ms));
+    EXPECT_TRUE(close.Tick(30s));
+    EXPECT_EQ(platform.close_requests, (std::vector<WindowIdentity>{target.identity}));
+}
+
+TEST_F(CloseControllerTest, ConsumesTheScheduleBeforeRequestCloseCanReenter)
+{
+    Start();
+    bool reentered = false;
+    platform.on_close = [&] {
+        // Guard the callback so a regression reports a duplicate request rather than recursing indefinitely.
+        if (reentered)
+        {
+            return;
+        }
+        reentered = true;
+        EXPECT_FALSE(close.Active());
+        EXPECT_EQ(close.NextUpdate(10s), std::nullopt);
+        EXPECT_TRUE(close.State(10s).inputs_enabled);
+        EXPECT_FALSE(close.Tick(10s));
+    };
+    EXPECT_TRUE(close.Tick(10s));
+    EXPECT_TRUE(reentered);
+    EXPECT_EQ(platform.close_requests, (std::vector<WindowIdentity>{target.identity}));
 }
 } // namespace
 } // namespace stay_awake

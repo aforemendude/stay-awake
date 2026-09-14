@@ -4,6 +4,8 @@
 
 #include <gtest/gtest.h>
 
+#include <stdexcept>
+
 namespace stay_awake
 {
 namespace
@@ -90,7 +92,7 @@ TEST_F(ApplicationTest, CancelingAwakeLeavesCloseTimerActive)
     EXPECT_EQ(platform.timer_deadline, 1350ms);
     EXPECT_FALSE(State().close.inputs_enabled);
     TickAt(10350ms);
-    EXPECT_EQ(platform.close_requests.size(), 1U);
+    EXPECT_EQ(platform.close_requests, (std::vector<WindowIdentity>{{0xABC, 12, 0x100000001ULL}}));
     EXPECT_FALSE(State().timer_needed);
 }
 
@@ -107,7 +109,7 @@ TEST_F(ApplicationTest, CancelingCloseLeavesAwakeActive)
     EXPECT_EQ(State().close.status, "Ready");
     EXPECT_TRUE(platform.close_requests.empty());
     TickAt(10s);
-    EXPECT_EQ(platform.power_calls.size(), 2U);
+    EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display, std::nullopt}));
     EXPECT_TRUE(platform.close_requests.empty());
 }
 
@@ -127,7 +129,7 @@ TEST_F(ApplicationTest, SlightlyLateCallbacksPreserveEverySecondWithoutAccumulat
         EXPECT_EQ(platform.timer_deadline, (second + 1) * 1s);
     }
     EXPECT_EQ(platform.timer_requests.size(), 151U); // Both countdowns share each scheduled tick.
-    EXPECT_EQ(platform.power_calls.size(), 1U);
+    EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::system}));
     EXPECT_TRUE(platform.close_requests.empty());
 }
 
@@ -147,20 +149,20 @@ TEST_F(ApplicationTest, StaggeredCountdownsShareOneTimerAndKeepIndependentBounda
         TickAt(*platform.timer_deadline);
         EXPECT_EQ(State().close.status, "Close scheduled - " + FormatRemaining((10 - second) * 1s) + " remaining");
         ASSERT_EQ(platform.timer_deadline, (second + 1) * 1s);
-        EXPECT_EQ(platform.power_calls.size(), 1U);
+        EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display}));
         EXPECT_TRUE(platform.close_requests.empty());
     }
     TickAt(10s);
-    EXPECT_EQ(platform.power_calls.size(), 2U);
+    EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display, std::nullopt}));
     EXPECT_TRUE(platform.close_requests.empty());
     ASSERT_EQ(platform.timer_deadline, 10350ms);
     TickAt(*platform.timer_deadline);
-    EXPECT_EQ(platform.close_requests.size(), 1U);
+    EXPECT_EQ(platform.close_requests, (std::vector<WindowIdentity>{{0xABC, 12, 0x100000001ULL}}));
     EXPECT_FALSE(platform.timer_deadline);
     EXPECT_FALSE(State().timer_needed);
     Send(EventKind::tick);
-    EXPECT_EQ(platform.power_calls.size(), 2U);
-    EXPECT_EQ(platform.close_requests.size(), 1U);
+    EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display, std::nullopt}));
+    EXPECT_EQ(platform.close_requests, (std::vector<WindowIdentity>{{0xABC, 12, 0x100000001ULL}}));
 }
 
 TEST_F(ApplicationTest, EarlyAndDelayedTicksRearmFromTheOriginalDeadline)
@@ -180,12 +182,12 @@ TEST_F(ApplicationTest, EarlyAndDelayedTicksRearmFromTheOriginalDeadline)
     EXPECT_EQ(State().close.status, "Close scheduled - 00:00:05 remaining");
     EXPECT_EQ(platform.timer_deadline, 6s);
     TickAt(9999ms);
-    EXPECT_EQ(platform.power_calls.size(), 1U);
+    EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display}));
     EXPECT_TRUE(platform.close_requests.empty());
     ASSERT_EQ(platform.timer_deadline, 10s);
     TickAt(*platform.timer_deadline);
-    EXPECT_EQ(platform.power_calls.size(), 2U);
-    EXPECT_EQ(platform.close_requests.size(), 1U);
+    EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display, std::nullopt}));
+    EXPECT_EQ(platform.close_requests, (std::vector<WindowIdentity>{{0xABC, 12, 0x100000001ULL}}));
     EXPECT_FALSE(platform.timer_deadline);
 }
 
@@ -210,8 +212,8 @@ TEST_F(ApplicationTest, UnrelatedEventsDoNotPostponePendingTicksAndOverdueWorkRe
     Send(EventKind::show);
     EXPECT_EQ(platform.timer_deadline, platform.now);
     TickAt(platform.now);
-    EXPECT_EQ(platform.power_calls.size(), 2U);
-    EXPECT_EQ(platform.close_requests.size(), 1U);
+    EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display, std::nullopt}));
+    EXPECT_EQ(platform.close_requests, (std::vector<WindowIdentity>{{0xABC, 12, 0x100000001ULL}}));
     EXPECT_FALSE(platform.timer_deadline);
 }
 
@@ -220,8 +222,8 @@ TEST_F(ApplicationTest, EarlierCloseExpiryLeavesAwakeDeadlineUnaffected)
     StartAwake(EventKind::toggle_system, 30min);
     StartClose();
     TickAt(11s);
-    EXPECT_EQ(platform.close_requests.size(), 1U);
-    EXPECT_EQ(platform.power_calls.size(), 1U);
+    EXPECT_EQ(platform.close_requests, (std::vector<WindowIdentity>{{0xABC, 12, 0x100000001ULL}}));
+    EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::system}));
     EXPECT_EQ(State().awake.status, "Require System - 00:29:49 remaining");
     EXPECT_TRUE(State().timer_needed);
     EXPECT_EQ(platform.timer_deadline, 12s);
@@ -232,7 +234,7 @@ TEST_F(ApplicationTest, EarlierAwakeExpiryLeavesCloseDeadlineUnaffected)
     StartAwake();
     StartClose(15min);
     TickAt(11s);
-    EXPECT_EQ(platform.power_calls.size(), 2U);
+    EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display, std::nullopt}));
     EXPECT_TRUE(platform.close_requests.empty());
     EXPECT_EQ(State().close.status, "Close scheduled - 00:14:49 remaining");
     EXPECT_TRUE(State().timer_needed);
@@ -244,13 +246,13 @@ TEST_F(ApplicationTest, BothDeadlinesExpireOnceOnSameDelayedCallback)
     StartAwake();
     StartClose();
     TickAt(100s);
-    EXPECT_EQ(platform.power_calls.size(), 2U);
-    EXPECT_EQ(platform.close_requests.size(), 1U);
+    EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display, std::nullopt}));
+    EXPECT_EQ(platform.close_requests, (std::vector<WindowIdentity>{{0xABC, 12, 0x100000001ULL}}));
     EXPECT_FALSE(State().timer_needed);
     EXPECT_FALSE(platform.timer_deadline);
     Send(EventKind::tick);
-    EXPECT_EQ(platform.power_calls.size(), 2U);
-    EXPECT_EQ(platform.close_requests.size(), 1U);
+    EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display, std::nullopt}));
+    EXPECT_EQ(platform.close_requests, (std::vector<WindowIdentity>{{0xABC, 12, 0x100000001ULL}}));
 }
 
 TEST_F(ApplicationTest, FailedReleaseDoesNotPreventSimultaneousCloseCompletion)
@@ -260,8 +262,10 @@ TEST_F(ApplicationTest, FailedReleaseDoesNotPreventSimultaneousCloseCompletion)
     platform.release_result = {false, "release failed"};
     platform.now = 10s;
     Send(EventKind::tick);
-    EXPECT_NE(State().awake.status.find("release failed"), std::string::npos);
-    EXPECT_EQ(platform.close_requests.size(), 1U);
+    EXPECT_EQ(State().awake.status,
+              "Error Ending Require Display At Friday, September 11, 2026 12:34:56 PM: release failed. "
+              "Click the active mode to retry.");
+    EXPECT_EQ(platform.close_requests, (std::vector<WindowIdentity>{{0xABC, 12, 0x100000001ULL}}));
     EXPECT_FALSE(State().timer_needed);
     EXPECT_TRUE(platform.errors.empty());
 }
@@ -277,10 +281,10 @@ TEST_F(ApplicationTest, WallClockJumpsDoNotChangeDurationAndResumeConsumesOverdu
     // Fake elapsed time includes suspend: no actual OS clocks or sleeps in application tests.
     platform.timestamp = "Sonntag, 1. März 2026 09:02:03";
     TickAt(platform.now + 8h);
-    EXPECT_NE(State().awake.status.find("Sonntag, 1. März 2026 09:02:03"), std::string::npos);
-    EXPECT_NE(State().close.status.find("Sonntag, 1. März 2026 09:02:03"), std::string::npos);
-    EXPECT_EQ(platform.close_requests.size(), 1U);
-    EXPECT_EQ(platform.power_calls.size(), 2U);
+    EXPECT_EQ(State().awake.status, "Require Display Ended At Sonntag, 1. März 2026 09:02:03");
+    EXPECT_EQ(State().close.status, "Close requested ABC At Sonntag, 1. März 2026 09:02:03 (alpha)");
+    EXPECT_EQ(platform.close_requests, (std::vector<WindowIdentity>{{0xABC, 12, 0x100000001ULL}}));
+    EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display, std::nullopt}));
     EXPECT_FALSE(platform.timer_deadline);
 }
 
@@ -301,9 +305,7 @@ TEST_F(ApplicationTest, ScheduleCapturesIdentityAndIgnoresStaleListAndDurationEv
     Send(EventKind::tick);
     ASSERT_EQ(platform.close_requests.size(), 1U);
     EXPECT_EQ(platform.close_requests[0], (WindowIdentity{0xABC, 12, 0x100000001ULL}));
-    EXPECT_EQ(platform.close_requests[0].process_creation_time, 0x100000001ULL);
     EXPECT_EQ(State().close.status, "Close requested ABC At Friday, September 11, 2026 12:34:56 PM (alpha)");
-    EXPECT_EQ(State().close.status.find("Closed"), std::string::npos);
     EXPECT_FALSE(State().selection.selected_window);
     EXPECT_TRUE(State().close.inputs_enabled);
     EXPECT_EQ(State().close.caption, "Schedule Close Window");
@@ -313,22 +315,23 @@ TEST_F(ApplicationTest, CloseFailurePreservesCapturedMetadataEvenWhenAutomaticRe
 {
     for (const auto* failure : {"Target window no longer exists", "Target window owner changed", "access denied"})
     {
+        SCOPED_TRACE(failure);
+        platform.close_requests.clear();
         platform.catalog.result = {};
         StartClose();
         platform.close_result = {false, failure};
         platform.catalog.result = {false, "refresh failed"};
         platform.now += 10s;
         Send(EventKind::tick);
-        EXPECT_NE(
-            State().close.status.find("Close request failed ABC At Friday, September 11, 2026 12:34:56 PM (alpha)"),
-            std::string::npos);
-        EXPECT_NE(State().close.status.find(failure), std::string::npos);
-        EXPECT_NE(State().selection.catalog_status.find("refresh failed"), std::string::npos);
+        EXPECT_EQ(State().close.status,
+                  std::string("Close request failed ABC At Friday, September 11, 2026 12:34:56 PM (alpha): ") +
+                      failure);
+        EXPECT_EQ(State().selection.catalog_status, "Failed to refresh windows list: refresh failed");
         EXPECT_TRUE(State().close.inputs_enabled);
         EXPECT_FALSE(State().timer_needed);
         EXPECT_TRUE(platform.errors.empty());
+        EXPECT_EQ(platform.close_requests, (std::vector<WindowIdentity>{{0xABC, 12, 0x100000001ULL}}));
     }
-    EXPECT_EQ(platform.close_requests.size(), 3U);
 }
 
 TEST_F(ApplicationTest, SuccessfulCloseResultSurvivesFailedAutomaticRefresh)
@@ -338,6 +341,8 @@ TEST_F(ApplicationTest, SuccessfulCloseResultSurvivesFailedAutomaticRefresh)
     platform.now = 10s;
     Send(EventKind::tick);
     EXPECT_EQ(State().close.status, "Close requested ABC At Friday, September 11, 2026 12:34:56 PM (alpha)");
+    EXPECT_EQ(State().selection.catalog_status, "Failed to refresh windows list: refresh failed");
+    EXPECT_TRUE(State().selection.windows.empty());
     EXPECT_TRUE(platform.errors.empty());
     EXPECT_FALSE(State().timer_needed);
 }
@@ -351,14 +356,15 @@ TEST_F(ApplicationTest, CloseScheduleDoesNotDisableHighlightAndHideKeepsBothTime
     EXPECT_TRUE(State().selection.overlay);
     Send(EventKind::hide);
     EXPECT_FALSE(State().visible);
+    EXPECT_EQ(platform.visibility, (std::vector<bool>{true, false}));
     EXPECT_FALSE(State().selection.highlight_active);
     EXPECT_FALSE(State().selection.overlay);
     EXPECT_TRUE(State().timer_needed);
     EXPECT_FALSE(State().close.inputs_enabled);
     platform.now = 10s;
     Send(EventKind::tick);
-    EXPECT_EQ(platform.power_calls.size(), 2U);
-    EXPECT_EQ(platform.close_requests.size(), 1U);
+    EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display, std::nullopt}));
+    EXPECT_EQ(platform.close_requests, (std::vector<WindowIdentity>{{0xABC, 12, 0x100000001ULL}}));
     EXPECT_FALSE(State().visible);
 }
 
@@ -372,7 +378,7 @@ TEST_F(ApplicationTest, QuitCleansUpAndIgnoresAllLaterCallbacks)
     EXPECT_FALSE(State().timer_needed);
     EXPECT_FALSE(State().selection.overlay);
     EXPECT_EQ(platform.exits, 1);
-    EXPECT_EQ(platform.power_calls.size(), 2U);
+    EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display, std::nullopt}));
     EXPECT_TRUE(platform.close_requests.empty());
     const int presentations = platform.presentations;
     const int refreshes = platform.refreshes;
@@ -394,14 +400,14 @@ TEST_F(ApplicationTest, CanceledSessionEndKeepsRunningAndConfirmedEndCleansUpSil
     Send(EventKind::session_end_canceled);
     EXPECT_FALSE(State().stopped);
     EXPECT_TRUE(State().timer_needed);
-    EXPECT_TRUE(platform.power_calls.back().has_value());
+    EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display}));
     platform.release_result = {false, "release failed"};
     Send(EventKind::session_end_confirmed);
     EXPECT_TRUE(State().stopped);
     EXPECT_FALSE(State().timer_needed);
     EXPECT_TRUE(platform.errors.empty());
     EXPECT_EQ(platform.exits, 1);
-    EXPECT_EQ(platform.power_calls.size(), 2U);
+    EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display, std::nullopt}));
     EXPECT_TRUE(platform.close_requests.empty());
 }
 
@@ -409,13 +415,15 @@ TEST_F(ApplicationTest, TimerSetupFailureCancelsCloseAndReleasesAwake)
 {
     platform.timer_result = {false, "timer unavailable"};
     StartAwake();
-    EXPECT_EQ(platform.power_calls.size(), 2U);
+    EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display, std::nullopt}));
     EXPECT_FALSE(State().timer_needed);
-    EXPECT_NE(State().awake.status.find("timer unavailable"), std::string::npos);
+    EXPECT_EQ(State().awake.status, "Canceled: timer unavailable");
     StartClose();
     EXPECT_TRUE(State().close.inputs_enabled);
     EXPECT_FALSE(State().timer_needed);
-    EXPECT_NE(State().close.status.find("timer unavailable"), std::string::npos);
+    EXPECT_EQ(State().close.status, "Schedule canceled: timer unavailable");
+    EXPECT_EQ(platform.errors, (std::vector<std::string>{"Unable to schedule countdown timer: timer unavailable",
+                                                         "Unable to schedule countdown timer: timer unavailable"}));
     platform.now = 1h;
     Send(EventKind::tick);
     EXPECT_TRUE(platform.close_requests.empty());
@@ -426,11 +434,13 @@ TEST_F(ApplicationTest, TimerFailureWithReleaseFailureKeepsManualRetryAvailable)
     platform.timer_result = {false, "timer unavailable"};
     platform.release_result = {false, "release failed"};
     StartAwake();
-    EXPECT_NE(State().awake.status.find("release failed"), std::string::npos);
+    EXPECT_EQ(State().awake.status,
+              "Error Ending Require Display At Friday, September 11, 2026 12:34:56 PM: release failed. "
+              "Click the active mode to retry.");
     EXPECT_FALSE(State().timer_needed);
     EXPECT_TRUE(State().awake.display_enabled);
     EXPECT_FALSE(State().awake.system_enabled);
-    EXPECT_EQ(platform.errors.size(), 1U);
+    EXPECT_EQ(platform.errors, (std::vector<std::string>{"Unable to schedule countdown timer: timer unavailable"}));
     platform.release_result = {};
     Send(EventKind::toggle_display);
     EXPECT_EQ(State().awake.status, "Require Display Ended At Friday, September 11, 2026 12:34:56 PM");
@@ -442,6 +452,7 @@ TEST_F(ApplicationTest, TimerRearmFailureCancelsBothCountdownsAndAllowsRestart)
     StartClose();
     platform.timer_result = {false, "rearm failed"};
     TickAt(1008ms);
+    ASSERT_FALSE(platform.timer_requests.empty());
     EXPECT_EQ(platform.timer_requests.back(), 2s);
     EXPECT_FALSE(platform.timer_deadline);
     EXPECT_FALSE(State().timer_needed);
@@ -449,11 +460,11 @@ TEST_F(ApplicationTest, TimerRearmFailureCancelsBothCountdownsAndAllowsRestart)
     EXPECT_TRUE(State().close.inputs_enabled);
     EXPECT_EQ(State().awake.status, "Canceled: rearm failed");
     EXPECT_EQ(State().close.status, "Schedule canceled: rearm failed");
-    EXPECT_EQ(platform.power_calls.size(), 2U);
+    EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display, std::nullopt}));
     EXPECT_EQ(platform.errors, (std::vector<std::string>{"Unable to schedule countdown timer: rearm failed"}));
     platform.now = 10s;
     Send(EventKind::tick);
-    EXPECT_EQ(platform.power_calls.size(), 2U);
+    EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display, std::nullopt}));
     EXPECT_TRUE(platform.close_requests.empty());
     platform.timer_result = {};
     StartAwake();
@@ -472,16 +483,18 @@ TEST_F(ApplicationTest, TimerRearmFailurePreservesFailedPowerReleaseForManualRet
     EXPECT_FALSE(State().timer_needed);
     EXPECT_FALSE(State().awake.duration_enabled);
     EXPECT_TRUE(State().awake.display_enabled);
-    EXPECT_NE(State().awake.status.find("release failed"), std::string::npos);
-    EXPECT_NE(State().awake.status.find("Click the active mode to retry."), std::string::npos);
+    EXPECT_EQ(State().awake.status,
+              "Error Ending Require Display At Friday, September 11, 2026 12:34:56 PM: release failed. "
+              "Click the active mode to retry.");
     EXPECT_TRUE(State().close.inputs_enabled);
     platform.now = 10s;
     Send(EventKind::tick);
-    EXPECT_EQ(platform.power_calls.size(), 2U);
+    EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display, std::nullopt}));
     EXPECT_TRUE(platform.close_requests.empty());
     platform.release_result = {};
     Send(EventKind::toggle_display);
-    EXPECT_EQ(platform.power_calls.size(), 3U);
+    EXPECT_EQ(platform.power_calls,
+              (std::vector<std::optional<AwakeMode>>{AwakeMode::display, std::nullopt, std::nullopt}));
     EXPECT_TRUE(State().awake.duration_enabled);
     EXPECT_EQ(State().awake.status, "Require Display Ended At Friday, September 11, 2026 12:34:56 PM");
     EXPECT_FALSE(platform.timer_deadline);
@@ -495,11 +508,13 @@ TEST_F(ApplicationTest, FailedPowerReleaseSchedulesOnlyTheRemainingCloseCountdow
     platform.release_result = {false, "release failed"};
     TickAt(10s);
     EXPECT_EQ(platform.timer_deadline, 10350ms);
-    EXPECT_NE(State().awake.status.find("release failed"), std::string::npos);
-    EXPECT_EQ(platform.power_calls.size(), 2U);
+    EXPECT_EQ(State().awake.status,
+              "Error Ending Require Display At Friday, September 11, 2026 12:34:56 PM: release failed. "
+              "Click the active mode to retry.");
+    EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display, std::nullopt}));
     TickAt(10350ms);
-    EXPECT_EQ(platform.power_calls.size(), 2U);
-    EXPECT_EQ(platform.close_requests.size(), 1U);
+    EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display, std::nullopt}));
+    EXPECT_EQ(platform.close_requests, (std::vector<WindowIdentity>{{0xABC, 12, 0x100000001ULL}}));
     EXPECT_FALSE(platform.timer_deadline);
 }
 
@@ -536,7 +551,11 @@ TEST_F(ApplicationTest, HighlightAloneNeedsNoTimerAndTicksKeepTheSelectionSnapsh
     const auto queries = platform.geometry_targets.size();
     platform.rectangle = Rectangle{500, 300, 100, 200};
     Send(EventKind::tick);
+    ASSERT_TRUE(State().selection.overlay);
     EXPECT_EQ(State().selection.overlay->x, -900);
+    EXPECT_EQ(State().selection.overlay->y, -200);
+    EXPECT_EQ(State().selection.overlay->width, 800);
+    EXPECT_EQ(State().selection.overlay->height, 600);
     EXPECT_EQ(platform.geometry_targets.size(), queries);
     EXPECT_FALSE(platform.timer_deadline);
 }
@@ -559,8 +578,8 @@ TEST_F(ApplicationTest, WindowDetailsUsesSelectedSnapshotAndIgnoresAbsentSelecti
     Select(1);
     Send(EventKind::show_details);
     ASSERT_EQ(platform.window_details.size(), 2U);
-    EXPECT_EQ(platform.window_details.back().identity.handle, 0xDEFU);
-    EXPECT_FALSE(platform.window_details.back().identity.process_creation_time);
+    EXPECT_EQ(platform.window_details.back().identity, (WindowIdentity{0xDEF, 34, std::nullopt}));
+    EXPECT_EQ(platform.window_details.back().title, "Same title");
     EXPECT_TRUE(platform.window_details.back().process_name.empty());
     Select(std::nullopt);
     Send(EventKind::show_details);
@@ -582,14 +601,14 @@ TEST_F(ApplicationTest, ModalWindowDetailsKeepsScheduledTargetAndQueuesExpiryUnt
         EXPECT_FALSE(platform.timer_deadline); // No recurring callbacks build up while the dialog stays open.
         Send(EventKind::tick);
         EXPECT_TRUE(platform.close_requests.empty());
-        EXPECT_EQ(platform.power_calls.size(), 1U);
+        EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display}));
     };
     Send(EventKind::show_details);
     ASSERT_EQ(platform.window_details.size(), 1U);
     EXPECT_EQ(platform.window_details.back().identity, (WindowIdentity{0xABC, 12, 0x100000001ULL}));
     ASSERT_EQ(platform.close_requests.size(), 1U);
     EXPECT_EQ(platform.close_requests.back(), platform.window_details.back().identity);
-    EXPECT_EQ(platform.power_calls.size(), 2U);
+    EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display, std::nullopt}));
     EXPECT_FALSE(State().timer_needed);
     EXPECT_FALSE(platform.timer_deadline);
     EXPECT_EQ(State().close.status, "Close requested ABC At Friday, September 11, 2026 12:34:56 PM (alpha)");
@@ -616,7 +635,7 @@ TEST_F(ApplicationTest, QuitAndConfirmedSessionEndCleanUpImmediatelyDuringWindow
             EXPECT_EQ(binding.exits, 1);
             EXPECT_FALSE(binding.timer_deadline);
             EXPECT_FALSE(binding.overlay);
-            EXPECT_EQ(binding.power_calls.back(), std::nullopt);
+            EXPECT_EQ(binding.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display, std::nullopt}));
             app.Handle({EventKind::tick});
             app.Handle({EventKind::show_details});
         };
@@ -640,7 +659,7 @@ TEST_F(ApplicationTest, ReentrantFeatureEventsWaitUntilPresentationCompletes)
         Send(EventKind::toggle_system);
         Duration(EventKind::awake_duration_changed, 1h);
         Send(EventKind::toggle_display);
-        EXPECT_EQ(platform.power_calls.size(), 1U);
+        EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display}));
         EXPECT_EQ(State().awake.status, "Require Display - 00:00:10 remaining");
         EXPECT_FALSE(platform.view.awake.duration_enabled);
     };
@@ -660,8 +679,8 @@ TEST_F(ApplicationTest, ReentrantTickDuringCloseCannotPostTwice)
     platform.on_close = [this] { Send(EventKind::tick); };
     platform.now = 10s;
     Send(EventKind::tick);
-    EXPECT_EQ(platform.close_requests.size(), 1U);
-    EXPECT_EQ(platform.power_calls.size(), 2U);
+    EXPECT_EQ(platform.close_requests, (std::vector<WindowIdentity>{{0xABC, 12, 0x100000001ULL}}));
+    EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display, std::nullopt}));
     EXPECT_FALSE(State().timer_needed);
     EXPECT_EQ(State().close.status, "Close requested ABC At Friday, September 11, 2026 12:34:56 PM (alpha)");
 }
@@ -671,7 +690,9 @@ TEST_F(ApplicationTest, ModalErrorSeesCompletedStateAndQuitImmediatelyDisablesLa
     StartAwake();
     platform.release_result = {false, "release failed"};
     platform.on_error = [this] {
-        EXPECT_NE(platform.view.awake.status.find("release failed"), std::string::npos);
+        EXPECT_EQ(platform.view.awake.status,
+                  "Error Ending Require Display At Friday, September 11, 2026 12:34:56 PM: release failed. "
+                  "Click the active mode to retry.");
         EXPECT_FALSE(platform.view.timer_needed);
         Send(EventKind::quit);
         Send(EventKind::show);
@@ -680,8 +701,10 @@ TEST_F(ApplicationTest, ModalErrorSeesCompletedStateAndQuitImmediatelyDisablesLa
     Send(EventKind::toggle_display);
     EXPECT_TRUE(State().stopped);
     EXPECT_EQ(platform.exits, 1);
-    EXPECT_EQ(platform.power_calls.size(), 3U); // Start, failed stop, best-effort exit release.
-    EXPECT_EQ(platform.errors.size(), 1U);
+    // Start, failed stop, best-effort exit release.
+    EXPECT_EQ(platform.power_calls,
+              (std::vector<std::optional<AwakeMode>>{AwakeMode::display, std::nullopt, std::nullopt}));
+    EXPECT_EQ(platform.errors, (std::vector<std::string>{"Failed to stop stay awake: release failed"}));
     EXPECT_TRUE(platform.visibility.empty());
 }
 
@@ -700,7 +723,7 @@ TEST_F(ApplicationTest, ConfirmedSessionEndDuringModalErrorCleansUpBeforeReturni
     };
     Send(EventKind::toggle_display);
     EXPECT_TRUE(State().stopped);
-    EXPECT_EQ(platform.errors.size(), 1U);
+    EXPECT_EQ(platform.errors, (std::vector<std::string>{"Failed to stop stay awake: release failed"}));
 }
 
 TEST_F(ApplicationTest, CanceledSessionEndDuringModalErrorRetainsCloseSchedule)
@@ -714,24 +737,144 @@ TEST_F(ApplicationTest, CanceledSessionEndDuringModalErrorRetainsCloseSchedule)
     EXPECT_TRUE(State().timer_needed);
     platform.now = 10s;
     Send(EventKind::tick);
-    EXPECT_EQ(platform.close_requests.size(), 1U);
-    EXPECT_NE(State().awake.status.find("release failed"), std::string::npos);
+    EXPECT_EQ(platform.close_requests, (std::vector<WindowIdentity>{{0xABC, 12, 0x100000001ULL}}));
+    EXPECT_EQ(State().awake.status,
+              "Error Ending Require Display At Friday, September 11, 2026 12:34:56 PM: release failed. "
+              "Click the active mode to retry.");
 }
 
-TEST(ApplicationRunTest, ServiceActivationAndFailureUsePortableBoundary)
+TEST_F(ApplicationTest, PresentationFailureDoesNotPreventLaterEventDispatch)
+{
+    platform.on_present = [] { throw std::runtime_error("presentation failed"); };
+    try
+    {
+        Send(EventKind::show);
+        FAIL() << "Expected the presentation failure to reach the caller";
+    }
+    catch (const std::runtime_error& error)
+    {
+        EXPECT_STREQ(error.what(), "presentation failed");
+    }
+    platform.on_present = {};
+    Send(EventKind::toggle_system);
+    EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::system}));
+    EXPECT_EQ(platform.view.awake.status, "Require System - 02:00:00 remaining");
+    EXPECT_EQ(platform.timer_deadline, 1s);
+    Send(EventKind::hide);
+    EXPECT_EQ(platform.visibility, (std::vector<bool>{true, false}));
+    EXPECT_FALSE(platform.view.visible);
+}
+
+TEST_F(ApplicationTest, QuitDuringPresentationDiscardsQueuedEventsAndPendingErrors)
+{
+    StartAwake();
+    StartClose();
+    platform.overlay_result = {false, "overlay unavailable"};
+    bool interrupted = false;
+    platform.on_present = [&] {
+        if (interrupted)
+        {
+            return;
+        }
+        interrupted = true;
+        platform.now = 10s;
+        Send(EventKind::tick);
+        EXPECT_TRUE(platform.close_requests.empty());
+        Send(EventKind::quit);
+        EXPECT_TRUE(State().stopped);
+        EXPECT_EQ(platform.exits, 1);
+        EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display, std::nullopt}));
+        EXPECT_FALSE(platform.timer_deadline);
+        EXPECT_FALSE(platform.overlay);
+    };
+    Send(EventKind::toggle_highlight);
+    EXPECT_TRUE(interrupted);
+    EXPECT_TRUE(platform.view.stopped);
+    EXPECT_FALSE(platform.view.visible);
+    EXPECT_TRUE(platform.close_requests.empty());
+    EXPECT_TRUE(platform.errors.empty());
+}
+
+TEST(ApplicationRunTest, DefersPresentationUntilInitialization)
+{
+    FakePlatformBinding platform;
+    Application application(platform);
+    application.Handle({EventKind::show});
+    EXPECT_EQ(platform.presentations, 0);
+    EXPECT_TRUE(application.State().visible);
+    application.Handle({EventKind::initialized});
+    EXPECT_EQ(platform.presentations, 1);
+    EXPECT_TRUE(platform.view.visible);
+    EXPECT_EQ(platform.view.selection.catalog_revision, 1U);
+    EXPECT_EQ(platform.visibility, (std::vector<bool>{true}));
+}
+
+TEST(ApplicationRunTest, ServiceActivationAndQuitUsePortableBoundary)
 {
     FakePlatformBinding platform;
     platform.service_events = {{EventKind::initialized}, {EventKind::show}, {EventKind::quit}};
     Application application(platform);
     EXPECT_EQ(application.Run(), 0);
+    EXPECT_EQ(platform.service_runs, 1);
+    EXPECT_EQ(platform.presentations, 3);
     EXPECT_EQ(platform.visibility, (std::vector<bool>{true}));
     EXPECT_EQ(platform.exits, 1);
     EXPECT_TRUE(application.State().stopped);
-    FakePlatformBinding failed;
-    failed.service_result = {false, "startup failed"};
-    Application failing(failed);
-    EXPECT_EQ(failing.Run(), 1);
-    EXPECT_EQ(failed.errors, (std::vector<std::string>{"startup failed"}));
+    EXPECT_TRUE(platform.errors.empty());
+}
+
+TEST(ApplicationRunTest, SecondaryActivationReturnsSuccessWithoutInitializingPresentation)
+{
+    FakePlatformBinding platform;
+    Application application(platform);
+    EXPECT_EQ(application.Run(), 0);
+    EXPECT_EQ(platform.service_runs, 1);
+    EXPECT_EQ(platform.presentations, 0);
+    EXPECT_TRUE(platform.visibility.empty());
+    EXPECT_EQ(platform.exits, 0);
+    EXPECT_TRUE(platform.errors.empty());
+    EXPECT_TRUE(platform.power_calls.empty());
+    EXPECT_FALSE(platform.timer_deadline);
+}
+
+TEST(ApplicationRunTest, StartupFailureReportsTheServiceErrorWithoutInitializingPresentation)
+{
+    FakePlatformBinding platform;
+    platform.service_result = {false, "startup failed"};
+    Application application(platform);
+    EXPECT_EQ(application.Run(), 1);
+    EXPECT_EQ(platform.service_runs, 1);
+    EXPECT_EQ(platform.errors, (std::vector<std::string>{"startup failed"}));
+    EXPECT_EQ(platform.presentations, 0);
+    EXPECT_TRUE(platform.visibility.empty());
+    EXPECT_TRUE(platform.power_calls.empty());
+    EXPECT_FALSE(platform.timer_deadline);
+}
+
+TEST(ApplicationRunTest, FailedServiceLoopCleansUpThroughQuitBeforeReportingTheError)
+{
+    FakePlatformBinding platform;
+    platform.service_events = {{EventKind::initialized},
+                               {EventKind::show},
+                               {EventKind::select_window, 0},
+                               {EventKind::toggle_display},
+                               {EventKind::toggle_close},
+                               {EventKind::toggle_highlight},
+                               {EventKind::quit}};
+    platform.service_result = {false, "event loop failed"};
+    Application application(platform);
+    platform.on_error = [&] {
+        EXPECT_TRUE(application.State().stopped);
+        EXPECT_TRUE(platform.view.stopped);
+        EXPECT_EQ(platform.exits, 1);
+        EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display, std::nullopt}));
+        EXPECT_FALSE(platform.timer_deadline);
+        EXPECT_FALSE(platform.overlay);
+        EXPECT_TRUE(platform.close_requests.empty());
+    };
+    EXPECT_EQ(application.Run(), 1);
+    EXPECT_EQ(platform.service_runs, 1);
+    EXPECT_EQ(platform.errors, (std::vector<std::string>{"event loop failed"}));
 }
 } // namespace
 } // namespace stay_awake

@@ -13,6 +13,11 @@ class FakePlatformBinding final : public PlatformBinding
   public:
     OperationResult RunService(EventHandler handler) override
     {
+        ++service_runs;
+        if (on_service)
+        {
+            on_service();
+        }
         for (const auto& event : service_events)
         {
             handler(event);
@@ -53,8 +58,12 @@ class FakePlatformBinding final : public PlatformBinding
     }
     OperationResult SetOverlay(std::optional<Rectangle> value) override
     {
-        overlay = value;
-        return value ? overlay_result : OperationResult{};
+        const auto result = value ? overlay_result : overlay_clear_result;
+        if (result.success)
+        {
+            overlay = value;
+        }
+        return result;
     }
     OperationResult ScheduleTick(std::optional<ElapsedTime> deadline) override
     {
@@ -122,6 +131,7 @@ class FakePlatformBinding final : public PlatformBinding
     OperationResult release_result;
     OperationResult close_result;
     OperationResult overlay_result;
+    OperationResult overlay_clear_result;
     OperationResult timer_result;
     std::optional<ElapsedTime> timer_deadline;
     std::vector<ApplicationEvent> service_events;
@@ -136,9 +146,11 @@ class FakePlatformBinding final : public PlatformBinding
     std::function<void()> on_error;
     std::function<void()> on_present;
     std::function<void()> on_details;
+    std::function<void()> on_service;
     ViewState view;
     int refreshes = 0;
     int exits = 0;
     int presentations = 0;
+    int service_runs = 0;
 };
 } // namespace stay_awake
