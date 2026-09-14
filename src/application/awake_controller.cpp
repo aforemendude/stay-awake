@@ -6,7 +6,7 @@ namespace
 {
 std::string ModeName(const AwakeMode mode)
 {
-    return mode == AwakeMode::display ? "Require Display" : "Require System";
+    return mode == AwakeMode::display ? "display" : "system";
 }
 } // namespace
 
@@ -36,7 +36,7 @@ OperationResult AwakeController::Toggle(const AwakeMode mode)
     const auto result = platform_.SetAwake(mode);
     if (!result.success)
     {
-        state_.status = "Failed to start " + ModeName(mode) + ": " + result.error;
+        state_.status = "Failed to start require " + ModeName(mode) + ": " + result.error;
         return {false, "Failed to start stay awake: " + result.error};
     }
     session_ = Session{mode, platform_.Now() + *state_.duration};
@@ -55,13 +55,13 @@ OperationResult AwakeController::Stop(const bool expired)
         session_.reset();
         if (expired || retry)
         {
-            state_.status = ModeName(mode) + " Ended At " + platform_.LocalTimestamp();
+            state_.status = "Require " + ModeName(mode) + " ended at " + platform_.LocalTimestamp();
         }
     }
     else
     {
-        state_.status = "Error Ending " + ModeName(mode) + " At " + platform_.LocalTimestamp() + ": " + result.error +
-                        ". Click the active mode to retry.";
+        state_.status = "Error ending require " + ModeName(mode) + " at " + platform_.LocalTimestamp() + ": " +
+                        result.error + ". Click the active mode to retry.";
         if (!expired)
         {
             return {false, "Failed to stop stay awake: " + result.error};
@@ -115,7 +115,8 @@ AwakeViewState AwakeController::State(const ElapsedTime now) const
     auto state = state_;
     if (NeedsTimer())
     {
-        state.status = ModeName(session_->mode) + " - " + FormatRemaining(*session_->deadline - now) + " remaining";
+        state.status =
+            "Require " + ModeName(session_->mode) + " - " + FormatRemaining(*session_->deadline - now) + " remaining";
     }
     state.duration_enabled = !session_;
     state.display_enabled = !session_ || session_->mode == AwakeMode::display;

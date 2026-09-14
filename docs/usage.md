@@ -39,10 +39,11 @@ replaced during the request can cause a different window to receive it, even aft
 
 **Status** shows **Ready** when idle with no previous result or issue, the remaining countdown while active, and the
 last completion or error until the next run. The status below the list reports refresh errors and returns to **Ready**
-after a successful refresh. Status timestamps use the same Windows regional long-date and time format as **Process
-Creation Time (Local)**.
+after a successful refresh. Status messages use sentence case, such as **Require display ended at …**. Status timestamps
+use the same Windows regional long-date and time format as **Process Creation Time (Local)**.
 
 Left-click anywhere in any status content area, including blank space after a short message, to open its complete text.
+The dialog title identifies the area: **Stay Awake Status**, **Window Closer Status**, or **Window List Status**.
 **Copy** copies the status and closes the dialog; **OK** just closes it. Long statuses show their beginning in the main
 window and clip at the right edge without adding an ellipsis. The dialog captures the status when opened.
 

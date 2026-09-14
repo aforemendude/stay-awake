@@ -67,7 +67,7 @@ void Application::Handle(const ApplicationEvent& event)
             }
             if (status && !state_.stopped)
             {
-                platform_.ShowStatus(*status);
+                platform_.ShowStatus(status->title, status->message);
             }
         }
         dispatching_ = false;
@@ -142,13 +142,13 @@ void Application::Process(const ApplicationEvent& event)
         pending_details_ = selection_.SelectedWindow();
         break;
     case EventKind::show_awake_status:
-        pending_status_ = state_.awake.status;
+        pending_status_ = StatusMessage{"Stay Awake Status", state_.awake.status};
         break;
     case EventKind::show_close_status:
-        pending_status_ = state_.close.status;
+        pending_status_ = StatusMessage{"Window Closer Status", state_.close.status};
         break;
     case EventKind::show_catalog_status:
-        pending_status_ = state_.selection.catalog_status;
+        pending_status_ = StatusMessage{"Window List Status", state_.selection.catalog_status};
         break;
     }
 }

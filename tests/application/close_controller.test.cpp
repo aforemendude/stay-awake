@@ -103,7 +103,7 @@ TEST_F(CloseControllerTest, CapturesTargetAndConsumesScheduleOnceAtExactDeadline
     EXPECT_TRUE(close.Tick(platform.now));
     ASSERT_EQ(platform.close_requests.size(), 1U);
     EXPECT_EQ(platform.close_requests[0], (WindowIdentity{0xABC, 12, 0x100000001ULL}));
-    EXPECT_EQ(State().status, "Close requested ABC At Friday, September 11, 2026 12:34:56 PM (alpha)");
+    EXPECT_EQ(State().status, "Close requested ABC at Friday, September 11, 2026 12:34:56 PM (alpha)");
     EXPECT_FALSE(close.Active());
     EXPECT_FALSE(close.Tick(platform.now));
     EXPECT_EQ(platform.close_requests.size(), 1U);
@@ -146,7 +146,7 @@ TEST_F(CloseControllerTest, FailedRequestUsesCapturedMetadataAndDoesNotRetry)
         platform.now += 10s;
         EXPECT_TRUE(close.Tick(platform.now));
         EXPECT_EQ(State().status,
-                  std::string("Close request failed ABC At Friday, September 11, 2026 12:34:56 PM (alpha): ") +
+                  std::string("Close request failed ABC at Friday, September 11, 2026 12:34:56 PM (alpha): ") +
                       failure);
         EXPECT_TRUE(State().inputs_enabled);
         EXPECT_FALSE(close.Active());
@@ -162,7 +162,7 @@ TEST_F(CloseControllerTest, MissingProcessNameUsesFallback)
     Start();
     platform.now = 10s;
     EXPECT_TRUE(close.Tick(platform.now));
-    EXPECT_EQ(State().status, "Close requested ABC At Friday, September 11, 2026 12:34:56 PM (Unknown)");
+    EXPECT_EQ(State().status, "Close requested ABC at Friday, September 11, 2026 12:34:56 PM (Unknown)");
     EXPECT_EQ(platform.close_requests, (std::vector<WindowIdentity>{target.identity}));
 }
 

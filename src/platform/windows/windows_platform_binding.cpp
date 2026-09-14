@@ -271,9 +271,9 @@ void WindowsPlatformBinding::ShowWindowDetails(const WindowInfo& window)
     ShowCopyableMessage(L"Window Details", text);
 }
 
-void WindowsPlatformBinding::ShowStatus(const std::string_view message)
+void WindowsPlatformBinding::ShowStatus(const std::string_view title, const std::string_view message)
 {
-    ShowCopyableMessage(L"Stay Awake - Status", ToWide(message));
+    ShowCopyableMessage(ToWide(title).c_str(), ToWide(message));
 }
 
 void WindowsPlatformBinding::ShowCopyableMessage(const wchar_t* title, const std::wstring& text)

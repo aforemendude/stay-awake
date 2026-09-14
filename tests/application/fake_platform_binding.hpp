@@ -118,8 +118,9 @@ class FakePlatformBinding final : public PlatformBinding
             on_details();
         }
     }
-    void ShowStatus(std::string_view message) override
+    void ShowStatus(std::string_view title, std::string_view message) override
     {
+        status_titles.emplace_back(title);
         statuses.emplace_back(message);
         if (on_status)
         {
@@ -150,6 +151,7 @@ class FakePlatformBinding final : public PlatformBinding
     std::vector<bool> visibility;
     std::vector<std::string> errors;
     std::vector<WindowInfo> window_details;
+    std::vector<std::string> status_titles;
     std::vector<std::string> statuses;
     std::function<void()> on_close;
     std::function<void()> on_error;

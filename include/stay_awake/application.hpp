@@ -17,6 +17,12 @@ class Application
     const ViewState& State() const;
 
   private:
+    struct StatusMessage
+    {
+        std::string title;
+        std::string message;
+    };
+
     void Process(const ApplicationEvent& event);
     void Tick();
     void Publish();
@@ -33,6 +39,6 @@ class Application
     bool initialized_ = false;
     std::string pending_error_;
     std::optional<WindowInfo> pending_details_;
-    std::optional<std::string> pending_status_;
+    std::optional<StatusMessage> pending_status_;
 };
 } // namespace stay_awake

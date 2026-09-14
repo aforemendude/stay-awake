@@ -59,7 +59,7 @@ TEST_F(AwakeControllerTest, StartsEachModeAndStopsOnlyThroughItsActiveButton)
         EXPECT_EQ(display ? State().display_caption : State().system_caption,
                   display ? "Stop Require Display" : "Stop Require System");
         EXPECT_EQ(State().status,
-                  display ? "Require Display - 00:00:10 remaining" : "Require System - 00:00:10 remaining");
+                  display ? "Require display - 00:00:10 remaining" : "Require system - 00:00:10 remaining");
         EXPECT_TRUE(awake.Toggle(display ? AwakeMode::system : AwakeMode::display).success);
         awake.SetDuration(1h);
         EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{mode}));
@@ -101,14 +101,14 @@ TEST_F(AwakeControllerTest, FailedPowerStartLeavesNoDeadlineAndCanBeRetried)
     EXPECT_EQ(result.error, "Failed to start stay awake: start denied");
     EXPECT_FALSE(awake.NeedsTimer());
     EXPECT_TRUE(State().duration_enabled);
-    EXPECT_EQ(State().status, "Failed to start Require Display: start denied");
+    EXPECT_EQ(State().status, "Failed to start require display: start denied");
     platform.now += 1h;
     awake.Tick(platform.now);
     EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display}));
     platform.start_result = {};
     EXPECT_TRUE(awake.Toggle(AwakeMode::display).success);
     EXPECT_TRUE(awake.NeedsTimer());
-    EXPECT_EQ(State().status, "Require Display - 00:00:10 remaining");
+    EXPECT_EQ(State().status, "Require display - 00:00:10 remaining");
     EXPECT_EQ(awake.NextUpdate(platform.now), 1h + 1s);
     EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display, AwakeMode::display}));
 }
@@ -118,19 +118,19 @@ TEST_F(AwakeControllerTest, ExpiryRecordsModeAndTimeOnceAtExactDeadline)
     Start(AwakeMode::system);
     platform.now = 9999ms;
     awake.Tick(platform.now);
-    EXPECT_EQ(State().status, "Require System - 00:00:01 remaining");
+    EXPECT_EQ(State().status, "Require system - 00:00:01 remaining");
     EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::system}));
     platform.now = 10s;
     awake.Tick(platform.now);
     EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::system, std::nullopt}));
-    EXPECT_EQ(State().status, "Require System Ended At Friday, September 11, 2026 12:34:56 PM");
+    EXPECT_EQ(State().status, "Require system ended at Friday, September 11, 2026 12:34:56 PM");
     EXPECT_FALSE(awake.NeedsTimer());
     platform.now += 1h;
     awake.Tick(platform.now);
     awake.Tick(platform.now);
     EXPECT_EQ(platform.power_calls.size(), 2U);
     Start();
-    EXPECT_EQ(State().status, "Require Display - 00:00:10 remaining");
+    EXPECT_EQ(State().status, "Require display - 00:00:10 remaining");
 }
 
 TEST_F(AwakeControllerTest, FailedAutomaticReleaseIsVisibleWithoutTimerRetriesAndManualRetryWorks)
@@ -139,7 +139,7 @@ TEST_F(AwakeControllerTest, FailedAutomaticReleaseIsVisibleWithoutTimerRetriesAn
     platform.release_result = {false, "release denied"};
     platform.now = 10s;
     awake.Tick(platform.now);
-    const std::string failure = "Error Ending Require Display At Friday, September 11, 2026 12:34:56 PM: "
+    const std::string failure = "Error ending require display at Friday, September 11, 2026 12:34:56 PM: "
                                 "release denied. Click the active mode to retry.";
     EXPECT_EQ(State().status, failure);
     EXPECT_FALSE(awake.NeedsTimer());
@@ -158,7 +158,7 @@ TEST_F(AwakeControllerTest, FailedAutomaticReleaseIsVisibleWithoutTimerRetriesAn
     platform.release_result = {};
     EXPECT_TRUE(awake.Toggle(AwakeMode::display).success);
     EXPECT_TRUE(State().duration_enabled);
-    EXPECT_EQ(State().status, "Require Display Ended At Friday, September 11, 2026 12:34:56 PM");
+    EXPECT_EQ(State().status, "Require display ended at Friday, September 11, 2026 12:34:56 PM");
     EXPECT_EQ(platform.power_calls,
               (std::vector<std::optional<AwakeMode>>{AwakeMode::display, std::nullopt, std::nullopt, std::nullopt}));
 }
@@ -170,7 +170,7 @@ TEST_F(AwakeControllerTest, ManualReleaseFailureDoesNotClaimProtectionEnded)
     const auto result = awake.Toggle(AwakeMode::system);
     EXPECT_FALSE(result.success);
     EXPECT_EQ(result.error, "Failed to stop stay awake: retry needed");
-    EXPECT_EQ(State().status, "Error Ending Require System At Friday, September 11, 2026 12:34:56 PM: retry needed. "
+    EXPECT_EQ(State().status, "Error ending require system at Friday, September 11, 2026 12:34:56 PM: retry needed. "
                               "Click the active mode to retry.");
     EXPECT_FALSE(awake.NeedsTimer());
     EXPECT_FALSE(State().display_enabled);
@@ -223,7 +223,7 @@ TEST_F(AwakeControllerTest, TimerFailurePreservesFailedReleaseUntilManualRetry)
     Start(AwakeMode::system);
     platform.release_result = {false, "release denied"};
     awake.CancelForTimerFailure("timer unavailable");
-    EXPECT_EQ(State().status, "Error Ending Require System At Friday, September 11, 2026 12:34:56 PM: release denied. "
+    EXPECT_EQ(State().status, "Error ending require system at Friday, September 11, 2026 12:34:56 PM: release denied. "
                               "Click the active mode to retry.");
     EXPECT_FALSE(State().duration_enabled);
     EXPECT_EQ(awake.NextUpdate(platform.now), std::nullopt);
@@ -235,7 +235,7 @@ TEST_F(AwakeControllerTest, TimerFailurePreservesFailedReleaseUntilManualRetry)
     EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::system, std::nullopt}));
     platform.release_result = {};
     EXPECT_TRUE(awake.Toggle(AwakeMode::system).success);
-    EXPECT_EQ(State().status, "Require System Ended At Friday, September 11, 2026 12:34:56 PM");
+    EXPECT_EQ(State().status, "Require system ended at Friday, September 11, 2026 12:34:56 PM");
     EXPECT_TRUE(State().duration_enabled);
     EXPECT_EQ(platform.power_calls,
               (std::vector<std::optional<AwakeMode>>{AwakeMode::system, std::nullopt, std::nullopt}));
