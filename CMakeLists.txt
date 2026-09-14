@@ -81,9 +81,13 @@ if(STAY_AWAKE_BUILD_APP)
     stay_awake_enable_warnings(stay_awake_platform)
 
     add_executable(stay_awake WIN32 src/main.cpp src/platform/windows/stay_awake.rc)
+    # Resource compilers do not reliably report dependencies for Ninja incremental builds.
     set_property(
         SOURCE src/platform/windows/stay_awake.rc
-        APPEND PROPERTY OBJECT_DEPENDS "${PROJECT_SOURCE_DIR}/assets/icon.ico"
+        APPEND PROPERTY OBJECT_DEPENDS
+            "${PROJECT_SOURCE_DIR}/assets/icon.ico"
+            "${PROJECT_SOURCE_DIR}/src/platform/windows/stay_awake.manifest"
+            "${PROJECT_SOURCE_DIR}/src/platform/windows/resource.h"
     )
     target_include_directories(stay_awake PRIVATE "${PROJECT_SOURCE_DIR}/src/platform/windows")
     target_compile_definitions(stay_awake PRIVATE UNICODE _UNICODE)

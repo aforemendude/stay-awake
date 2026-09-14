@@ -36,6 +36,10 @@ cmake --build --preset linux-mingw-release
 Executables are written to `build/<preset>/StayAwake.exe`. Distribute the Release executable; its resources and MinGW
 runtime are embedded, so no adjacent assets or separately installed runtime are needed.
 
+Incremental builds recompile Windows resources when `assets/icon.ico`, `stay_awake.manifest`, or `resource.h` changes.
+Keep the resource source's `OBJECT_DEPENDS` list in `CMakeLists.txt` current when adding resource inputs; the resource
+compiler does not reliably report them to Ninja.
+
 For native tests on Linux:
 
 ```sh
