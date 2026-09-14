@@ -68,7 +68,7 @@ npm run icon:convert
 ```
 
 The [converter](../scripts/convert-icon.mjs) uses [svg-to-ico](https://github.com/jtrauntvein/svg-to-ico) to create
-`assets/icon.ico` with a single transparent, PNG-compressed 256 × 256 px image. Commit both SVG and ICO, then rebuild to
+`assets/icon.ico` with a single opaque, PNG-compressed 256 × 256 px image. Commit both SVG and ICO, then rebuild to
 embed the icon. Direct CMake builds use the checked-in ICO.
 
 See [release size and validation](release.md) for optimization settings and distribution checks.
