@@ -41,6 +41,8 @@ class PlatformBinding
     virtual void ShowError(std::string_view message) = 0;
     // Present captured window metadata; the adapter formats process creation time as Unix seconds and local date/time.
     virtual void ShowWindowDetails(const WindowInfo& window) = 0;
+    // Present the complete status snapshot with Copy and OK actions, including short or idle statuses.
+    virtual void ShowStatus(std::string_view message) = 0;
     virtual void RequestExit() = 0;
 };
 } // namespace stay_awake

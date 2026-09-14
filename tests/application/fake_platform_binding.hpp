@@ -118,6 +118,14 @@ class FakePlatformBinding final : public PlatformBinding
             on_details();
         }
     }
+    void ShowStatus(std::string_view message) override
+    {
+        statuses.emplace_back(message);
+        if (on_status)
+        {
+            on_status();
+        }
+    }
 
     ElapsedTime now{0};
     std::string timestamp = "Friday, September 11, 2026 12:34:56 PM";
@@ -142,10 +150,12 @@ class FakePlatformBinding final : public PlatformBinding
     std::vector<bool> visibility;
     std::vector<std::string> errors;
     std::vector<WindowInfo> window_details;
+    std::vector<std::string> statuses;
     std::function<void()> on_close;
     std::function<void()> on_error;
     std::function<void()> on_present;
     std::function<void()> on_details;
+    std::function<void()> on_status;
     std::function<void()> on_service;
     ViewState view;
     int refreshes = 0;

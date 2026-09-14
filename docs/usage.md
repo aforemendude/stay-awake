@@ -42,6 +42,10 @@ last completion or error until the next run. The status below the list reports r
 after a successful refresh. Status timestamps use the same Windows regional long-date and time format as **Process
 Creation Time (Local)**.
 
+Left-click anywhere in any status content area, including blank space after a short message, to open its complete text.
+**Copy** copies the status and closes the dialog; **OK** just closes it. Long statuses show their beginning in the main
+window and clip at the right edge without adding an ellipsis. The dialog captures the status when opened.
+
 Countdowns include sleep and hibernation; overdue operations run after resume. Clock and time-zone changes affect result
 timestamps, not durations.
 

@@ -57,6 +57,7 @@ void MainWindowControls::Create(HWND window)
     window_ = window;
     constexpr DWORD button = BS_PUSHBUTTON | WS_TABSTOP;
     constexpr DWORD static_text = SS_LEFT | SS_NOPREFIX | SS_ENDELLIPSIS;
+    constexpr DWORD status_text = SS_LEFTNOWORDWRAP | SS_NOPREFIX | SS_NOTIFY;
     constexpr DWORD combo = CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP;
     // Coordinates are logical 96-DPI units.
     Add(-1, L"STATIC", L"", SS_ETCHEDHORZ, 18, 22, 24, 2);
@@ -67,7 +68,7 @@ void MainWindowControls::Create(HWND window)
     Add(-1, L"STATIC", L"Duration:", 0, 222, 42, 72, 24);
     Add(awake_duration, L"COMBOBOX", L"", combo, 300, 37, 264, 300);
     Add(-1, L"STATIC", L"Status:", 0, 20, 111, 62, 24);
-    Add(awake_status, L"STATIC", L"", static_text, 84, 111, 682, 24);
+    Add(awake_status, L"STATIC", L"", status_text, 84, 111, 682, 24);
 
     Add(-1, L"STATIC", L"", SS_ETCHEDHORZ, 18, 156, 24, 2);
     Add(close_heading, L"STATIC", L"Window Closer", SS_CENTER | SS_CENTERIMAGE, 42, 145, 124, 20);
@@ -83,11 +84,11 @@ void MainWindowControls::Create(HWND window)
     Add(-1, L"STATIC", L"Window Position:", 0, 222, 250, 130, 24);
     Add(window_position, L"STATIC", L"", static_text, 356, 250, 410, 24);
     Add(-1, L"STATIC", L"Status:", 0, 20, 286, 62, 24);
-    Add(close_status, L"STATIC", L"", static_text, 84, 286, 682, 24);
+    Add(close_status, L"STATIC", L"", status_text, 84, 286, 682, 24);
     Add(window_list, L"LISTBOX", L"", LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 18, 323,
         748, 232, WS_EX_CLIENTEDGE);
     Add(-1, L"STATIC", L"Status:", 0, 20, 565, 62, 24);
-    Add(catalog_status, L"STATIC", L"", static_text, 84, 565, 682, 24);
+    Add(catalog_status, L"STATIC", L"", status_text, 84, 565, 682, 24);
     for (const int id : {window_list, awake_duration, close_duration})
     {
         Scrolling(id).Attach(GetDlgItem(window_, id), id != window_list,
@@ -254,6 +255,21 @@ void MainWindowControls::Command(const int id, const int notification)
     if (rendering_)
     {
         return;
+    }
+    if (notification == STN_CLICKED)
+    {
+        switch (id)
+        {
+        case awake_status:
+            emit_({EventKind::show_awake_status});
+            return;
+        case close_status:
+            emit_({EventKind::show_close_status});
+            return;
+        case catalog_status:
+            emit_({EventKind::show_catalog_status});
+            return;
+        }
     }
     const bool selection_changed = (id == window_list && notification == LBN_SELCHANGE) ||
                                    ((id == awake_duration || id == close_duration) && notification == CBN_SELCHANGE);

@@ -614,35 +614,119 @@ TEST_F(ApplicationTest, ModalWindowDetailsKeepsScheduledTargetAndQueuesExpiryUnt
     EXPECT_EQ(State().close.status, "Close requested ABC At Friday, September 11, 2026 12:34:56 PM (alpha)");
 }
 
-TEST_F(ApplicationTest, QuitAndConfirmedSessionEndCleanUpImmediatelyDuringWindowDetails)
+TEST_F(ApplicationTest, EveryStatusCanBeOpenedWhileIdleWithoutASelection)
 {
-    for (const auto event : {EventKind::quit, EventKind::session_end_confirmed})
+    for (const auto event :
+         {EventKind::show_awake_status, EventKind::show_close_status, EventKind::show_catalog_status})
     {
-        FakePlatformBinding binding;
-        Application app(binding);
-        app.Handle({EventKind::initialized});
-        app.Handle({EventKind::show});
-        app.Handle({EventKind::select_window, 0});
-        app.Handle({EventKind::toggle_display});
-        app.Handle({EventKind::toggle_close});
-        app.Handle({EventKind::toggle_highlight});
-        binding.on_details = [&] {
-            binding.now = 1s;
-            ASSERT_TRUE(binding.DeliverTick([&](const ApplicationEvent& tick) { app.Handle(tick); }));
-            EXPECT_FALSE(binding.timer_deadline);
-            app.Handle({event});
-            EXPECT_TRUE(app.State().stopped);
+        Send(event);
+    }
+    EXPECT_EQ(platform.statuses, (std::vector<std::string>{"Ready", "Ready", "Ready"}));
+    EXPECT_TRUE(platform.window_details.empty());
+    EXPECT_FALSE(State().timer_needed);
+}
+
+TEST_F(ApplicationTest, StatusDialogsPreserveCompleteAutomaticFailureDiagnostics)
+{
+    StartAwake();
+    StartClose();
+    const auto diagnostic = std::string(1000, 'x') + u8" diagnostic & tail: \u8bbf\u95ee\u88ab\u62d2\u7edd\r\n";
+    platform.release_result = {false, "power " + diagnostic};
+    platform.close_result = {false, "close " + diagnostic};
+    platform.catalog.result = {false, "catalog " + diagnostic};
+    TickAt(10s);
+    ASSERT_TRUE(platform.errors.empty()); // Automatic failures are reported only in the status areas.
+    const auto awake = State().awake.status;
+    const auto close = State().close.status;
+    const auto catalog = State().selection.catalog_status;
+    ASSERT_NE(awake.find(platform.release_result.error), std::string::npos);
+    ASSERT_NE(close.find(platform.close_result.error), std::string::npos);
+    ASSERT_NE(catalog.find(platform.catalog.result.error), std::string::npos);
+    Send(EventKind::show_awake_status);
+    Send(EventKind::show_close_status);
+    Send(EventKind::show_catalog_status);
+    EXPECT_EQ(platform.statuses, (std::vector<std::string>{awake, close, catalog}));
+    EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display, std::nullopt}));
+    EXPECT_FALSE(State().awake.duration_enabled); // Reading the diagnostic preserves manual release retry.
+}
+
+TEST_F(ApplicationTest, ModalStatusCapturesDisplayedTextAndQueuesExpiryUntilItReturns)
+{
+    StartAwake();
+    StartClose();
+    const auto displayed_status = platform.view.awake.status;
+    platform.now = 1s;
+    platform.on_status = [this, &displayed_status] {
+        EXPECT_EQ(platform.statuses, (std::vector<std::string>{displayed_status}));
+        EXPECT_EQ(platform.view.awake.status, "Require Display - 00:00:09 remaining");
+        TickAt(10s);
+        EXPECT_FALSE(platform.timer_deadline);
+        Send(EventKind::tick);
+        EXPECT_TRUE(platform.close_requests.empty());
+        EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display}));
+    };
+    Send(EventKind::show_awake_status);
+    EXPECT_EQ(platform.statuses, (std::vector<std::string>{displayed_status}));
+    EXPECT_EQ(platform.close_requests, (std::vector<WindowIdentity>{{0xABC, 12, 0x100000001ULL}}));
+    EXPECT_EQ(platform.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display, std::nullopt}));
+    EXPECT_FALSE(State().timer_needed);
+}
+
+TEST_F(ApplicationTest, ReentrantStatusRequestWaitsForPresentationToFinish)
+{
+    bool requested = false;
+    platform.on_present = [this, &requested] {
+        if (!requested)
+        {
+            requested = true;
+            Send(EventKind::show_close_status);
+            EXPECT_TRUE(platform.statuses.empty());
+        }
+    };
+    StartClose();
+    EXPECT_TRUE(requested);
+    EXPECT_EQ(platform.statuses, (std::vector<std::string>{"Ready"}));
+}
+
+TEST_F(ApplicationTest, QuitAndConfirmedSessionEndCleanUpImmediatelyDuringCopyableDialogs)
+{
+    for (const auto dialog : {EventKind::show_details, EventKind::show_awake_status, EventKind::show_close_status,
+                              EventKind::show_catalog_status})
+    {
+        SCOPED_TRACE(static_cast<int>(dialog));
+        for (const auto event : {EventKind::quit, EventKind::session_end_confirmed})
+        {
+            SCOPED_TRACE(static_cast<int>(event));
+            FakePlatformBinding binding;
+            Application app(binding);
+            app.Handle({EventKind::initialized});
+            app.Handle({EventKind::show});
+            app.Handle({EventKind::select_window, 0});
+            app.Handle({EventKind::toggle_display});
+            app.Handle({EventKind::toggle_close});
+            app.Handle({EventKind::toggle_highlight});
+            const auto on_dialog = [&] {
+                binding.now = 1s;
+                ASSERT_TRUE(binding.DeliverTick([&](const ApplicationEvent& tick) { app.Handle(tick); }));
+                EXPECT_FALSE(binding.timer_deadline);
+                app.Handle({event});
+                EXPECT_TRUE(app.State().stopped);
+                EXPECT_EQ(binding.exits, 1);
+                EXPECT_FALSE(binding.timer_deadline);
+                EXPECT_FALSE(binding.overlay);
+                EXPECT_EQ(binding.power_calls,
+                          (std::vector<std::optional<AwakeMode>>{AwakeMode::display, std::nullopt}));
+                app.Handle({EventKind::tick});
+                app.Handle({dialog});
+            };
+            binding.on_details = on_dialog;
+            binding.on_status = on_dialog;
+            app.Handle({dialog});
+            EXPECT_EQ(binding.window_details.size() + binding.statuses.size(), 1U);
             EXPECT_EQ(binding.exits, 1);
+            EXPECT_TRUE(binding.close_requests.empty());
             EXPECT_FALSE(binding.timer_deadline);
-            EXPECT_FALSE(binding.overlay);
-            EXPECT_EQ(binding.power_calls, (std::vector<std::optional<AwakeMode>>{AwakeMode::display, std::nullopt}));
-            app.Handle({EventKind::tick});
-            app.Handle({EventKind::show_details});
-        };
-        app.Handle({EventKind::show_details});
-        EXPECT_EQ(binding.window_details.size(), 1U);
-        EXPECT_TRUE(binding.close_requests.empty());
-        EXPECT_FALSE(binding.timer_deadline);
+        }
     }
 }
 

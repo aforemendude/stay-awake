@@ -38,7 +38,7 @@ OperationResult CopyTextToClipboard(HWND owner, const std::wstring& text)
         (void)memory.Release();
     }
     CloseClipboard();
-    return copied ? OperationResult{} : OperationResult{false, NativeError("Copy window details to clipboard", error)};
+    return copied ? OperationResult{} : OperationResult{false, NativeError("Copy text to clipboard", error)};
 }
 
 std::wstring FormatUnixProcessCreationTime(const std::optional<std::uint64_t> creation_time)
@@ -268,13 +268,27 @@ void WindowsPlatformBinding::ShowWindowDetails(const WindowInfo& window)
                       L"\r\nProcess Creation Time (Local): " +
                       FormatLocalProcessCreationTime(window.identity.process_creation_time) + L"\r\nWindow Handle: 0x" +
                       ToWide(FormatHandle(window.identity));
+    ShowCopyableMessage(L"Window Details", text);
+}
+
+void WindowsPlatformBinding::ShowStatus(const std::string_view message)
+{
+    ShowCopyableMessage(L"Stay Awake - Status", ToWide(message));
+}
+
+void WindowsPlatformBinding::ShowCopyableMessage(const wchar_t* title, const std::wstring& text)
+{
+    if (exiting_)
+    {
+        return;
+    }
     constexpr int copy_button = 100;
     const TASKDIALOG_BUTTON buttons[] = {{copy_button, L"&Copy"}, {IDOK, L"OK"}};
     TASKDIALOGCONFIG dialog{};
     dialog.cbSize = sizeof(dialog);
     dialog.hwndParent = window_ ? window_->Get() : nullptr;
     dialog.dwFlags = TDF_ALLOW_DIALOG_CANCELLATION | TDF_POSITION_RELATIVE_TO_WINDOW | TDF_SIZE_TO_CONTENT;
-    dialog.pszWindowTitle = L"Window Details";
+    dialog.pszWindowTitle = title;
     dialog.pszMainIcon = TD_INFORMATION_ICON;
     dialog.pszContent = text.c_str();
     dialog.cButtons = static_cast<UINT>(std::size(buttons));
@@ -288,7 +302,7 @@ void WindowsPlatformBinding::ShowWindowDetails(const WindowInfo& window)
     }
     if (FAILED(result))
     {
-        ShowError(NativeError("Show window details", static_cast<DWORD>(result)));
+        ShowError(NativeError("Show message dialog", static_cast<DWORD>(result)));
     }
     else if (pressed_button == copy_button)
     {

@@ -56,6 +56,7 @@ void Application::Handle(const ApplicationEvent& event)
             // queued until presentation returns, preventing duplicate expiry and stale UI writes.
             auto error = std::exchange(pending_error_, {});
             auto details = std::exchange(pending_details_, std::nullopt);
+            auto status = std::exchange(pending_status_, std::nullopt);
             if (!error.empty() && !state_.stopped)
             {
                 platform_.ShowError(error);
@@ -63,6 +64,10 @@ void Application::Handle(const ApplicationEvent& event)
             if (details && !state_.stopped)
             {
                 platform_.ShowWindowDetails(*details);
+            }
+            if (status && !state_.stopped)
+            {
+                platform_.ShowStatus(*status);
             }
         }
         dispatching_ = false;
@@ -135,6 +140,15 @@ void Application::Process(const ApplicationEvent& event)
         break;
     case EventKind::show_details:
         pending_details_ = selection_.SelectedWindow();
+        break;
+    case EventKind::show_awake_status:
+        pending_status_ = state_.awake.status;
+        break;
+    case EventKind::show_close_status:
+        pending_status_ = state_.close.status;
+        break;
+    case EventKind::show_catalog_status:
+        pending_status_ = state_.selection.catalog_status;
         break;
     }
 }

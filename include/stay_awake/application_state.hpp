@@ -133,6 +133,9 @@ enum class EventKind
     toggle_close,
     toggle_highlight,
     show_details,
+    show_awake_status,
+    show_close_status,
+    show_catalog_status,
 };
 
 struct ApplicationEvent
