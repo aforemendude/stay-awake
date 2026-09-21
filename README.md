@@ -21,7 +21,7 @@ Launch the app, then left-click the tray icon or choose **Show** from its menu. 
   overlay. **Close requested** means a message was queued: the target may prompt to save, ignore it, or remain
   unresponsive. Stay Awake does not force termination or verify closure.
 
-Close button and **Alt-F4** hide the window; countdowns continue. Exit with tray **Quit**.
+**X** and **Alt-F4** hide the window; countdowns continue. Exit with tray **Quit**.
 
 See [usage details](docs/usage.md) for window targeting, highlighting, and status behavior.
 
